@@ -12,23 +12,38 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { data: tender } = await supabase.from("tenders").select("*").eq("id", tender_id).single();
+    const { data: tender } = await supabase
+      .from("tenders")
+      .select("*")
+      .eq("id", tender_id)
+      .single();
+
     const { data: docs } = await supabase.from("documents").select("*");
-    const { data: company } = await supabase.from("companies").select("*").limit(1).maybeSingle();
+    const { data: company } = await supabase
+      .from("companies")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
 
-    if (!tender) return NextResponse.json({ error: "Tender nahi mila" }, { status: 404 });
+    if (!tender) {
+      return NextResponse.json({ error: "Tender nahi mila" }, { status: 404 });
+    }
 
-    const docsList = (docs || []).map(d => `- ${d.type}: ${d.file_url || "N/A"}${d.expiry_date ? ` (Exp: ${d.expiry_date})` : ""}`).join("\n");
+    const docsList = (docs || [])
+      .map((d: any) => `- ${d.type}: ${d.file_url || "N/A"}${d.expiry_date ? ` (Exp: ${d.expiry_date})` : ""}`)
+      .join("\n");
 
-    const companyInfo = company ? `
-Name: ${company.name}
-Type: ${company.business_type}
+    const companyInfo = company
+      ? `
+Name: ${company.name || ""}
+Type: ${company.business_type || ""}
 Turnover: ₹${company.turnover_cr || "N/A"} Cr
 Experience: ${company.experience_years || "N/A"} years
 GST: ${company.gst_number || "N/A"}
 PAN: ${company.pan_number || "N/A"}
 MSME: ${company.msme_number || "N/A"}
-` : "Company info not provided";
+`
+      : "Company info not provided";
 
     const prompt = `You are a tender eligibility analyst. Compare the company's profile and documents with the tender requirements.
 
@@ -56,7 +71,7 @@ Analyze eligibility for this type of tender. Return ONLY valid JSON with this ex
 Include 5-8 checks covering: Experience, Turnover, Licenses, GST, PAN, Required Documents, Technical capability, etc.`;
 
     const keysString = process.env.GEMINI_API_KEYS || "";
-    const apiKeys = keysString.split(",").map(k => k.trim()).filter(Boolean);
+    const apiKeys = keysString.split(",").map((k) => k.trim()).filter(Boolean);
 
     let finalResult: any = null;
     let lastError = "";
@@ -68,7 +83,8 @@ Include 5-8 checks covering: Experience, Turnover, Licenses, GST, PAN, Required 
           model: "gemini-3.6-flash",
           contents: [{ role: "user", parts: [{ text: prompt }] }],
         });
-        const cleaned = response.text.replace(/```json|```/g, "").trim();
+        const responseText: string = response.text || "";
+        const cleaned = responseText.replace(/```json|```/g, "").trim();
         finalResult = JSON.parse(cleaned);
         break;
       } catch (err: any) {
@@ -78,7 +94,10 @@ Include 5-8 checks covering: Experience, Turnover, Licenses, GST, PAN, Required 
     }
 
     if (!finalResult) {
-      return NextResponse.json({ success: false, error: "AI failed: " + lastError }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: "AI failed: " + lastError },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true, result: finalResult });

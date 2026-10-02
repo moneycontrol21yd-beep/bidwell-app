@@ -38,8 +38,6 @@ export async function POST(req: NextRequest) {
     for (const key of apiKeys) {
       try {
         const ai = new GoogleGenAI({ apiKey: key });
-        
-        // Naya SDK aur naya model use kar rahe hain
         const response = await ai.models.generateContent({
           model: "gemini-3.6-flash",
           contents: [
@@ -47,16 +45,16 @@ export async function POST(req: NextRequest) {
               role: "user",
               parts: [
                 { text: prompt },
-                { inlineData: { data: base64Data, mimeType: "application/pdf" } }
-              ]
-            }
-          ]
+                { inlineData: { data: base64Data, mimeType: "application/pdf" } },
+              ],
+            },
+          ],
         });
 
-        const responseText = response.text;
+        const responseText: string = response.text || "";
         const cleaned = responseText.replace(/```json|```/g, "").trim();
         finalResult = JSON.parse(cleaned);
-        break; 
+        break;
       } catch (err: any) {
         console.log("Key failed, trying next...", err.message);
         lastError = err.message;
@@ -72,7 +70,6 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, analysis: finalResult });
-
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
