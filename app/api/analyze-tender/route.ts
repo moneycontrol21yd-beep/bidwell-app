@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     - risk_clauses (array of strings)
     Return ONLY valid JSON, no markdown, no explanation. If a field is not found, use null.`;
 
-    let finalResult = null;
+    let finalResult: any = null;
     let lastError = "";
 
     for (const key of apiKeys) {

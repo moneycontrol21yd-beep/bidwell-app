@@ -58,7 +58,7 @@ Include 5-8 checks covering: Experience, Turnover, Licenses, GST, PAN, Required 
     const keysString = process.env.GEMINI_API_KEYS || "";
     const apiKeys = keysString.split(",").map(k => k.trim()).filter(Boolean);
 
-    let finalResult = null;
+    let finalResult: any = null;
     let lastError = "";
 
     for (const key of apiKeys) {
