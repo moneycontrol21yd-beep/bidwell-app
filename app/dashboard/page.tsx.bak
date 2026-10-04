@@ -1,0 +1,201 @@
+import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/lib/supabase";
+
+function getDaysLeft(d: string | null) { if (!d) return null; return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000); }
+
+export default async function Dashboard() {
+  const { data: tenders } = await supabase.from("tenders").select("*").order("created_at", { ascending: false });
+  const { data: contracts } = await supabase.from("contracts").select("*");
+  const { data: invoices } = await supabase.from("invoices").select("*");
+  const { data: docs } = await supabase.from("documents").select("*");
+  const { data: notifs } = await supabase.from("notifications").select("*").eq("is_read", false);
+  const { data: watched } = await supabase.from("tenders").select("*").eq("is_watched", true);
+
+  const allTenders = tenders || [];
+  const activeTenders = allTenders.filter((t: any) => t.status === "active");
+  const wonTenders = allTenders.filter((t: any) => t.status === "won");
+  const allContracts = contracts || [];
+  const allInv = invoices || [];
+  const allDocs = docs || [];
+  const unreadNotifs = (notifs || []).length;
+  const watchedCount = (watched || []).length;
+
+  const totalReceivable = allContracts.reduce((s: number, c: any) => s + (c.receivable_in_lakh || 0), 0) * 100000;
+  const pendingInvoices = allInv.filter((i: any) => i.status !== "paid");
+  const pendingAmount = pendingInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+
+  const urgentTenders = activeTenders.filter((t: any) => { const d = getDaysLeft(t.deadline); return d !== null && d > 0 && d <= 7; });
+  const expiredCount = activeTenders.filter((t: any) => { const d = getDaysLeft(t.deadline); return d !== null && d <= 0; }).length;
+  const expiringDocs = allDocs.filter((d: any) => {
+    if (!d.expiry_date) return false;
+    const days = Math.ceil((new Date(d.expiry_date).getTime() - Date.now()) / 86400000);
+    return days >= 0 && days <= 30;
+  });
+
+  const upcomingDeadlines = activeTenders
+    .filter((t: any) => { const d = getDaysLeft(t.deadline); return d !== null && d > 0; })
+    .sort((a: any, b: any) => (getDaysLeft(a.deadline) || 999) - (getDaysLeft(b.deadline) || 999))
+    .slice(0, 3);
+
+  return (
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+      <div className="bg-blue-600 dark:bg-blue-800 text-white p-6 rounded-b-3xl">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <p className="text-blue-200 text-sm">Good Morning,</p>
+            <h1 className="text-2xl font-bold">Abhinav Sharma</h1>
+            <p className="text-blue-200 text-xs mt-1">Shivam Security Services</p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/notifications">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl relative">
+                🔔
+                {unreadNotifs > 0 && (<span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">{unreadNotifs}</span>)}
+              </div>
+            </Link>
+            <Link href="/profile">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">👤</div>
+            </Link>
+          </div>
+        </div>
+        <Link href="/upload">
+          <div className="bg-white/10 backdrop-blur border border-white/20 p-4 rounded-2xl flex items-center">
+            <div className="text-3xl mr-3">🤖</div>
+            <div className="flex-1">
+              <p className="font-semibold">AI Tender Analysis</p>
+              <p className="text-xs text-blue-200">Naya Tender upload karo</p>
+            </div>
+            <span className="text-blue-200">→</span>
+          </div>
+        </Link>
+      </div>
+
+      <div className="p-6 -mt-2">
+        <div className="mb-6">
+          <h2 className="font-bold text-gray-900 dark:text-white mb-3">📊 Your Business Today</h2>
+          <div className="space-y-2">
+            {urgentTenders.length > 0 && (
+              <Link href="/tenders"><div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded-xl flex items-center">
+                <span className="text-lg mr-3">🔴</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">Urgent</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{urgentTenders.length} tender deadline 7 days me</p>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div></Link>
+            )}
+            {activeTenders.length > 0 && (
+              <Link href="/tenders"><div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-3 rounded-xl flex items-center">
+                <span className="text-lg mr-3">🟢</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-green-700 dark:text-green-400">New Matches</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{activeTenders.length} tenders match</p>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div></Link>
+            )}
+            {pendingAmount > 0 && (
+              <Link href="/payments"><div className="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 p-3 rounded-xl flex items-center">
+                <span className="text-lg mr-3">🟠</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">Payment Follow-up</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">₹{(pendingAmount / 100000).toFixed(1)}L pending</p>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div></Link>
+            )}
+            {expiringDocs.length > 0 && (
+              <Link href="/documents"><div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-3 rounded-xl flex items-center">
+                <span className="text-lg mr-3">🔵</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">Action Required</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{expiringDocs.length} doc expire ho rahe</p>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div></Link>
+            )}
+            {watchedCount > 0 && (
+              <Link href="/watch"><div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 p-3 rounded-xl flex items-center">
+                <span className="text-lg mr-3">👁️</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-purple-700 dark:text-purple-400">BidWell Watch</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{watchedCount} tenders monitor ho rahe</p>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div></Link>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Link href="/tenders"><div className="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-sm text-center">
+            <p className="text-2xl font-bold text-blue-600">{activeTenders.length}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active</p>
+          </div></Link>
+          <Link href="/contracts"><div className="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-sm text-center">
+            <p className="text-2xl font-bold text-green-600">{wonTenders.length}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Won</p>
+          </div></Link>
+          <Link href="/payments"><div className="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-sm text-center">
+            <p className="text-2xl font-bold text-orange-500">₹{(totalReceivable / 10000000).toFixed(1)}Cr</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Receivable</p>
+          </div></Link>
+        </div>
+
+        <h2 className="font-bold text-gray-900 dark:text-white mb-3">🤖 AI Action Center</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 space-y-3 mb-6">
+          {pendingAmount > 0 && (<Link href="/payments"><div className="flex items-center">
+            <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+            <p className="text-sm text-gray-800 dark:text-gray-200 flex-1">₹{(pendingAmount / 100000).toFixed(1)}L payment pending</p>
+            <span className="text-gray-400 text-xs">→</span>
+          </div></Link>)}
+          {urgentTenders.length > 0 && (<Link href="/tenders"><div className="flex items-center">
+            <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
+            <p className="text-sm text-gray-800 dark:text-gray-200 flex-1">{urgentTenders.length} tender deadline 7 days me</p>
+            <span className="text-gray-400 text-xs">→</span>
+          </div></Link>)}
+          {expiredCount > 0 && (<Link href="/tenders"><div className="flex items-center">
+            <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+            <p className="text-sm text-gray-800 dark:text-gray-200 flex-1">{expiredCount} tender expired</p>
+            <span className="text-gray-400 text-xs">→</span>
+          </div></Link>)}
+          {activeTenders.length > 0 && (<Link href="/bids"><div className="flex items-center">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+            <p className="text-sm text-gray-800 dark:text-gray-200 flex-1">{activeTenders.length} active tenders ready for bidding</p>
+            <span className="text-gray-400 text-xs">→</span>
+          </div></Link>)}
+        </div>
+
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="font-bold text-gray-900 dark:text-white">Upcoming Deadlines</h2>
+          <Link href="/tenders" className="text-blue-600 text-sm font-medium">See All</Link>
+        </div>
+
+        <div className="space-y-3">
+          {upcomingDeadlines.length > 0 ? upcomingDeadlines.map((t: any) => {
+            const dl = getDaysLeft(t.deadline);
+            return (
+              <Link href={`/tenders/${t.id}`} key={t.id}>
+                <div className={`bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border-l-4 ${dl && dl <= 3 ? "border-red-500" : dl && dl <= 7 ? "border-orange-500" : "border-blue-500"}`}>
+                  <div className="flex justify-between">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm flex-1 mr-2">{t.title}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${dl && dl <= 3 ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400" : dl && dl <= 7 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"}`}>{dl}d</span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t.department}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Value: ₹{t.value_in_cr} Cr</p>
+                </div>
+              </Link>
+            );
+          }) : (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl text-center">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi upcoming deadline nahi hai.</p>
+              <Link href="/upload"><button className="mt-3 text-blue-600 font-semibold text-sm">+ Naya Tender Upload Karo</button></Link>
+            </div>
+          )}
+        </div>
+      </div>
+      <BottomNav />
+    </main>
+  );
+}

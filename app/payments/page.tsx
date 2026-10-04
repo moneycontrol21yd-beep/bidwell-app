@@ -1,19 +1,23 @@
-import BottomNav from "@/components/BottomNav";
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
+import { WalletIcon, ClockIcon, CheckSquareIcon, AlertIcon } from "@/components/icons";
 
-export default async function Payments() {
-  const { data: contracts } = await supabase.from("contracts").select("*");
-  const { data: invoices } = await supabase.from("invoices").select("*");
+export default function Payments() {
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const list = contracts || [];
-  const allInv = invoices || [];
-
-  const totalInvoiced = allInv.reduce((s, i) => s + (i.amount || 0), 0);
-  const submitted = allInv.filter(i => i.status === "submitted").reduce((s, i) => s + (i.amount || 0), 0);
-  const approved = allInv.filter(i => i.status === "approved").reduce((s, i) => s + (i.amount || 0), 0);
-  const paid = allInv.filter(i => i.status === "paid").reduce((s, i) => s + (i.amount || 0), 0);
-  const pending = submitted + approved;
+  const load = async () => {
+    const { data: invs } = await supabase.from("invoices").select("*").order("submitted_at", { ascending: false });
+    const { data: cons } = await supabase.from("contracts").select("*");
+    setInvoices(invs || []);
+    setContracts(cons || []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
 
   const fmt = (n: number) => {
     if (n >= 10000000) return `₹${(n / 10000000).toFixed(2)} Cr`;
@@ -22,84 +26,111 @@ export default async function Payments() {
     return `₹${n}`;
   };
 
+  const submitted = invoices.filter(i => i.status === "submitted").reduce((s, i) => s + (i.amount || 0), 0);
+  const approved = invoices.filter(i => i.status === "approved").reduce((s, i) => s + (i.amount || 0), 0);
+  const paid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + (i.amount || 0), 0);
+  const overdue = invoices.filter(i => i.status === "submitted" && new Date(i.submitted_at).getTime() < Date.now() - 30 * 86400000).reduce((s, i) => s + (i.amount || 0), 0);
+  const totalReceivable = contracts.reduce((s, c) => s + (c.receivable_in_lakh || 0), 0) * 100000;
+
+  const contractMap: any = {};
+  contracts.forEach((c: any) => { contractMap[c.id] = c.title; });
+
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-blue-600 text-white p-6">
-        <p className="text-blue-200 text-sm">Total Receivable (Pending)</p>
-        <h1 className="text-4xl font-bold mt-1">{fmt(pending)}</h1>
-        <p className="text-blue-200 text-xs mt-2">
-          {allInv.filter(i => i.status !== "paid").length} pending invoices · {allInv.filter(i => i.status === "paid").length} paid
-        </p>
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-5 pt-6 pb-24 rounded-b-[2rem] relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div className="relative z-10">
+          <p className="text-blue-100/80 text-xs font-medium tracking-wide uppercase">Total Receivable</p>
+          <h1 className="text-4xl font-bold mt-2 tracking-tight">{fmt(totalReceivable)}</h1>
+          <p className="text-blue-100/70 text-xs mt-2 font-medium">{contracts.length} active contracts · {invoices.length} invoices</p>
+        </div>
       </div>
 
-      <div className="p-5 -mt-6">
-        <div className="bg-white p-5 rounded-2xl shadow-sm mb-5">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div>
-              <p className="text-xs text-gray-500">Submitted</p>
-              <p className="font-bold text-orange-600 mt-1 text-sm">{fmt(submitted)}</p>
+      <div className="px-5 -mt-14 relative z-20">
+        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-xl shadow-blue-600/5 border border-gray-100 dark:border-gray-800 mb-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-xl">
+              <div className="flex items-center mb-1">
+                <ClockIcon size={14} className="text-orange-600 mr-1.5" />
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Submitted</p>
+              </div>
+              <p className="font-bold text-orange-600 text-sm mt-1">{fmt(submitted)}</p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Approved</p>
-              <p className="font-bold text-blue-600 mt-1 text-sm">{fmt(approved)}</p>
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-xl">
+              <div className="flex items-center mb-1">
+                <CheckSquareIcon size={14} className="text-blue-600 mr-1.5" />
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Approved</p>
+              </div>
+              <p className="font-bold text-blue-600 text-sm mt-1">{fmt(approved)}</p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Paid</p>
-              <p className="font-bold text-green-600 mt-1 text-sm">{fmt(paid)}</p>
+            <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-xl">
+              <div className="flex items-center mb-1">
+                <CheckSquareIcon size={14} className="text-green-600 mr-1.5" />
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Paid</p>
+              </div>
+              <p className="font-bold text-green-600 text-sm mt-1">{fmt(paid)}</p>
             </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex justify-between text-xs text-gray-500 mb-2">
-              <span>Collection Progress</span>
-              <span>{totalInvoiced > 0 ? Math.round((paid / totalInvoiced) * 100) : 0}%</span>
+            <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-xl">
+              <div className="flex items-center mb-1">
+                <AlertIcon size={14} className="text-red-600 mr-1.5" />
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Overdue</p>
+              </div>
+              <p className="font-bold text-red-600 text-sm mt-1">{fmt(overdue)}</p>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div
-                className="bg-green-500 h-2 rounded-full"
-                style={{ width: `${totalInvoiced > 0 ? (paid / totalInvoiced) * 100 : 0}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              Total invoiced: {fmt(totalInvoiced)}
-            </p>
           </div>
         </div>
 
-        <h2 className="font-bold text-gray-900 mb-3">Recent Invoices</h2>
+        {overdue > 0 && (
+          <div className="mb-5">
+            <h2 className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-3">🔴 PAYMENT FOLLOW-UP</h2>
+            <div className="space-y-2">
+              {invoices.filter(i => i.status === "submitted" && new Date(i.submitted_at).getTime() < Date.now() - 30 * 86400000).map((inv) => {
+                const days = Math.ceil((Date.now() - new Date(inv.submitted_at).getTime()) / 86400000);
+                return (
+                  <div key={inv.id} className="bg-white dark:bg-gray-900 border-l-4 border-red-500 p-4 rounded-2xl shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 dark:text-white text-sm tracking-tight">{inv.invoice_no}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{contractMap[inv.contract_id] || "Contract"}</p>
+                      </div>
+                      <p className="font-bold text-red-600 text-sm">{fmt(inv.amount)}</p>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <span className="text-[10px] text-red-600 font-bold tracking-wide uppercase">{days} days overdue</span>
+                      <button className="text-[11px] bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg tracking-wide">REMIND</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-3">ALL INVOICES</p>
         <div className="space-y-2">
-          {allInv.length > 0 ? (
-            allInv.slice(0, 10).map((inv: any) => (
-              <Link href={`/contracts/${inv.contract_id}`} key={inv.id}>
-                <div className="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{inv.invoice_no}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {new Date(inv.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    </p>
+          {loading ? (<p className="text-center text-gray-500 text-sm py-6">Loading...</p>) :
+            invoices.length === 0 ? (
+              <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
+                <WalletIcon size={28} className="text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Koi invoice nahi hai</p>
+              </div>
+            ) : invoices.map((inv) => (
+              <div key={inv.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 dark:text-white text-sm tracking-tight">{inv.invoice_no}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{contractMap[inv.contract_id] || "Contract"}</p>
+                    <p className="text-[10px] text-gray-400 mt-1 font-medium">{new Date(inv.submitted_at).toLocaleDateString("en-IN")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900 text-sm">₹{inv.amount.toLocaleString("en-IN")}</p>
-                    <span className={`text-xs font-semibold ${
-                      inv.status === "paid" ? "text-green-600" :
-                      inv.status === "approved" ? "text-blue-600" :
-                      "text-orange-600"
-                    }`}>
-                      {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
-                    </span>
+                    <p className="font-bold text-gray-900 dark:text-white text-sm">{fmt(inv.amount)}</p>
+                    <span className={`text-[10px] font-bold tracking-wide uppercase ${inv.status === "paid" ? "text-green-600" : inv.status === "approved" ? "text-blue-600" : "text-orange-600"}`}>{inv.status}</span>
                   </div>
                 </div>
-              </Link>
-            ))
-          ) : (
-            <div className="bg-white p-8 rounded-2xl text-center">
-              <p className="text-gray-500 text-sm">Abhi koi invoice nahi hai.</p>
-              <p className="text-xs text-gray-400 mt-1">Contracts page se invoice banao</p>
-            </div>
-          )}
+              </div>
+            ))}
         </div>
       </div>
-
       <BottomNav />
     </main>
   );
