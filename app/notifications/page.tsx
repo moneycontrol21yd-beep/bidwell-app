@@ -39,8 +39,8 @@ export default function Notifications() {
           notifs.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl text-center">
               <div className="text-5xl mb-3">🔔</div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi notification nahi hai.</p>
-              <p className="text-xs text-gray-400 mt-1">Tenders watch karo — updates yahan aayenge.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi notification no hai.</p>
+              <p className="text-xs text-gray-400 mt-1">Watch tenders — updates will appear here.</p>
             </div>
           ) : notifs.map((n) => (
             <div key={n.id} onClick={() => markRead(n.id)} className={`p-4 rounded-2xl shadow-sm cursor-pointer ${n.is_read ? "bg-white dark:bg-gray-800" : "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600"}`}>

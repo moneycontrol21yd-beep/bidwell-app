@@ -101,14 +101,14 @@ export default function Terms() {
 
         <section>
           <h2 className="font-bold text-gray-900 dark:text-white mb-2">10. Governing Law</h2>
-          <p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra.</p>
+          <p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in India.</p>
         </section>
 
         <section>
           <h2 className="font-bold text-gray-900 dark:text-white mb-2">11. Contact</h2>
           <p>
             <span className="font-semibold">Email:</span> legal@bidwell.app<br />
-            <span className="font-semibold">Location:</span> Mumbai, Maharashtra, India
+            <span className="font-semibold">Location:</span> India, India
           </p>
         </section>
       </div>

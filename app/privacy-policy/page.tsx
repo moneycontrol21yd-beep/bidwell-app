@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
           <p className="mt-2">
             <span className="font-semibold">Email:</span> privacy@bidwell.app<br />
             <span className="font-semibold">Grievance Officer:</span> grievance@bidwell.app<br />
-            <span className="font-semibold">Location:</span> Mumbai, Maharashtra, India
+            <span className="font-semibold">Location:</span> India
           </p>
         </section>
       </div>

@@ -16,7 +16,7 @@ export default function ResetPassword() {
     const checkSession = async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        setError("Reset link invalid or expired. Dobara try karo.");
+        setError("Reset link invalid or expired. Try again.");
       }
     };
     checkSession();
@@ -25,7 +25,7 @@ export default function ResetPassword() {
   const handleUpdate = async () => {
     if (!password || !confirm) return setError("Saari details bharo");
     if (password.length < 6) return setError("Password kam se kam 6 characters");
-    if (password !== confirm) return setError("Dono passwords match nahi kar rahe");
+    if (password !== confirm) return setError("Dono passwords match no kar rahe");
 
     setLoading(true); setError("");
     const { error } = await supabase.auth.updateUser({ password });

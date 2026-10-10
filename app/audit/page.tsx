@@ -28,7 +28,7 @@ export default function Audit() {
         {loading ? (<p className="text-center text-gray-500 text-sm py-6">Loading...</p>) :
           logs.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl text-center">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi activity nahi hai.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi activity no hai.</p>
             </div>
           ) : logs.map((l) => (
             <div key={l.id} className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">

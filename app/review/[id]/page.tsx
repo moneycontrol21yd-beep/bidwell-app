@@ -32,7 +32,7 @@ export default function BidReview() {
   const ready = readyCount === totalCount;
 
   if (loading) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-gray-500 text-sm py-10">Loading...</p></main>;
-  if (!tender) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-red-500 text-sm py-10">Tender nahi mila</p></main>;
+  if (!tender) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-red-500 text-sm py-10">Tender no mila</p></main>;
 
   const items = [
     { key: "technical", label: "Technical Response", note: "Complete & verified" },

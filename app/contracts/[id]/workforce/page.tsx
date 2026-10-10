@@ -43,7 +43,7 @@ export default function Workforce() {
       <div className="bg-white dark:bg-gray-900 px-5 pt-5 pb-4 border-b border-gray-200 dark:border-gray-800">
         <Link href={`/contracts/${id}`} className="text-blue-600 text-xs font-bold tracking-wide">← CONTRACT</Link>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">Workforce</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Team & attendance manage karo</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage team Team & attendance manage do attendance</p>
       </div>
 
       <div className="px-5 py-4">
@@ -95,7 +95,7 @@ export default function Workforce() {
               employees.length === 0 ? (
                 <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
                   <UsersIcon size={32} className="text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi employee nahi hai</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi employee no hai</p>
                 </div>
               ) : employees.map((emp) => (
                 <div key={emp.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center">
@@ -116,7 +116,7 @@ export default function Workforce() {
           <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 tracking-tight">Today's Attendance</h2>
             {employees.length === 0 ? (
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-6">Pehle employees add karo</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-6">Add employees first</p>
             ) : (
               <div className="space-y-2">
                 {employees.map((emp) => (

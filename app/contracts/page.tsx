@@ -7,10 +7,10 @@ function getHealth(c: any) {
   const now = new Date();
   const endDate = c.end_date ? new Date(c.end_date) : null;
   const daysLeft = endDate ? Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
-  if (daysLeft !== null && daysLeft < 0) return { label: "At Risk", bg: "bg-red-50 dark:bg-red-950/30", border: "border-red-500", text: "text-red-700 dark:text-red-400", reason: "Contract expire ho gaya" };
+  if (daysLeft !== null && daysLeft < 0) return { label: "At Risk", bg: "bg-red-50 dark:bg-red-950/30", border: "border-red-500", text: "text-red-700 dark:text-red-400", reason: "Contract expired" };
   if (daysLeft !== null && daysLeft <= 30) return { label: "Attention", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-500", text: "text-orange-700 dark:text-orange-400", reason: `Contract ${daysLeft} din me khatam` };
-  if ((c.receivable_in_lakh || 0) > 500) return { label: "Attention", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-500", text: "text-orange-700 dark:text-orange-400", reason: "₹5Cr+ receivable pending" };
-  return { label: "Healthy", bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-500", text: "text-green-700 dark:text-green-400", reason: "Sab track par hai" };
+  if ((c.receivable_in_lakh || 0) > 500) return { label: "Attention", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-500", text: "text-orange-700 dark:text-orange-400", reason: "₹5Cr+ payment pending" };
+  return { label: "Healthy", bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-500", text: "text-green-700 dark:text-green-400", reason: "All on track" };
 }
 
 export default async function Contracts() {
@@ -30,8 +30,8 @@ export default async function Contracts() {
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <BuildingIcon size={28} className="text-blue-600" />
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi contract nahi hai.</p>
-            <Link href="/bids"><p className="text-blue-600 text-xs mt-2 font-bold">Bids me jaake "Awarded" mark karo →</p></Link>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi contract no hai.</p>
+            <Link href="/bids"><p className="text-blue-600 text-xs mt-2 font-bold">Mark as 'Awarded' in Bids →</p></Link>
           </div>
         ) : (
           list.map((c: any) => {

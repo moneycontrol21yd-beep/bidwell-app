@@ -57,17 +57,17 @@ export default function LiveTenders() {
 
   const fetchLive = async () => {
     setFetching(true);
-    setMessage("BidWell live tenders la raha hai...");
+    setMessage("BidWell is fetching live tenders...");
     const keyword = BIZ_KEYWORDS[company?.business_type]?.[0] || "services";
     try {
-      const res = await fetch("/api/fetch-tenders", {
+      const res = await fetch("/api/save-tender", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keyword }),
       });
       const data = await res.json();
       if (data.success) {
-        setMessage(`✅ ${data.inserted} naye tenders mile`);
+        setMessage(`✅ ${data.inserted || data.count || 0} new tenders found`);
         load();
       } else {
         setMessage(`❌ ${data.error}`);
@@ -88,8 +88,8 @@ export default function LiveTenders() {
     return keywords.some((k: string) => title.includes(k) || dept.includes(k));
   };
 
-  const allActive = tenders.filter((t) => { const d = getDaysLeft(t.deadline); return t.status === "active" && (d === null || d > 0); });
-  const allExpired = tenders.filter((t) => { const d = getDaysLeft(t.deadline); return t.status === "active" && d !== null && d <= 0; });
+  const allActive = tenders.filter((t) => { const d = getDaysLeft(t.deadline); return true && (d === null || d > 0); });
+  const allExpired = tenders.filter((t) => { const d = getDaysLeft(t.deadline); return true && d !== null && d <= 0; });
 
   const applyFilters = (list: any[]) => list.filter((t) => {
     if (search && !t.title?.toLowerCase().includes(search.toLowerCase()) && !t.department?.toLowerCase().includes(search.toLowerCase())) return false;
@@ -180,7 +180,7 @@ export default function LiveTenders() {
 
       <div className="px-5 -mt-4 relative z-20 space-y-4">
         <button
-          onClick={fetchLive}
+          style={{display: "none"}} onClick={() => {}}
           disabled={fetching}
           className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/30 text-sm tracking-wide flex items-center justify-center disabled:opacity-60"
         >
@@ -278,10 +278,10 @@ export default function LiveTenders() {
               <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
                 <AlertIcon size={32} className="text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {view === "mine" ? "Aapke profile se match nahi hua" : "Koi tender nahi"}
+                  {view === "mine" ? "No match found for your profile" : "No tenders yet"}
                 </p>
                 {view === "mine" && (
-                  <button onClick={() => setView("all")} className="mt-3 text-blue-600 font-bold text-sm">🌐 All Tenders dekho</button>
+                  <button onClick={() => setView("all")} className="mt-3 text-blue-600 font-bold text-sm">🌐 View All Tenders</button>
                 )}
               </div>
             )}

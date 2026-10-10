@@ -78,7 +78,7 @@ export default function Tasks() {
           tasks.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
               <CheckSquareIcon size={32} className="text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi task nahi hai</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi task no hai</p>
             </div>
           ) : tasks.map((t) => (
             <div key={t.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center">

@@ -49,7 +49,7 @@ export default function TechnicalResponse() {
   };
 
   if (loading) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-gray-500 text-sm py-10">Loading...</p></main>;
-  if (!tender) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-red-500 text-sm py-10">Tender nahi mila</p></main>;
+  if (!tender) return <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6"><p className="text-center text-red-500 text-sm py-10">Tender no mila</p></main>;
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
@@ -61,9 +61,9 @@ export default function TechnicalResponse() {
       <div className="p-5 space-y-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-2xl">
           <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold mb-2">🤖 AI Draft Assistant</p>
-          <p className="text-xs text-gray-700 dark:text-gray-300 mb-3">BidWell aapke company profile se technical response draft banayega.</p>
+          <p className="text-xs text-gray-700 dark:text-gray-300 mb-3">BidWell will draft a technical response from your company profile.</p>
           <button onClick={generateAI} disabled={generating} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-sm disabled:bg-gray-400">
-            {generating ? "AI likh raha hai..." : "✨ Generate with AI"}
+            {generating ? "AI is writing..." : "✨ Generate with AI"}
           </button>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">

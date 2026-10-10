@@ -70,8 +70,8 @@ export default function Team() {
           members.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl text-center">
               <div className="text-5xl mb-3">👥</div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi team member nahi hai.</p>
-              <p className="text-xs text-gray-400 mt-1">Apne team ko add karo — Tenders, Bids, Contracts manage karne ke liye.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">No team members yet.</p>
+              <p className="text-xs text-gray-400 mt-1">Add your team — To manage tenders, bids, contracts.</p>
             </div>
           ) : members.map((m) => (
             <div key={m.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm flex items-center">

@@ -16,3 +16,18 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   await supabase.auth.signOut();
 }
+
+export async function signOutAllDevices() {
+  const { error } = await supabase.auth.signOut({ scope: "global" });
+  return { error };
+}
+
+export async function changePassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  return { data, error };
+}
+
+export async function getCurrentUser() {
+  const { data } = await supabase.auth.getUser();
+  return data.user;
+}

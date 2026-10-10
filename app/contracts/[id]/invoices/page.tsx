@@ -100,7 +100,7 @@ export default function Invoices() {
           invoices.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
               <WalletIcon size={32} className="text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi invoice nahi hai</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi invoice no hai</p>
             </div>
           ) : invoices.map((inv) => (
             <div key={inv.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">

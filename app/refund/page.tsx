@@ -72,7 +72,7 @@ export default function Refund() {
           <h2 className="font-bold text-gray-900 dark:text-white mb-2">8. Contact</h2>
           <p>
             <span className="font-semibold">Email:</span> billing@bidwell.app<br />
-            <span className="font-semibold">Location:</span> Mumbai, Maharashtra, India
+            <span className="font-semibold">Location:</span> India
           </p>
         </section>
       </div>

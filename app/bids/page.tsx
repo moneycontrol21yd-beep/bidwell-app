@@ -54,7 +54,7 @@ export default function Bids() {
       <div className="bg-white dark:bg-gray-900 px-5 py-5 border-b border-gray-200 dark:border-gray-800">
         <Link href="/tenders" className="text-blue-600 text-xs font-bold tracking-wide">← TENDERS</Link>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">Bid Workspace</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Apne bids manage karo</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage your bids</p>
       </div>
 
       <div className="p-5 space-y-4">
@@ -64,7 +64,7 @@ export default function Bids() {
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <FileTextIcon size={28} className="text-blue-600" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi active tender nahi hai.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Koi active tender no hai.</p>
               <Link href="/upload"><button className="mt-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl text-sm">+ Upload Tender</button></Link>
             </div>
           ) : (

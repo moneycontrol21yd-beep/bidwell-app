@@ -30,8 +30,8 @@ export default function Profile() {
     { Icon: UsersIcon, label: "Team Members", href: "/team", color: "cyan" },
     { Icon: BellIcon, label: "Notifications", href: "/notifications", color: "orange" },
     { Icon: EyeIcon, label: "BidWell Watch", href: "/watch", color: "pink" },
+    { Icon: HelpCircleIcon, label: "Support Tickets", href: "/support", color: "teal" },
     { Icon: LockIcon, label: "Audit Log", href: "/audit", color: "slate" },
-    { Icon: HelpCircleIcon, label: "Help & Support", href: "/help", color: "teal" },
   ];
 
   const legal = [
@@ -52,7 +52,6 @@ export default function Profile() {
     pink: "bg-pink-100 dark:bg-pink-900/30 text-pink-600",
     slate: "bg-slate-100 dark:bg-slate-900/30 text-slate-600",
     teal: "bg-teal-100 dark:bg-teal-900/30 text-teal-600",
-    green: "bg-green-100 dark:bg-green-900/30 text-green-600",
   };
 
   return (
@@ -60,7 +59,7 @@ export default function Profile() {
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-5 pt-6 pb-24 rounded-b-[2rem] relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex items-center">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mr-4 border-2 border-white/30 overflow-hidden bg-white/10 backdrop-blur-md">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mr-4 border-2 border-white/30 bg-white/10 backdrop-blur-md">
             <span className="text-3xl font-bold text-white">{user?.user_metadata?.full_name?.[0]?.toUpperCase() || "U"}</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -72,10 +71,10 @@ export default function Profile() {
       </div>
 
       <div className="px-5 -mt-14 relative z-20">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-blue-600/5 border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
           {menu.map((m, i) => (
             <Link key={i} href={m.href}>
-              <div className={`flex items-center px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition ${i !== menu.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
+              <div className={`flex items-center px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${i !== menu.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center mr-3 ${colorMap[m.color]}`}>
                   <m.Icon size={18} />
                 </div>
@@ -86,7 +85,6 @@ export default function Profile() {
           ))}
         </div>
 
-        {/* Legal */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mt-4">
           {legal.map((l, i) => (
             <Link key={i} href={l.href}>
@@ -98,7 +96,7 @@ export default function Profile() {
           ))}
         </div>
 
-        <button onClick={handleLogout} className="w-full mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center px-4 py-3.5 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+        <button onClick={handleLogout} className="w-full mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center px-4 py-3.5">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center mr-3 bg-red-100 dark:bg-red-900/30">
             <LogOutIcon size={18} className="text-red-600" />
           </div>

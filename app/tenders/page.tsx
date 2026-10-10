@@ -26,9 +26,9 @@ export default async function Tenders() {
         <div className="space-y-3">
           {list.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
-              <p className="text-gray-500 text-sm">Koi tender nahi hai</p>
+              <p className="text-gray-500 text-sm">No tenders yet hai</p>
               <Link href="/live-tenders">
-                <button className="mt-3 text-blue-600 font-bold text-sm">Live Tenders fetch karo</button>
+                <button className="mt-3 text-blue-600 font-bold text-sm">Fetch Live Tenders</button>
               </Link>
             </div>
           ) : list.map((t: any) => {

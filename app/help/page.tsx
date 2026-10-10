@@ -1,60 +1,122 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
 
-const FAQS = [
-  { q: "BidWell kya hai?", a: "BidWell ek AI-powered Contract Operating System hai jo contractors ko Tender dhundhne se lekar Payment milne tak madad karta hai. Find → Analyze → Bid → Contract → Invoice → Payment — sab ek jagah." },
-  { q: "AI Eligibility Match kaise kaam karta hai?", a: "Aapke Company Profile aur uploaded Documents ko Tender requirements se compare karke AI match score deta hai — kaunsi requirement match ho rahi hai, kaunsi missing hai, sab clear dikhata hai." },
-  { q: "Kitne documents upload kar sakte hain?", a: "Free plan me 10 documents, paid plans me unlimited. GST, PAN, Licenses, Experience Certificates — sab upload karo, AI automatically use karega." },
-  { q: "Kya mera data safe hai?", a: "Haan, 100% safe. Aapka data sirf aapki company ko dikhta hai. Row-level security, encrypted storage, aur private documents ka full protection hai." },
-  { q: "Tender automatically submit hota hai kya?", a: "Nahi. BidWell aapko bid prepare karne me madad karta hai, par final submission aap khud portal par karte hain. AI ko legal decision lene ka adhikar nahi." },
-  { q: "Payment kitne din me milta hai?", a: "BidWell payment nahi deta — ye sirf aapke invoices track karta hai, reminders bhejta hai, aur overdue payments alert karta hai." },
-  { q: "Kaunsa plan best hai?", a: "Chhote contractors ke liye Starter (₹499/month), growing businesses ke liye Professional (₹1,499/month) — ye sabse zyada use kiya jata hai." },
-  { q: "Tender PDF kahan se milte hain?", a: "Government portals (GeM, eProcure), private tender sites, ya company emails se. Aapka har PDF BidWell AI analyze kar sakta hai." },
-];
+export default function HelpPage() {
+  const [open, setOpen] = useState<number | null>(null);
 
-export default function Help() {
-  const [open, setOpen] = useState<number | null>(0);
+  const faqs = [
+    {
+      q: "How does AI Eligibility Match work?",
+      a: "AI compares your Company Profile and uploaded Documents against tender requirements to give a match score — showing what matches and what is missing.",
+    },
+    {
+      q: "How many documents can I upload?",
+      a: "Free plan: 10 documents. Paid plans: unlimited. GST, PAN, Licenses, Experience Certificates — upload all, AI uses them automatically.",
+    },
+    {
+      q: "Does BidWell auto-submit tenders?",
+      a: "No. BidWell helps you prepare your bid, but final submission is done by you on the portal. AI is not authorized to make legal decisions.",
+    },
+    {
+      q: "How accurate is the tender data?",
+      a: "Data is fetched from official government portals (CPPP, GeM, State portals) multiple times daily. Always verify critical details on the original source.",
+    },
+    {
+      q: "Can I use BidWell for multiple companies?",
+      a: "Yes. Business plan supports multiple companies with separate profiles, documents, and team members.",
+    },
+    {
+      q: "Is my data secure?",
+      a: "Yes. We use bank-grade encryption, multi-tenant isolation, and Row Level Security. Your data is never shared with other users.",
+    },
+    {
+      q: "How do I cancel my subscription?",
+      a: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing cycle.",
+    },
+    {
+      q: "What payment methods are accepted?",
+      a: "UPI, Credit/Debit Cards, Net Banking. Powered by Razorpay.",
+    },
+  ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
-      <div className="bg-white dark:bg-gray-800 p-5 border-b border-gray-200 dark:border-gray-700">
-        <Link href="/profile" className="text-blue-600 text-sm">← Profile</Link>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-3">❓ Help & Support</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">FAQs aur contact options</p>
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6">
+        <Link href="/profile" className="text-blue-100/80 text-xs font-bold tracking-wide">← BACK</Link>
+        <h1 className="text-2xl font-bold mt-2">Help & Support</h1>
+        <p className="text-blue-100/70 text-xs mt-1">Answers to common questions</p>
       </div>
 
-      <div className="p-5 space-y-3">
-        {FAQS.map((f, i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-            <button onClick={() => setOpen(open === i ? null : i)} className="w-full p-4 flex items-center justify-between text-left">
-              <p className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-3">{f.q}</p>
-              <span className="text-gray-400 text-lg">{open === i ? "−" : "+"}</span>
-            </button>
-            {open === i && (
-              <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{f.a}</p>
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="px-5 mt-5">
+        <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">Frequently Asked Questions</p>
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl mt-4">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3">📞 Contact Support</h2>
-          <div className="space-y-2">
-            <a href="mailto:support@bidwell.app" className="block text-xs text-blue-600 font-semibold">📧 support@bidwell.app</a>
-            <p className="text-xs text-gray-600 dark:text-gray-400">🕐 Response time: 24 hours</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">🇮🇳 Available in English & Hindi</p>
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-2xl">
-          <p className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1">💡 Tip</p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Pehle Company Profile complete karo — AI zyada accurate results dega.</p>
+        <div className="space-y-2">
+          {faqs.map((faq, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+            >
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full text-left p-4 flex items-start justify-between gap-3"
+              >
+                <span className="font-bold text-sm text-gray-900 dark:text-white flex-1">
+                  {faq.q}
+                </span>
+                <span className="text-blue-600 text-xl leading-none">
+                  {open === i ? "−" : "+"}
+                </span>
+              </button>
+              {open === i && (
+                <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {faq.a}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
-      <BottomNav />
+
+      <div className="px-5 mt-6">
+        <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">Still Need Help?</p>
+
+        <a
+          href="mailto:support@bidwell.in"
+          className="block bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📧</span>
+            <div>
+              <p className="font-bold text-sm text-gray-900 dark:text-white">Email Support</p>
+              <p className="text-xs text-gray-500">support@bidwell.in</p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="https://wa.me/917770873817"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mt-2"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💬</span>
+            <div>
+              <p className="font-bold text-sm text-gray-900 dark:text-white">WhatsApp Support</p>
+              <p className="text-xs text-gray-500">+91 77708 73817</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div className="px-5 mt-6 text-center">
+        <p className="text-[10px] text-gray-400 tracking-wider uppercase">
+          BidWell v1.0 · Made in India 🇮🇳
+        </p>
+      </div>
     </main>
   );
 }

@@ -53,7 +53,7 @@ export default function Documents() {
     });
 
     if (error) {
-      alert("Save nahi hua: " + error.message);
+      alert("Save no hua: " + error.message);
     } else {
       setNewDoc({ doc_type: DOC_TYPES[0], doc_number: "", expiry_date: "" });
       setShowForm(false);
@@ -91,7 +91,7 @@ export default function Documents() {
         {/* Add Form */}
         {showForm && (
           <div className="bg-white p-5 rounded-2xl shadow-sm mb-4 border-2 border-blue-200">
-            <h2 className="font-bold text-gray-900 mb-3 text-sm">📄 Naya Document Add Karo</h2>
+            <h2 className="font-bold text-gray-900 mb-3 text-sm">📄 Add New Document</h2>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-gray-600">Document Type</label>
@@ -146,8 +146,8 @@ export default function Documents() {
           <p className="text-center text-gray-500 text-sm py-8">Loading...</p>
         ) : docs.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl text-center">
-            <p className="text-gray-500 text-sm mb-2">Abhi koi document nahi hai.</p>
-            <p className="text-xs text-gray-400">Company documents add karo — ye hamesha kaam aayenge.</p>
+            <p className="text-gray-500 text-sm mb-2">Abhi koi document no hai.</p>
+            <p className="text-xs text-gray-400">Add company documents — they always come in handy.</p>
           </div>
         ) : (
           <div className="space-y-2">

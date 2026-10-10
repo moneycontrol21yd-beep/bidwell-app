@@ -26,7 +26,7 @@ export default function ContractDetail() {
   }, [id]);
 
   if (loading) return <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6"><p className="text-center text-gray-500 text-sm py-10">Loading...</p></main>;
-  if (!contract) return <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6"><p className="text-center text-red-500 text-sm py-10">Contract nahi mila</p></main>;
+  if (!contract) return <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6"><p className="text-center text-red-500 text-sm py-10">Contract no mila</p></main>;
 
   const totalInvoiced = invoices.reduce((s, i) => s + (i.amount || 0), 0);
   const totalPaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + (i.amount || 0), 0);
@@ -112,7 +112,7 @@ export default function ContractDetail() {
 
         <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-4 rounded-2xl">
           <p className="text-xs text-blue-900 dark:text-blue-300 font-bold mb-1">💡 Tip</p>
-          <p className="text-[11px] text-gray-700 dark:text-gray-300">Upar diye gaye 4 buttons se Workforce, Tasks, Invoices aur Documents manage karo.</p>
+          <p className="text-[11px] text-gray-700 dark:text-gray-300">Manage Workforce, Tasks, Invoices and Documents from the 4 tabs above.</p>
         </div>
       </div>
       <BottomNav />

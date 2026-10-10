@@ -17,7 +17,7 @@ export default function Signup() {
 
     const { error } = await signUp(form.email, form.password, form.name);
     if (error) { setError(error.message); setLoading(false); }
-    else { alert("Account ban gaya! Ab login karo."); router.push("/login"); }
+    else { alert("Account created! Please login."); router.push("/login"); }
   };
 
   return (
