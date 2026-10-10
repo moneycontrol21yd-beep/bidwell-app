@@ -1,0 +1,33 @@
+name: Daily Tender Automation
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Roz raat ko 12 baje automatic run hoga
+  workflow_dispatch: # Aap manually bhi button daba kar chala sakte hain
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Scraper
+        run: python auto_scraper.py
+
+      - name: Commit and push latest tenders
+        run: |
+          git config --global user.name "BidWell Bot"
+          git config --global user.email "bot@bidwell.app"
+          git add latest_tenders.json
+          git commit -m "Auto-update: Latest daily tenders sync [skip ci]" || exit 0
+          git push
