@@ -29,3 +29,4 @@ jobs:
         run: |
           python scripts/historical_ingest.py
           python scripts/hf_sync.py
+          python scripts/intel_ingest.py
