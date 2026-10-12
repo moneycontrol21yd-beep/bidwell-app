@@ -7,8 +7,7 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
 def push_supabase(rows):
-    if not rows:
-        return 0
+    if not rows: return 0
     url = f"{SUPABASE_URL}/rest/v1/tenders"
     headers = {
         "apikey": SUPABASE_KEY,
@@ -20,13 +19,11 @@ def push_supabase(rows):
     for i in range(0, len(rows), 100):
         batch = rows[i:i+100]
         try:
-            r = requests.post(url, headers=headers, json=batch, timeout=60)
+            r = requests.post(url, headers=headers, json=batch, timeout=30)
             if r.status_code in (200, 201, 204):
                 inserted += len(batch)
-            else:
-                print(f"Push error {r.status_code}: {r.text[:200]}", flush=True)
-        except Exception as e:
-            print(f"Batch error: {e}", flush=True)
+        except:
+            pass
     return inserted
 
 def get_page(session, page_num):
@@ -34,10 +31,10 @@ def get_page(session, page_num):
     enc = base64.b64encode(inner.encode()).decode()
     url = f"https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url={enc}"
     try:
-        r = session.get(url, headers=HEADERS, timeout=60)
+        r = session.get(url, headers=HEADERS, timeout=15)
         if r.status_code == 200:
             return r.text
-    except Exception:
+    except:
         pass
     return None
 
@@ -47,8 +44,7 @@ def parse(html):
     for table in soup.find_all("table"):
         for row in table.find_all("tr"):
             cells = row.find_all("td")
-            if len(cells) < 5:
-                continue
+            if len(cells) < 5: continue
             texts = [c.get_text(" ", strip=True) for c in cells]
             texts = [t for t in texts if t]
             title, link = "", ""
@@ -61,8 +57,7 @@ def parse(html):
                         if a and a.get("href"):
                             link = a["href"]
                         break
-            if len(title) < 30:
-                continue
+            if len(title) < 30: continue
             tl = title.lower()
             if any(j in tl for j in ["as per order", "guide line", "circular", "notice", "corrigendum", "screen reader", "click here"]):
                 continue
@@ -75,8 +70,7 @@ def parse(html):
                     break
             if not link.startswith("http"):
                 link = "https://eprocure.gov.in" + link if link.startswith("/") else ""
-            if not link:
-                continue
+            if not link: continue
             tenders.append({
                 "title": title[:350],
                 "department": org,
@@ -92,23 +86,41 @@ def main():
     s.headers.update(HEADERS)
     all_tenders = []
     print(f"[START] {datetime.now()}", flush=True)
-    for page in range(1, 501):
+
+    consecutive_empty = 0
+    for page in range(1, 301):  # Reduced from 500 to 300
         html = get_page(s, page)
         if not html:
-            print(f"[STOP] Page {page} empty", flush=True)
-            break
+            consecutive_empty += 1
+            if consecutive_empty >= 5:
+                print(f"[STOP] 5 empty pages, breaking at page {page}", flush=True)
+                break
+            continue
+        consecutive_empty = 0
         batch = parse(html)
+        if not batch:
+            consecutive_empty += 1
+            if consecutive_empty >= 5:
+                print(f"[STOP] 5 empty parses, breaking at page {page}", flush=True)
+                break
+            continue
         all_tenders.extend(batch)
+
+        # Push every 50 pages to save progress
         if page % 50 == 0:
-            print(f"[PROGRESS] Page {page}, total {len(all_tenders)}", flush=True)
-        time.sleep(2)
-    print(f"[SCRAPED] {len(all_tenders)} tenders", flush=True)
-    unique = {}
-    for t in all_tenders:
-        unique[t["source_url"]] = t
-    rows = list(unique.values())
-    ins = push_supabase(rows)
-    print(f"[DONE] Inserted {ins} to Supabase", flush=True)
+            unique = {t["source_url"]: t for t in all_tenders}
+            ins = push_supabase(list(unique.values()))
+            print(f"[PAGE {page}] Pushed {ins}, total scraped {len(all_tenders)}", flush=True)
+            all_tenders = []  # reset to avoid double push
+
+        time.sleep(1)  # 1 sec delay instead of 2
+
+    # Final push
+    if all_tenders:
+        unique = {t["source_url"]: t for t in all_tenders}
+        push_supabase(list(unique.values()))
+
+    print(f"[DONE] {datetime.now()}", flush=True)
 
 if __name__ == "__main__":
     main()
