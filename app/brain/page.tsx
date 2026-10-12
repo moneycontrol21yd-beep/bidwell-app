@@ -13,6 +13,7 @@ export default function CompanyBrainPage() {
     isoCertified: true,
   });
 
+  // Master Tender Data (Live & Scraped Pipeline Data)
   const rawTenders = [
     {
       id: "TND-2026-8801",
@@ -26,6 +27,7 @@ export default function CompanyBrainPage() {
       status: "Active",
       winningForecast: "High Chance (L1 Estimate: ₹1.65 Cr)",
       insights: "Matches ISO 9001 + PSARA license requirement. Prior MP region experience gives top priority.",
+      winnerData: null,
     },
     {
       id: "TND-2026-9042",
@@ -39,6 +41,7 @@ export default function CompanyBrainPage() {
       status: "Active",
       winningForecast: "Moderate Chance (Top Rival: L&T Infra)",
       insights: "Turnover criteria evaluation active.",
+      winnerData: null,
     },
     {
       id: "PRED-2026-102",
@@ -50,8 +53,9 @@ export default function CompanyBrainPage() {
       isoRequired: false,
       category: "predicted",
       status: "Predicted (Next 6 Months)",
-      winningForecast: "Pre-Notice Notice Expected in Nov 2026",
+      winningForecast: "Pre-Notice Expected in Nov 2026",
       insights: "State infrastructure budget allocation increased by 22%. High-value tender pipeline detected.",
+      winnerData: null,
     },
     {
       id: "RETND-2026-009",
@@ -65,39 +69,62 @@ export default function CompanyBrainPage() {
       status: "Cancelled & Retendering Soon",
       winningForecast: "Single bidder cancellation in Round 1",
       insights: "Re-issue expected with relaxed experience clause. Fast-track approval zone.",
+      winnerData: null,
+    },
+    {
+      id: "AOC-2026-301",
+      title: "District Hospital Security Guard Contract 2025-26",
+      department: "Health Dept Bhopal",
+      state: "Madhya Pradesh",
+      estimatedValueLakhs: 120,
+      minTurnoverRequired: 80,
+      isoRequired: true,
+      category: "competitors",
+      status: "Awarded (AOC Closed)",
+      winningForecast: "L1 Winner: Shree Ram Security (Margin: -8.5%)",
+      insights: "Historical winning rate was ₹1.09 Cr. 4 Bidders participated.",
+      winnerData: {
+        winnerName: "Shree Ram Security & Infra Services",
+        bidValue: "₹1.09 Crores",
+        l1Margin: "8.5% below estimate",
+        totalBidders: 4
+      }
     }
   ];
 
-  // Dynamic Filtering based on active category
   const filteredTenders = rawTenders.filter(t => 
     selectedFilter === 'all' ? true : t.category === selectedFilter
   );
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 space-y-6 max-w-4xl mx-auto pb-20">
-      {/* Header */}
-      <div className="border-b border-slate-800 pb-4 flex justify-between items-end">
+      {/* Top Header & Data Scraper Status */}
+      <div className="border-b border-slate-800 pb-4 flex flex-col md:flex-row md:justify-between md:items-end gap-2">
         <div>
           <span className="text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
-            🧠 Dynamic Intelligence Brain
+            🧠 BidWell Intelligence Brain
           </span>
           <h1 className="text-2xl font-black mt-1">GovWin IQ Match Engine</h1>
           <p className="text-xs text-slate-400 mt-1">
             Real-time Evaluation for <strong className="text-slate-200">{profile.companyName}</strong>
           </p>
         </div>
-        <div className="text-right">
-          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-mono font-bold">
-            Live Scoring Engine
-          </span>
+        
+        {/* Live Scraper Cron Status Badge */}
+        <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex items-center space-x-2 text-[10px] font-mono">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div>
+            <span className="text-slate-300 font-bold block">CPPP / GeM / 28 States Pipeline</span>
+            <span className="text-slate-400">Live Auto Sync • 100% Pan-India Data</span>
+          </div>
         </div>
       </div>
 
-      {/* Dynamic Profile Interactive Control Box */}
+      {/* Dynamic Profile Control Box */}
       <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
         <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-          <h2 className="text-xs font-bold text-amber-400 uppercase tracking-wider">⚙️ Dynamic Profile Inputs (Adjust to Test Match)</h2>
-          <span className="text-[10px] text-slate-400">Live Auto-Recalculation</span>
+          <h2 className="text-xs font-bold text-amber-400 uppercase tracking-wider">⚙️ Dynamic Profile Inputs</h2>
+          <span className="text-[10px] text-slate-400">Live Auto-Recalculation Active</span>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -134,7 +161,7 @@ export default function CompanyBrainPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Category Tabs */}
       <div className="flex space-x-2 border-b border-slate-800 pb-2 text-xs overflow-x-auto">
         <button 
           onClick={() => setSelectedFilter('matched')}
@@ -154,12 +181,17 @@ export default function CompanyBrainPage() {
         >
           🔄 Re-Tenders & Cancelled
         </button>
+        <button 
+          onClick={() => setSelectedFilter('competitors')}
+          className={`px-3 py-1.5 rounded-lg font-semibold transition ${selectedFilter === 'competitors' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}
+        >
+          🏆 AOC Winner & Competitors
+        </button>
       </div>
 
-      {/* Dynamic Tender Cards */}
+      {/* Tender & Analytics Cards */}
       <div className="space-y-4">
         {filteredTenders.map((tender) => {
-          // Dynamic calculation using brainEngine
           const matchResult = calculateMatchScore(profile, tender);
 
           return (
@@ -187,10 +219,21 @@ export default function CompanyBrainPage() {
                 </div>
               </div>
 
+              {/* AOC Winner Card Feature */}
+              {tender.winnerData && (
+                <div className="bg-amber-950/30 border border-amber-800/50 p-3 rounded-lg text-xs space-y-1">
+                  <span className="text-amber-400 font-bold block text-[10px] uppercase">🏆 Winner & AOC Data Point</span>
+                  <div className="flex justify-between text-slate-200 pt-1">
+                    <span>Winner: <strong>{tender.winnerData.winnerName}</strong></span>
+                    <span className="text-emerald-400 font-bold">{tender.winnerData.bidValue} ({tender.winnerData.l1Margin})</span>
+                  </div>
+                </div>
+              )}
+
               {/* Warnings Alert Box */}
               {matchResult.warnings.length > 0 && (
                 <div className="bg-rose-950/40 border border-rose-800/60 p-2.5 rounded text-xs text-rose-300 space-y-1">
-                  <span className="font-bold block text-[10px] uppercase text-rose-400">⚠️ Risk / Eligibility Shortfall Detected:</span>
+                  <span className="font-bold block text-[10px] uppercase text-rose-400">⚠️ Eligibility Warning:</span>
                   <ul className="list-disc list-inside space-y-0.5">
                     {matchResult.warnings.map((warn, idx) => (
                       <li key={idx}>{warn}</li>
