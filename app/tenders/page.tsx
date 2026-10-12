@@ -1,5 +1,6 @@
 import React from 'react';
 import TenderIntel from '../components/TenderIntel';
+import DocumentScanner from '../components/DocumentScanner';
 
 export default function TenderDetailsPage() {
   const intelData = {
@@ -27,6 +28,10 @@ export default function TenderDetailsPage() {
         <p className="text-sm text-slate-400 mt-1">Tender ID: {intelData.tenderId} | Value Range: Micro to Mega</p>
       </div>
 
+      {/* Smart Camera & PDF Scanner */}
+      <DocumentScanner />
+
+      {/* Intelligence Dashboard */}
       <TenderIntel 
         tenderId={intelData.tenderId}
         winProbability={intelData.winProbability}
