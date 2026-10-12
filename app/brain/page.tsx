@@ -5,7 +5,6 @@ import { calculateMatchScore } from '../lib/brainEngine';
 export default function CompanyBrainPage() {
   const [selectedFilter, setSelectedFilter] = useState('matched');
 
-  // Dynamic User Profile State
   const [profile, setProfile] = useState({
     companyName: "Shivam Security Services Pvt. Ltd.",
     state: "Madhya Pradesh",
@@ -13,7 +12,6 @@ export default function CompanyBrainPage() {
     isoCertified: true,
   });
 
-  // Master Tender Data (Live & Scraped Pipeline Data)
   const rawTenders = [
     {
       id: "TND-2026-8801",
@@ -98,19 +96,21 @@ export default function CompanyBrainPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 space-y-6 max-w-4xl mx-auto pb-20">
-      {/* Top Header & Data Scraper Status */}
+      {/* Top Header */}
       <div className="border-b border-slate-800 pb-4 flex flex-col md:flex-row md:justify-between md:items-end gap-2">
         <div>
-          <span className="text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
-            🧠 BidWell Intelligence Brain
+          <span className="text-sm md:text-base text-emerald-400 font-mono font-black uppercase tracking-wider block">
+            🧠 BIDWELL INTELLIGENCE BRAIN
           </span>
-          <h1 className="text-2xl font-black mt-1">GovWin IQ Match Engine</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-200 mt-0.5">
+            BidWell Predictive Match Engine
+          </h1>
           <p className="text-xs text-slate-400 mt-1">
             Real-time Evaluation for <strong className="text-slate-200">{profile.companyName}</strong>
           </p>
         </div>
         
-        {/* Live Scraper Cron Status Badge */}
+        {/* Scraper Status Badge */}
         <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex items-center space-x-2 text-[10px] font-mono">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <div>
@@ -189,7 +189,7 @@ export default function CompanyBrainPage() {
         </button>
       </div>
 
-      {/* Tender & Analytics Cards */}
+      {/* Cards */}
       <div className="space-y-4">
         {filteredTenders.map((tender) => {
           const matchResult = calculateMatchScore(profile, tender);
@@ -219,7 +219,6 @@ export default function CompanyBrainPage() {
                 </div>
               </div>
 
-              {/* AOC Winner Card Feature */}
               {tender.winnerData && (
                 <div className="bg-amber-950/30 border border-amber-800/50 p-3 rounded-lg text-xs space-y-1">
                   <span className="text-amber-400 font-bold block text-[10px] uppercase">🏆 Winner & AOC Data Point</span>
@@ -230,7 +229,6 @@ export default function CompanyBrainPage() {
                 </div>
               )}
 
-              {/* Warnings Alert Box */}
               {matchResult.warnings.length > 0 && (
                 <div className="bg-rose-950/40 border border-rose-800/60 p-2.5 rounded text-xs text-rose-300 space-y-1">
                   <span className="font-bold block text-[10px] uppercase text-rose-400">⚠️ Eligibility Warning:</span>
