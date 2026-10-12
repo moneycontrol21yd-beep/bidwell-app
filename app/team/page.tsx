@@ -44,6 +44,8 @@ export default function Team() {
       <div className="bg-white dark:bg-gray-800 p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <div>
           <Link href="/profile" className="text-blue-600 text-sm">← Profile</Link>
+          <Link href="/profile" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
           <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-3">👥 Team Members</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{members.length} members</p>
         </div>

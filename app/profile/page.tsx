@@ -24,6 +24,7 @@ export default function Profile() {
 
   const menu = [
     { Icon: BuildingIcon, label: "Company Profile", href: "/company", color: "blue" },
+      { Icon: EyeIcon, label: "Company Brain", href: "/brain", color: "pink" },
     { Icon: FileTextIcon, label: "Document Vault", href: "/documents", color: "indigo" },
     { Icon: SettingsIcon, label: t("settings"), href: "/settings", color: "gray" },
     { Icon: CreditCardIcon, label: "Subscription", href: "/subscription", color: "purple" },
@@ -63,6 +64,8 @@ export default function Profile() {
             <span className="text-3xl font-bold text-white">{user?.user_metadata?.full_name?.[0]?.toUpperCase() || "U"}</span>
           </div>
           <div className="flex-1 min-w-0">
+            <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
             <h1 className="text-xl font-bold tracking-tight truncate">{user?.user_metadata?.full_name || "User"}</h1>
             <p className="text-blue-100/80 text-xs truncate mt-0.5">{user?.email || ""}</p>
             <span className="inline-flex items-center text-[10px] bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 px-2.5 py-1 rounded-full font-bold mt-2 tracking-wide uppercase">★ Free Plan</span>

@@ -41,6 +41,8 @@ export default function Payments() {
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
         <div className="relative z-10">
           <p className="text-blue-100/80 text-xs font-medium tracking-wide uppercase">Total Receivable</p>
+          <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
           <h1 className="text-4xl font-bold mt-2 tracking-tight">{fmt(totalReceivable)}</h1>
           <p className="text-blue-100/70 text-xs mt-2 font-medium">{contracts.length} active contracts · {invoices.length} invoices</p>
         </div>

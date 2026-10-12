@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
@@ -71,6 +72,8 @@ export default function Documents() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <div className="bg-white p-5 border-b border-gray-200">
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
         <h1 className="text-xl font-bold text-gray-900">Document Vault</h1>
         <p className="text-xs text-gray-500 mt-1">{docs.length} documents saved</p>
       </div>

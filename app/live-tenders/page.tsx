@@ -41,7 +41,7 @@ export default function LiveTenders() {
   const [deadlineFilter, setDeadlineFilter] = useState("All");
 
   const load = async () => {
-    const { data: t } = await supabase.from("tenders").select("*").order("created_at", { ascending: false });
+    const { data: t } = await supabase.from("tenders").select("*").order("created_at", { ascending: false }).limit(10000);
     const { data: c } = await supabase.from("companies").select("*").limit(1).maybeSingle();
     setTenders(t || []);
     setCompany(c);
@@ -125,7 +125,7 @@ export default function LiveTenders() {
 
   const Card = ({ t }: { t: any }) => {
     const dl = getDaysLeft(t.deadline);
-    const match = t.match_score || 85;
+    const match = t.match_score || 50;
     return (
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-3">
         <Link href={`/tenders/${t.id}`}>

@@ -45,6 +45,8 @@ export default function Settings() {
   return (
     <main className="min-h-screen bg-white dark:bg-gray-950 p-6 pb-24">
       <Link href="/profile" className="text-blue-600 text-xs font-bold tracking-wide">← {t("profile")}</Link>
+      <Link href="/profile" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-4 mb-6 tracking-tight">{t("settings")}</h1>
 
       <div className="space-y-4">

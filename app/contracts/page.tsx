@@ -20,6 +20,8 @@ export default async function Contracts() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
       <div className="bg-white dark:bg-gray-900 px-5 py-5 border-b border-gray-200 dark:border-gray-800">
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
         <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Contracts</h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{list.length} active contracts</p>
       </div>

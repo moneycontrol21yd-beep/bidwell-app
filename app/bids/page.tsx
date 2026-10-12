@@ -77,7 +77,7 @@ export default function Bids() {
                   <div className="p-4 border-b border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <p className="font-bold text-gray-900 dark:text-white text-sm flex-1 tracking-tight leading-tight">{t.title}</p>
-                      <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold tracking-wide ${(t.match_score || 85) >= 75 ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"}`}>{t.match_score || 85}%</span>
+                      <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold tracking-wide ${(t.match_score || 50) >= 75 ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"}`}>{t.match_score || 50}%</span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{t.department}</p>
                     <p className="text-xs font-bold text-blue-600 mt-1">₹{t.value_in_cr} Cr</p>

@@ -30,6 +30,8 @@ export default function Notifications() {
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
       <div className="bg-white dark:bg-gray-800 p-5 border-b border-gray-200 dark:border-gray-700">
         <Link href="/dashboard" className="text-blue-600 text-sm">← Dashboard</Link>
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-3">🔔 Notifications</h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notifs.filter(n => !n.is_read).length} unread</p>
       </div>
