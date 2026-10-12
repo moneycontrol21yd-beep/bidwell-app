@@ -1,334 +1,142 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
-function getDaysLeft(deadline: string | null) {
-  if (!deadline) return null;
-  const d = new Date(deadline);
-  if (isNaN(d.getTime())) return null;
-  return Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-}
+export default function TenderDetailPage({ params }: { params: { id: string } }) {
+  const [activeTab, setActiveTab] = useState<"overview" | "analysis" | "eligibility" | "source">("overview");
 
-export default function TenderDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string;
-
-  const [tender, setTender] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("overview");
-
-  // AI state
-  const [aiResult, setAiResult] = useState<any>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-
-  useEffect(() => {
-    if (!id) return;
-    const load = async () => {
-      const { data } = await supabase.from("tenders").select("*").eq("id", id).single();
-      setTender(data);
-      // Load existing AI result if saved
-      if (data?.ai_summary) {
-        setAiResult({
-          summary: data.ai_summary,
-          key_points: data.ai_key_points || [],
-          eligibility: data.match_score ? `${data.match_score}%` : "85%",
-          payment_risk: data.risk_level || "Medium",
-          decision: "GO",
-          emd: "See docs",
-        });
-      }
-      setLoading(false);
-    };
-    load();
-  }, [id]);
-
-  const runAI = async () => {
-    if (!tender || aiLoading) return;
-    setAiLoading(true);
-    setAiError("");
-    setAiResult(null);
-
-    try {
-      const res = await fetch("/api/analyze-tender", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tenderId: tender.id,
-          title: tender.title,
-          department: tender.department,
-          value: tender.value_in_cr,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setAiError(data.error || "AI analysis failed");
-        setAiLoading(false);
-        return;
-      }
-
-      setAiResult({
-        eligibility: data.eligibility || "85%",
-        emd: data.emd || "See docs",
-        payment_risk: data.payment_risk || "Medium",
-        decision: data.decision || "GO",
-        summary: data.summary || "",
-        key_points: data.key_points || [],
-      });
-    } catch (e: any) {
-      setAiError(e.message || "Network error");
-    }
-    setAiLoading(false);
+  const tender = {
+    id: params.id,
+    title: "Supply, Installation and Maintenance of Security Systems & Manpower Services",
+    department: "Public Works Department (PWD)",
+    organisation: "Executive Engineer PWD Division Indore",
+    tender_no: "PWD/IND/2026/8942",
+    value_in_cr: "2.5",
+    emd_amount: "₹50,000",
+    deadline: "2026-10-25",
+    published_date: "2026-10-10",
+    source: "CPPP (eprocure.gov.in)",
+    source_url: "https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata",
+    full_description: "Comprehensive tender for providing trained security personnel, CCTV surveillance setup, and 24/7 facility management services across government establishments in MP.",
+    eligibility_criteria: "Minimum 3 years experience in similar works. Valid ISO 9001 and PSARA license mandatory. Minimum turnover of ₹1 Cr in last 3 financial years.",
+    documents_required: "GST Registration, PAN Card, PSARA License, ISO Certificate, TurnOver Certificate from CA, Past Performance Certificates.",
+    payment_terms: "Monthly progressive billing based on milestone verification.",
+    state: "Madhya Pradesh",
+    city: "Indore",
+    risk_level: "Low",
+    ai_summary: "High capability match based on Shivam Security Services profile. Strong track record in security operations aligns well with technical eligibility requirements."
   };
-
-  const startBid = async () => {
-    if (!tender) return;
-    try {
-      await supabase.from("tenders").update({ bid_stage: "draft" }).eq("id", tender.id);
-      router.push("/bids");
-    } catch {
-      alert("Could not start bid. Try again.");
-    }
-  };
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-        <p className="text-center text-gray-500 text-sm pt-10">Loading tender...</p>
-      </main>
-    );
-  }
-
-  if (!tender) {
-    return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-        <Link href="/tenders" className="text-blue-600 text-xs font-bold">← BACK</Link>
-        <p className="text-center text-red-500 text-sm pt-10">Tender not found</p>
-      </main>
-    );
-  }
-
-  const daysLeft = getDaysLeft(tender.deadline);
-  const eligibility = aiResult?.eligibility || "—";
-  const emd = aiResult?.emd || "See docs";
-  const risk = aiResult?.payment_risk || "—";
-  const decision = aiResult?.decision || "—";
-  const summary = aiResult?.summary || "";
-  const keyPoints = aiResult?.key_points || [];
-
-  const tabs = [
-    { key: "overview", label: "Overview" },
-    { key: "eligibility", label: "Eligibility" },
-    { key: "documents", label: "Documents" },
-    { key: "source", label: "Source" },
-  ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-5 pt-5 pb-6 rounded-b-[2rem]">
-        <Link href="/live-tenders" className="text-blue-100/80 text-xs font-bold tracking-wide">
-          ← BACK
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24">
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6 rounded-b-[2rem] shadow-md">
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-200 hover:text-white mb-3">
+          ← Back to Dashboard
         </Link>
-        <h1 className="text-lg font-bold mt-3 leading-tight">{tender.title}</h1>
-        <p className="text-blue-100/70 text-xs mt-2">{tender.department || "N/A"}</p>
-
-        <div className="grid grid-cols-4 gap-2 mt-4">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2 text-center">
-            <p className="text-[9px] text-blue-100/70 font-bold tracking-wider uppercase">Value</p>
-            <p className="font-bold text-xs mt-1">₹{tender.value_in_cr || 0} Cr</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2 text-center">
-            <p className="text-[9px] text-blue-100/70 font-bold tracking-wider uppercase">EMD</p>
-            <p className="font-bold text-[10px] mt-1 truncate">{emd}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2 text-center">
-            <p className="text-[9px] text-blue-100/70 font-bold tracking-wider uppercase">Deadline</p>
-            <p className="font-bold text-xs mt-1">{daysLeft && daysLeft > 0 ? `${daysLeft}d` : "Exp"}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2 text-center">
-            <p className="text-[9px] text-blue-100/70 font-bold tracking-wider uppercase">State</p>
-            <p className="font-bold text-xs mt-1">{tender.state || "India"}</p>
-          </div>
+        <div className="text-[10px] font-bold tracking-wider uppercase text-blue-200 mb-1">{tender.department}</div>
+        <h1 className="text-xl font-bold leading-tight mb-2">{tender.title}</h1>
+        <div className="flex flex-wrap gap-2 text-xs text-blue-100">
+          <span className="bg-white/20 px-2.5 py-1 rounded-full font-medium">Ref: {tender.tender_no}</span>
+          <span className="bg-white/20 px-2.5 py-1 rounded-full font-medium">Value: ₹{tender.value_in_cr} Cr</span>
         </div>
       </div>
 
-      {/* AI Analysis Card */}
-      <div className="px-5 -mt-3">
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-white font-bold text-sm">🤖 BidWell AI Analysis</p>
+      <div className="p-4 space-y-4">
+        <div className="flex bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800 text-xs font-bold">
+          {(["overview", "analysis", "eligibility", "source"] as const).map((tab) => (
             <button
-              onClick={runAI}
-              disabled={aiLoading}
-              className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full disabled:opacity-60"
-            >
-              {aiLoading ? "Analyzing..." : aiResult ? "Re-run AI" : "Run AI"}
-            </button>
-          </div>
-
-          {aiError && (
-            <div className="bg-red-500/20 backdrop-blur-sm rounded-lg p-2 mb-2">
-              <p className="text-white text-[11px]">⚠️ {aiError}</p>
-            </div>
-          )}
-
-          {aiLoading && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-              <p className="text-white text-xs animate-pulse">BidWell analyzing this tender...</p>
-            </div>
-          )}
-
-          {!aiLoading && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
-                <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider">Eligibility</p>
-                <p className="text-white font-bold text-sm mt-0.5">
-                  {eligibility === "—" ? "—" : `✅ ${eligibility}`}
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
-                <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider">Payment Risk</p>
-                <p className="text-white font-bold text-sm mt-0.5">
-                  {risk === "—" ? "—" : `⚠️ ${risk}`}
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
-                <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider">EMD</p>
-                <p className="text-white font-bold text-[11px] mt-0.5 truncate">💰 {emd}</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
-                <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider">Decision</p>
-                <p className="text-white font-bold text-sm mt-0.5">
-                  {decision === "—" ? "—" : `🎯 ${decision}`}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {summary && !aiLoading && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mt-3">
-              <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider mb-1">Summary</p>
-              <p className="text-white text-xs leading-relaxed">{summary}</p>
-            </div>
-          )}
-
-          {keyPoints.length > 0 && !aiLoading && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mt-2">
-              <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider mb-2">Key Points</p>
-              <ul className="space-y-1">
-                {keyPoints.map((p: string, i: number) => (
-                  <li key={i} className="text-white text-[11px] leading-relaxed flex gap-2">
-                    <span>•</span>
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {!aiResult && !aiLoading && !aiError && (
-            <p className="text-white/70 text-[11px] text-center py-2">
-              Tap "Run AI" to analyze this tender
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="px-5 mt-5">
-        <div className="flex gap-1 bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition ${
-                tab === t.key
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                  : "text-gray-600 dark:text-gray-400"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2.5 text-center rounded-xl capitalize transition ${
+                activeTab === tab ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
             >
-              {t.label}
+              {tab}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div className="px-5 mt-4">
-        {tab === "overview" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">📄 Full Tender Description</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-              {tender.full_description || tender.title}
-            </p>
+        {activeTab === "overview" && (
+          <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Key Details</div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div><span className="text-gray-400 block text-[10px] uppercase">EMD Amount</span><span className="font-semibold">{tender.emd_amount}</span></div>
+                <div><span className="text-gray-400 block text-[10px] uppercase">Deadline</span><span className="font-semibold text-red-600 dark:text-red-400">{tender.deadline}</span></div>
+                <div><span className="text-gray-400 block text-[10px] uppercase">Location</span><span className="font-semibold">{tender.city}, {tender.state}</span></div>
+                <div><span className="text-gray-400 block text-[10px] uppercase">Risk Level</span><span className="font-semibold text-green-600 dark:text-green-400">{tender.risk_level}</span></div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Description</div>
+              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.full_description}</p>
+            </div>
           </div>
         )}
 
-        {tab === "eligibility" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">✅ Eligibility Criteria</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-              {tender.eligibility_criteria || "Run AI analysis to check your eligibility for this tender."}
-            </p>
-            <button
-              onClick={runAI}
-              disabled={aiLoading}
-              className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-60"
-            >
-              {aiLoading ? "Analyzing..." : "🤖 Run AI Eligibility Check"}
+        {activeTab === "analysis" && (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+            <div className="text-[10px] font-bold tracking-wider uppercase text-indigo-500 flex items-center gap-1">
+              <span>✨ AI Intelligence Summary</span>
+            </div>
+            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.ai_summary}</p>
+          </div>
+        )}
+
+        {activeTab === "eligibility" && (
+          <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Eligibility Criteria</div>
+              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.eligibility_criteria}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Documents Required</div>
+              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.documents_required}</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "source" && (
+          <div className="space-y-4">
+            <a href="https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata" target="_blank" rel="noopener noreferrer" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 active:scale-95 transition">
+              <span>Open CPPP Portal</span><span>→</span>
+            </a>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Source Information</div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div><span className="text-gray-400 block text-[10px] uppercase">Portal Source</span><span className="font-semibold text-gray-800 dark:text-gray-200">{tender.source}</span></div>
+                <div><span className="text-gray-400 block text-[10px] uppercase">Tender Ref No.</span><span className="font-semibold text-gray-800 dark:text-gray-200">{tender.tender_no}</span></div>
+              </div>
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 block text-[10px] uppercase">Department / Organisation</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{tender.department}</span>
+              </div>
+            </div>
+            <button onClick={() => { if (tender.title) { navigator.clipboard.writeText(tender.title); alert("Tender title copied to clipboard!"); } }} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 active:scale-95 transition">
+              📋 Copy Tender Title (For easy search on portal)
             </button>
-          </div>
-        )}
-
-        {tab === "documents" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">📎 Documents Required</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-              {tender.documents_required || "Document list is available in the tender document."}
-            </p>
-          </div>
-        )}
-
-        {tab === "source" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">🔗 Original Tender Source</p>
-            {tender.source_url ? (
-              <a
-                href={tender.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold text-sm p-3 rounded-xl text-center"
-              >
-                Open Original Tender →
-              </a>
-            ) : (
-              <p className="text-sm text-gray-500">Source URL not available.</p>
-            )}
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Source</span>
-                <span className="font-bold">{tender.source || "N/A"}</span>
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3.5 flex items-start gap-3">
+              <span className="text-amber-500 text-lg flex-shrink-0">⚠️</span>
+              <div className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                <strong className="font-semibold block mb-0.5">Important Note:</strong>
+                Downloading official BOQ/tender documents or submitting bids requires direct login on the CPPP portal (`eprocure.gov.in`).
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Start Bid Button */}
-      <div className="px-5 mt-4">
-        <button
-          onClick={startBid}
-          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 rounded-2xl text-sm shadow-lg active:scale-95 transition"
-        >
-          🎯 Start Bid Preparation
-        </button>
+        <div className="pt-2">
+          <Link href={`/match?tenderId=${tender.id}`}>
+            <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-2xl text-sm shadow-lg mb-3 active:scale-95 transition">
+              🎯 View Match Analysis
+            </button>
+          </Link>
+          <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition">
+            Start Bid Preparation
+          </button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

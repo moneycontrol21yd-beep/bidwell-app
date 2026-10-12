@@ -1,81 +1,124 @@
-import BottomNav from "@/components/BottomNav";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import { BuildingIcon, ChevronRightIcon } from "@/components/icons";
 
-function getHealth(c: any) {
-  const now = new Date();
-  const endDate = c.end_date ? new Date(c.end_date) : null;
-  const daysLeft = endDate ? Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
-  if (daysLeft !== null && daysLeft < 0) return { label: "At Risk", bg: "bg-red-50 dark:bg-red-950/30", border: "border-red-500", text: "text-red-700 dark:text-red-400", reason: "Contract expired" };
-  if (daysLeft !== null && daysLeft <= 30) return { label: "Attention", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-500", text: "text-orange-700 dark:text-orange-400", reason: `Contract ${daysLeft} din me khatam` };
-  if ((c.receivable_in_lakh || 0) > 500) return { label: "Attention", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-500", text: "text-orange-700 dark:text-orange-400", reason: "₹5Cr+ payment pending" };
-  return { label: "Healthy", bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-500", text: "text-green-700 dark:text-green-400", reason: "All on track" };
-}
+export default function ContractsPage() {
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "pending">("active");
 
-export default async function Contracts() {
-  const { data: contracts } = await supabase.from("contracts").select("*").order("created_at", { ascending: false });
-  const list = contracts || [];
+  const contracts = [
+    {
+      id: "CNT-2026-881",
+      title: "Security & Facility Management Services",
+      organisation: "Executive Engineer PWD Division Indore",
+      value: "₹2.5 Cr",
+      startDate: "2026-04-01",
+      endDate: "2027-03-31",
+      workforceCount: 45,
+      status: "Active Execution",
+      statusColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+    },
+    {
+      id: "CNT-2025-412",
+      title: "Smart City Surveillance Setup & Maintenance",
+      organisation: "Smart City Development Ltd",
+      value: "₹1.2 Cr",
+      startDate: "2025-01-15",
+      endDate: "2026-01-14",
+      workforceCount: 18,
+      status: "Completed",
+      statusColor: "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+    },
+  ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-white dark:bg-gray-900 px-5 py-5 border-b border-gray-200 dark:border-gray-800">
-        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
-
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Contracts</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{list.length} active contracts</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6 rounded-b-[2rem] shadow-md">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-200 hover:text-white mb-3"
+        >
+          ← Back to Dashboard
+        </Link>
+        <h1 className="text-2xl font-bold">Active Contracts</h1>
+        <p className="text-xs text-blue-100 mt-1">
+          Manage ongoing projects, site deployment, and billing status
+        </p>
       </div>
 
-      <div className="p-5 space-y-4">
-        {list.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl text-center border border-gray-100 dark:border-gray-800">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <BuildingIcon size={28} className="text-blue-600" />
-            </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Abhi koi contract no hai.</p>
-            <Link href="/bids"><p className="text-blue-600 text-xs mt-2 font-bold">Mark as 'Awarded' in Bids →</p></Link>
-          </div>
-        ) : (
-          list.map((c: any) => {
-            const h = getHealth(c);
-            return (
-              <Link href={`/contracts/${c.id}`} key={c.id}>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition">
-                  <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-                    <p className="font-bold text-gray-900 dark:text-white text-sm leading-tight tracking-tight">{c.title}</p>
-                  </div>
-                  <div className={`${h.bg} border-l-4 ${h.border} p-3.5 flex items-center justify-between`}>
-                    <div className="flex items-center">
-                      <div className={`w-2.5 h-2.5 rounded-full mr-3 ${h.border.replace("border-", "bg-")}`}></div>
-                      <div>
-                        <p className={`text-sm font-bold tracking-tight ${h.text}`}>{h.label}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{h.reason}</p>
-                      </div>
-                    </div>
-                    <ChevronRightIcon size={16} className="text-gray-400" />
-                  </div>
-                  <div className="p-4 grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Value</p>
-                      <p className="font-bold text-gray-900 dark:text-white mt-1 text-sm">₹{c.value_in_cr} Cr</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase">Receivable</p>
-                      <p className="font-bold text-orange-600 mt-1 text-sm">₹{c.receivable_in_lakh} L</p>
-                    </div>
-                  </div>
-                  {c.end_date && (
-                    <p className="text-[10px] text-gray-400 text-center pb-3 font-semibold tracking-wide">
-                      END: {new Date(c.end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}
-                    </p>
-                  )}
+      <div className="p-4 space-y-4">
+        {/* Navigation Tabs */}
+        <div className="flex bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800 text-xs font-bold">
+          {(
+            [
+              { id: "active", label: "Active" },
+              { id: "pending", label: "Pending Start" },
+              { id: "completed", label: "Completed" },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2.5 text-center rounded-xl transition ${
+                activeTab === tab.id
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Contracts List */}
+        <div className="space-y-3">
+          {contracts.map((contract) => (
+            <div
+              key={contract.id}
+              className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3"
+            >
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-gray-400 block">
+                    Ref ID: {contract.id}
+                  </span>
+                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-0.5 leading-snug">
+                    {contract.title}
+                  </h3>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    {contract.organisation}
+                  </span>
                 </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex-shrink-0 ${contract.statusColor}`}>
+                  {contract.status}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-gray-100 dark:border-gray-800">
+                <div>
+                  <span className="text-gray-400 text-[10px] block uppercase">Contract Value</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">{contract.value}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-[10px] block uppercase">Deployed Staff</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">{contract.workforceCount} Employees</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center text-[11px] text-gray-500 pt-1">
+                <span>Duration: {contract.startDate} to {contract.endDate}</span>
+              </div>
+
+              <Link href={`/contracts/${contract.id}`} className="block">
+                <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition">
+                  Manage Site & Workforce
+                </button>
               </Link>
-            );
-          })
-        )}
+            </div>
+          ))}
+        </div>
       </div>
-      <BottomNav />
-    </main>
+    </div>
   );
 }
