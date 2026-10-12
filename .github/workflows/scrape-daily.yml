@@ -2,19 +2,66 @@ name: Daily Tender Scrape
 
 on:
   schedule:
-    - cron: '30 20 * * *'   # Roz 2 AM IST
+    - cron: '30 20 * * *'
   workflow_dispatch:
 
 jobs:
-  scrape:
+  cppp:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests beautifulsoup4 supabase
+      - run: pip install requests beautifulsoup4 lxml
       - run: python scripts/scrape_cppp.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  states:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        state:
+          - "Maharashtra"
+          - "Uttar Pradesh"
+          - "Madhya Pradesh"
+          - "Rajasthan"
+          - "West Bengal"
+          - "Kerala"
+          - "Tamil Nadu"
+          - "Haryana"
+          - "Punjab"
+          - "Odisha"
+          - "Jharkhand"
+          - "Uttarakhand"
+          - "Himachal Pradesh"
+          - "Assam"
+          - "Bihar"
+          - "Gujarat"
+          - "Karnataka"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python scripts/scrape_states.py "${{ matrix.state }}"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  gem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python scripts/scrape_gem.py
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
