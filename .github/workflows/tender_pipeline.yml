@@ -2,8 +2,8 @@ name: BidWell Tender Ingestion Pipeline
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Har 6 ghante me chalega
-  workflow_dispatch: # Manual trigger ke liye
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   scrape-and-sync:
@@ -22,10 +22,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests supabase pandas
 
-      - name: Run Historical & Live Scraper
+      - name: Run Historical Ingestion & Sync
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           python scripts/historical_ingest.py
-          python scripts/pipeline_sync.py
+          python scripts/hf_sync.py
