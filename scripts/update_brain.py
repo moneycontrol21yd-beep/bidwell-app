@@ -17,7 +17,7 @@ conn = psycopg2.connect(NEON_URL, connect_timeout=60)
 cur = conn.cursor()
 cur.execute("""ALTER TABLE brain_awards ADD COLUMN IF NOT EXISTS product_category TEXT, ADD COLUMN IF NOT EXISTS product_sub_category TEXT, ADD COLUMN IF NOT EXISTS tender_category TEXT, ADD COLUMN IF NOT EXISTS completion_period TEXT, ADD COLUMN IF NOT EXISTS description TEXT;""")
 cur.execute("""DROP TABLE IF EXISTS brain_staging;""")
-cur.execute("""CREATE TABLE brain_staging (tender_id TEXT PRIMARY KEY, product_category TEXT, product_sub_category TEXT, tender_category TEXT, completion_period TEXT, description TEXT);""")
+cur.execute("""CREATE TABLE brain_staging (tender_id TEXT, product_category TEXT, product_sub_category TEXT, tender_category TEXT, completion_period TEXT, description TEXT);""")
 conn.commit()
 print("Tables ready")
 
@@ -31,11 +31,13 @@ while True:
     if not rows: break
     chunk_n += 1
     buf = io.StringIO(); cnt = 0
+    seen = set()
     for tid, dj in rows:
         try:
-            d = json.loads(dj)
             tid = clean(tid)
-            if not tid: continue
+            if not tid or tid in seen: continue
+            seen.add(tid)
+            d = json.loads(dj)
             buf.write(f"{tid}\t{clean(d.get('Product Category'))[:200]}\t{clean(d.get('Product Sub-Category'))[:200]}\t{clean(d.get('Tender Category'))[:100]}\t{clean(d.get('Date of Completion/Completion Period in Days'))[:100]}\t{clean(d.get('Tender Description'))[:1000]}\n")
             cnt += 1
         except: continue
@@ -43,9 +45,9 @@ while True:
     for a in range(3):
         try:
             buf.seek(0)
-            cur.execute("CREATE TEMP TABLE tmp_stage (LIKE brain_staging INCLUDING ALL) ON COMMIT DROP")
-            cur.copy_from(buf, 'tmp_stage', columns=('tender_id','product_category','product_sub_category','tender_category','completion_period','description'), null='')
-            cur.execute("INSERT INTO brain_staging SELECT * FROM tmp_stage ON CONFLICT (tender_id) DO NOTHING")
+            cur.execute("TRUNCATE brain_staging")
+            cur.copy_from(buf, 'brain_staging', columns=('tender_id','product_category','product_sub_category','tender_category','completion_period','description'), null='')
+            cur.execute("""INSERT INTO brain_awards (tender_id, product_category, product_sub_category, tender_category, completion_period, description) SELECT s.tender_id, s.product_category, s.product_sub_category, s.tender_category, s.completion_period, s.description FROM brain_staging s WHERE EXISTS (SELECT 1 FROM brain_awards a WHERE a.tender_id = s.tender_id) ON CONFLICT DO NOTHING""")
             conn.commit(); total += cnt; break
         except Exception as e:
             print(f"retry {a+1}: {str(e)[:100]}")
@@ -56,7 +58,8 @@ while True:
             time.sleep(3)
             conn = psycopg2.connect(NEON_URL, connect_timeout=60); cur = conn.cursor()
     if chunk_n % 10 == 0: print(f"chunk {chunk_n}: {total:,}")
-    del buf, rows
+    del buf, rows, seen
+
 print(f"[STAGED] {total:,}")
 
 print("[4/4] Updating...")
