@@ -1,219 +1,183 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
-import { supabase } from "@/lib/supabase";
-import { BuildingIcon, CheckSquareIcon, TrendingUpIcon, UserIcon } from "@/components/icons";
+import AppNav from "@/components/AppNav";
 
-const STEPS = [
-  { num: 1, label: "Company", Icon: BuildingIcon },
-  { num: 2, label: "Legal", Icon: CheckSquareIcon },
-  { num: 3, label: "Capacity", Icon: TrendingUpIcon },
-  { num: 4, label: "Contact", Icon: UserIcon },
-];
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
+const INPUT: React.CSSProperties = {
+  width: "100%", padding: "12px 14px", borderRadius: 12,
+  background: "rgba(10,14,39,0.7)", border: "1px solid rgba(99,102,241,0.3)",
+  color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+};
+const LABEL: React.CSSProperties = { fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6, display: "block" };
 
-const BIZ_TYPES = ["Security & Manpower", "Housekeeping & Facility", "Construction & Civil", "IT & Software", "Electrical & Plumbing", "Catering & Food", "Transport & Logistics", "Other"];
-
-export default function CompanySetup() {
+export default function CompanySetupPage() {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
-  const [existingId, setExistingId] = useState<string | null>(null);
   const [form, setForm] = useState({
-    name: "", business_type: "Security & Manpower", address: "",
-    gst_number: "", pan_number: "", msme_number: "", registration_no: "",
-    turnover_cr: "", experience_years: "", employees_count: "", services: "", certifications: "",
-    contact_person: "", contact_email: "", contact_phone: "",
+    name: "Shivam Security Services Pvt. Ltd.",
+    type: "Security & Manpower",
+    address: "Mumbai, Maharashtra",
+    gst: "27ABCDE1234F1Z5",
+    pan: "ABCDE1234F",
+    iso: "ISO 9001:2015",
+    psara: "PSARA/MH/2024/1234",
+    turnover: "5",
+    employees: "200",
+    experience: "7",
+    email: "contact@shivam.com",
+    phone: "+91 9876543210",
   });
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.from("companies").select("*").limit(1).maybeSingle();
-      if (data) {
-        setExistingId(data.id);
-        setForm((p) => ({ ...p, ...data }));
-      }
-      setLoading(false);
-    };
-    load();
-  }, []);
+  const steps = [
+    { id: 1, icon: "🏢", label: "Company" },
+    { id: 2, icon: "📋", label: "Legal" },
+    { id: 3, icon: "📈", label: "Capacity" },
+    { id: 4, icon: "👤", label: "Contact" },
+  ];
 
-  const update = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
+  const update = (k: string, v: string) => setForm({ ...form, [k]: v });
 
-  const save = async () => {
-    const payload: any = { ...form };
-    ["turnover_cr", "experience_years", "employees_count"].forEach((k) => {
-      if (payload[k] === "" || payload[k] === null) payload[k] = null;
-      else payload[k] = parseFloat(payload[k]);
-    });
-
-    let error;
-    if (existingId) {
-      const r = await supabase.from("companies").update(payload).eq("id", existingId);
-      error = r.error;
-    } else {
-      const r = await supabase.from("companies").insert(payload).select().single();
-      error = r.error;
-      if (r.data) setExistingId(r.data.id);
+  const handleNext = () => {
+    if (step < 4) setStep(step + 1);
+    else {
+      try {
+        localStorage.setItem("company", JSON.stringify(form));
+      } catch {}
+      window.location.href = "/dashboard";
     }
-
-    if (error) alert("Save no hua: " + error.message);
-    else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
   };
 
-  const next = () => { if (step < 4) setStep(step + 1); };
-  const prev = () => { if (step > 1) setStep(step - 1); };
-
-  if (loading) return <main className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6"><p className="text-center text-gray-500 text-sm py-10">Loading...</p></main>;
-
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-white dark:bg-gray-900 px-5 pt-5 pb-4 border-b border-gray-200 dark:border-gray-800">
-        <Link href="/profile" className="text-blue-600 text-xs font-bold tracking-wide">← PROFILE</Link>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">Company Setup</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fill once, use forever</p>
-      </div>
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 100, color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif" }}>
 
-      {/* Stepper */}
-      <div className="px-5 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between">
-          {STEPS.map((s, i) => {
-            const done = step > s.num;
-            const active = step === s.num;
-            return (
-              <div key={s.num} className="flex items-center flex-1">
-                <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${done ? "bg-green-500" : active ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30" : "bg-gray-100 dark:bg-gray-800"}`}>
-                    {done ? (
-                      <span className="text-white font-bold text-sm">✓</span>
-                    ) : (
-                      <s.Icon size={18} className={active ? "text-white" : "text-gray-400"} />
-                    )}
-                  </div>
-                  <p className={`text-[9px] mt-1.5 font-bold tracking-wide uppercase ${done ? "text-green-600" : active ? "text-blue-600" : "text-gray-400"}`}>{s.label}</p>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-1 mx-2 rounded-full mb-4 ${step > s.num ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"}`}></div>
-                )}
-              </div>
-            );
-          })}
+      {/* HEADER */}
+      <div style={{ background: "linear-gradient(135deg,#4338CA 0%,#6366F1 100%)", padding: "16px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(139,92,246,0.5)", filter: "blur(50px)" }} />
+        <div style={{ position: "relative" }}>
+          <Link href="/profile" style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#C7D2FE", letterSpacing: 1 }}>← PROFILE</Link>
+          <h1 style={{ fontSize: 24, fontWeight: 900, margin: "10px 0 0", lineHeight: 1.1 }}>Company Setup</h1>
+          <p style={{ fontSize: 12, color: "#C7D2FE", margin: "6px 0 0", fontWeight: 600 }}>Fill once, use forever</p>
         </div>
       </div>
 
-      {/* Step Content */}
-      <div className="p-5 space-y-4">
-        {step === 1 && (
-          <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Company Name *</label>
-              <input name="name" value={form.name} onChange={update} placeholder="Shivam Security Services Pvt. Ltd." className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
+      {/* STEPS */}
+      <div style={{ padding: "20px 18px 0" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+          {steps.map((s) => (
+            <div key={s.id} style={{ textAlign: "center", opacity: s.id <= step ? 1 : 0.4 }}>
+              <div style={{
+                width: 42, height: 42, borderRadius: 12, margin: "0 auto 6px",
+                background: s.id === step ? "linear-gradient(135deg,#6366F1,#A855F7)" : s.id < step ? "linear-gradient(135deg,#059669,#10B981)" : C.card,
+                border: `1px solid rgba(99,102,241,0.3)`,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
+                boxShadow: s.id === step ? "0 6px 18px rgba(99,102,241,0.4)" : "none",
+              }}>
+                {s.id < step ? "✓" : s.icon}
+              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: s.id === step ? "#A5B4FC" : C.muted, letterSpacing: 0.3 }}>{s.label}</div>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Business Type *</label>
-              <select name="business_type" value={form.business_type} onChange={update} className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white">
-                {BIZ_TYPES.map((t) => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Registered Address</label>
-              <textarea name="address" value={form.address} onChange={update} rows={3} className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </div>
 
-        {step === 2 && (
-          <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">GST Number</label>
-              <input name="gst_number" value={form.gst_number || ""} onChange={update} placeholder="27AABCS1234F1Z5" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">PAN Number</label>
-              <input name="pan_number" value={form.pan_number || ""} onChange={update} placeholder="AABCS1234F" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">MSME / Udyam Number</label>
-              <input name="msme_number" value={form.msme_number || ""} onChange={update} placeholder="UDYAM-MH-18-0012345" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Company Registration No.</label>
-              <input name="registration_no" value={form.registration_no || ""} onChange={update} placeholder="U74999MH2019PTC123456" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-          </div>
-        )}
+      {/* FORM */}
+      <div style={{ padding: "24px 18px 0" }}>
+        <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 18, padding: 18 }}>
 
-        {step === 3 && (
-          <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          {step === 1 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Turnover (₹ Cr)</label>
-                <input name="turnover_cr" type="number" value={form.turnover_cr || ""} onChange={update} placeholder="5" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
+                <label style={LABEL}>Company Name *</label>
+                <input style={INPUT} value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Your company name" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Experience (Yrs)</label>
-                <input name="experience_years" type="number" value={form.experience_years || ""} onChange={update} placeholder="7" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
+                <label style={LABEL}>Business Type *</label>
+                <select style={{ ...INPUT, appearance: "none" }} value={form.type} onChange={(e) => update("type", e.target.value)}>
+                  <option value="Security & Manpower">Security & Manpower</option>
+                  <option value="Housekeeping">Housekeeping</option>
+                  <option value="Construction">Construction</option>
+                  <option value="IT Services">IT Services</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style={LABEL}>Registered Address</label>
+                <textarea style={{ ...INPUT, minHeight: 70, resize: "vertical" }} value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Full address" />
               </div>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Employees Count</label>
-              <input name="employees_count" type="number" value={form.employees_count || ""} onChange={update} placeholder="200" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Services (comma separated)</label>
-              <textarea name="services" value={form.services || ""} onChange={update} rows={2} placeholder="Security Guards, Housekeeping, Facility Management" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Certifications</label>
-              <textarea name="certifications" value={form.certifications || ""} onChange={update} rows={2} placeholder="ISO 9001, PSARA, Labour License" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Contact Person</label>
-              <input name="contact_person" value={form.contact_person || ""} onChange={update} placeholder="Rohit Sharma" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Contact Email</label>
-              <input name="contact_email" value={form.contact_email || ""} onChange={update} type="email" placeholder="admin@company.com" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1.5">Contact Phone</label>
-              <input name="contact_phone" value={form.contact_phone || ""} onChange={update} placeholder="+91 98765 43210" className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white" />
-            </div>
-          </div>
-        )}
-
-        {/* Navigation */}
-        <div className="flex gap-3">
-          {step > 1 && (
-            <button onClick={prev} className="flex-1 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-4 rounded-2xl text-sm tracking-wide">
-              ← BACK
-            </button>
           )}
-          {step < 4 ? (
-            <button onClick={next} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-2xl text-sm tracking-wide shadow-lg shadow-blue-600/20">
-              NEXT →
-            </button>
-          ) : (
-            <button onClick={save} className={`flex-1 font-bold py-4 rounded-2xl text-sm tracking-wide shadow-lg ${saved ? "bg-green-600 text-white shadow-green-600/20" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-600/20"}`}>
-              {saved ? "✓ SAVED" : "SAVE COMPANY"}
-            </button>
+
+          {step === 2 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={LABEL}>GST Number</label>
+                <input style={INPUT} value={form.gst} onChange={(e) => update("gst", e.target.value)} placeholder="22AAAAA0000A1Z5" />
+              </div>
+              <div>
+                <label style={LABEL}>PAN Number</label>
+                <input style={INPUT} value={form.pan} onChange={(e) => update("pan", e.target.value)} placeholder="AAAAA0000A" />
+              </div>
+              <div>
+                <label style={LABEL}>ISO Certificate</label>
+                <input style={INPUT} value={form.iso} onChange={(e) => update("iso", e.target.value)} placeholder="ISO 9001:2015" />
+              </div>
+              <div>
+                <label style={LABEL}>PSARA License</label>
+                <input style={INPUT} value={form.psara} onChange={(e) => update("psara", e.target.value)} placeholder="PSARA/MH/2024/1234" />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={LABEL}>Annual Turnover (₹ Crore)</label>
+                <input style={INPUT} type="number" value={form.turnover} onChange={(e) => update("turnover", e.target.value)} placeholder="5" />
+              </div>
+              <div>
+                <label style={LABEL}>Total Employees</label>
+                <input style={INPUT} type="number" value={form.employees} onChange={(e) => update("employees", e.target.value)} placeholder="200" />
+              </div>
+              <div>
+                <label style={LABEL}>Years of Experience</label>
+                <input style={INPUT} type="number" value={form.experience} onChange={(e) => update("experience", e.target.value)} placeholder="7" />
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={LABEL}>Email</label>
+                <input style={INPUT} type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="contact@company.com" />
+              </div>
+              <div>
+                <label style={LABEL}>Phone Number</label>
+                <input style={INPUT} value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+91 9876543210" />
+              </div>
+            </div>
           )}
         </div>
-
-        {step === 4 && !saved && (
-          <Link href="/dashboard">
-            <button className="w-full text-center text-blue-600 text-xs font-bold tracking-wide py-2">
-              SKIP FOR NOW →
-            </button>
-          </Link>
-        )}
       </div>
-      <BottomNav />
-    </main>
+
+      {/* BUTTONS */}
+      <div style={{ padding: "20px 18px 0", display: "flex", gap: 10 }}>
+        {step > 1 && (
+          <button onClick={() => setStep(step - 1)}
+            style={{ flex: 1, padding: "14px", borderRadius: 14, background: C.card, border: `1px solid rgba(99,102,241,0.3)`, color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit" }}>
+            ← Back
+          </button>
+        )}
+        <button onClick={handleNext}
+          style={{ flex: 2, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#6366F1,#A855F7)", border: "none", color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 6px 20px rgba(139,92,246,0.4)" }}>
+          {step === 4 ? "✓ Save & Continue" : "Next →"}
+        </button>
+      </div>
+
+      {/* BOTTOM NAV */}
+      <AppNav active="more" />
+    </div>
   );
 }

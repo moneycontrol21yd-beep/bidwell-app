@@ -1,122 +1,52 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
-
-export default function HelpPage() {
-  const [open, setOpen] = useState<number | null>(null);
-
-  const faqs = [
-    {
-      q: "How does AI Eligibility Match work?",
-      a: "AI compares your Company Profile and uploaded Documents against tender requirements to give a match score — showing what matches and what is missing.",
-    },
-    {
-      q: "How many documents can I upload?",
-      a: "Free plan: 10 documents. Paid plans: unlimited. GST, PAN, Licenses, Experience Certificates — upload all, AI uses them automatically.",
-    },
-    {
-      q: "Does BidWell auto-submit tenders?",
-      a: "No. BidWell helps you prepare your bid, but final submission is done by you on the portal. AI is not authorized to make legal decisions.",
-    },
-    {
-      q: "How accurate is the tender data?",
-      a: "Data is fetched from official government portals (CPPP, GeM, State portals) multiple times daily. Always verify critical details on the original source.",
-    },
-    {
-      q: "Can I use BidWell for multiple companies?",
-      a: "Yes. Business plan supports multiple companies with separate profiles, documents, and team members.",
-    },
-    {
-      q: "Is my data secure?",
-      a: "Yes. We use bank-grade encryption, multi-tenant isolation, and Row Level Security. Your data is never shared with other users.",
-    },
-    {
-      q: "How do I cancel my subscription?",
-      a: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing cycle.",
-    },
-    {
-      q: "What payment methods are accepted?",
-      a: "UPI, Credit/Debit Cards, Net Banking. Powered by Razorpay.",
-    },
+const C={bg:"#060B28",card:"#0E1533",text:"#fff",sub:"#94A3B8",muted:"#64748B"};
+const LINK:React.CSSProperties={textDecoration:"none",color:"#fff"};
+export default function HelpPage(){
+  const faqs=[
+    {q:"How do I search for tenders?",a:"Use the search bar on Tenders page. Filter by category, state, and value."},
+    {q:"Is BidWell free?",a:"Yes! Core features are free forever. Premium features available in paid plans."},
+    {q:"How do I save a tender?",a:"Tap the star icon on any tender card to save it to your Watchlist."},
+    {q:"What is Brain Analysis?",a:"AI-powered market intelligence from 25+ lakh tenders with competitor & price insights."},
+    {q:"How do I upload documents?",a:"Go to Document Vault, tap +, choose Camera/PDF/Gallery."},
+    {q:"How to contact support?",a:"Email support@bidwell.app or use in-app chat."},
   ];
-
-  return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6">
-        <Link href="/profile" className="text-blue-100/80 text-xs font-bold tracking-wide">← BACK</Link>
-        <h1 className="text-2xl font-bold mt-2">Help & Support</h1>
-        <p className="text-blue-100/70 text-xs mt-1">Answers to common questions</p>
+  return(
+    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:100,color:C.text,fontFamily:"system-ui,-apple-system,sans-serif"}}>
+      <div style={{background:"linear-gradient(135deg,#7C3AED 0%,#A855F7 100%)",padding:"18px 18px 24px",borderBottomLeftRadius:28,borderBottomRightRadius:28}}>
+        <Link href="/profile" style={{...LINK,fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.85)",letterSpacing:1}}>← PROFILE</Link>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:12}}>
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>❓</div>
+          <div><h1 style={{fontSize:24,fontWeight:900,margin:0}}>Help & Support</h1><p style={{fontSize:12,color:"rgba(255,255,255,0.85)",margin:"4px 0 0",fontWeight:600}}>We're here to help</p></div>
+        </div>
       </div>
-
-      <div className="px-5 mt-5">
-        <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">Frequently Asked Questions</p>
-
-        <div className="space-y-2">
-          {faqs.map((faq, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
-            >
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                className="w-full text-left p-4 flex items-start justify-between gap-3"
-              >
-                <span className="font-bold text-sm text-gray-900 dark:text-white flex-1">
-                  {faq.q}
-                </span>
-                <span className="text-blue-600 text-xl leading-none">
-                  {open === i ? "−" : "+"}
-                </span>
-              </button>
-              {open === i && (
-                <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {faq.a}
-                  </p>
-                </div>
-              )}
-            </div>
+      <div style={{padding:"16px 18px 0"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+          {[{i:"💬",l:"Live Chat",h:"/assistant"},{i:"📧",l:"Email Us",h:"#"},{i:"🎥",l:"Video Tutorials",h:"#"},{i:"📞",l:"Call Support",h:"#"}].map(x=>(
+            <Link key={x.l} href={x.h} style={{...LINK,display:"flex",alignItems:"center",gap:10,padding:14,borderRadius:14,background:C.card,border:"1px solid rgba(99,102,241,0.2)"}}>
+              <div style={{fontSize:20}}>{x.i}</div>
+              <div style={{fontSize:12,fontWeight:800}}>{x.l}</div>
+            </Link>
+          ))}
+        </div>
+        <div style={{fontSize:10,fontWeight:900,letterSpacing:1.2,color:C.muted,textTransform:"uppercase",marginBottom:10}}>Frequently Asked</div>
+        <div style={{background:C.card,border:"1px solid rgba(99,102,241,0.2)",borderRadius:16,overflow:"hidden"}}>
+          {faqs.map((f,i)=>(
+            <details key={i} style={{borderBottom:i<faqs.length-1?"1px solid rgba(99,102,241,0.12)":"none"}}>
+              <summary style={{padding:"14px 16px",fontSize:13,fontWeight:800,color:"#fff",cursor:"pointer",listStyle:"none"}}>{f.q}</summary>
+              <div style={{padding:"0 16px 14px",fontSize:11.5,color:C.sub,lineHeight:1.5}}>{f.a}</div>
+            </details>
           ))}
         </div>
       </div>
-
-      <div className="px-5 mt-6">
-        <p className="text-[10px] font-bold tracking-wider uppercase text-gray-500 mb-3">Still Need Help?</p>
-
-        <a
-          href="mailto:support@bidwell.in"
-          className="block bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📧</span>
-            <div>
-              <p className="font-bold text-sm text-gray-900 dark:text-white">Email Support</p>
-              <p className="text-xs text-gray-500">support@bidwell.in</p>
-            </div>
-          </div>
-        </a>
-
-        <a
-          href="https://wa.me/917770873817"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 mt-2"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">💬</span>
-            <div>
-              <p className="font-bold text-sm text-gray-900 dark:text-white">WhatsApp Support</p>
-              <p className="text-xs text-gray-500">+91 77708 73817</p>
-            </div>
-          </div>
-        </a>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:30,background:"rgba(10,14,39,0.98)",backdropFilter:"blur(12px)",borderTop:"1px solid rgba(99,102,241,0.18)",display:"flex",alignItems:"center",justifyContent:"space-around",padding:"10px 0 14px"}}>
+        {[{icon:"🏠",l:"Home",href:"/dashboard"},{icon:"📄",l:"Tenders",href:"/tenders"},{icon:"🧠",l:"Brain",href:"/brain",center:true},{icon:"✍️",l:"Bids",href:"/bids"},{icon:"⋯",l:"More",href:"/profile",on:true}].map(n=>(
+          <Link key={n.l} href={n.href} style={{...LINK,display:"flex",flexDirection:"column",alignItems:"center",position:"relative",marginTop:n.center?-28:0,minWidth:55}}>
+            {n.center?(<div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#6366F1 0%,#A855F7 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,boxShadow:"0 10px 30px rgba(139,92,246,0.55)",border:`4px solid ${C.bg}`}}>🧠</div>):(<span style={{fontSize:22,opacity:n.on?1:0.55}}>{n.icon}</span>)}
+            <span style={{fontSize:10,fontWeight:900,color:n.on?"#818CF8":C.muted,marginTop:n.center?4:5}}>{n.l}</span>
+          </Link>
+        ))}
       </div>
-
-      <div className="px-5 mt-6 text-center">
-        <p className="text-[10px] text-gray-400 tracking-wider uppercase">
-          BidWell v1.0 · Made in India 🇮🇳
-        </p>
-      </div>
-    </main>
+    </div>
   );
 }

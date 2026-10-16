@@ -1,90 +1,28 @@
 "use client";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
-
-export default function Privacy() {
-  return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-white dark:bg-gray-900 px-5 pt-5 pb-4 border-b border-gray-200 dark:border-gray-800">
-        <Link href="/profile" className="text-blue-600 text-xs font-bold tracking-wide">← PROFILE</Link>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">🔒 Privacy & Security</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Your data, your control</p>
+const C={bg:"#060B28",card:"#0E1533",text:"#fff",sub:"#94A3B8",muted:"#64748B"};
+const LINK:React.CSSProperties={textDecoration:"none",color:"#fff"};
+export default function PrivacyPage(){
+  return(
+    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:100,color:C.text,fontFamily:"system-ui,-apple-system,sans-serif"}}>
+      <div style={{position:"sticky",top:0,zIndex:20,background:"rgba(6,11,40,0.96)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(99,102,241,0.15)",padding:"14px 18px 12px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <Link href="/profile" style={{...LINK,fontSize:20}}>←</Link>
+          <div style={{fontSize:17,fontWeight:900}}>Privacy</div>
+        </div>
       </div>
-
-      <div className="p-5 space-y-4">
-        <div className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900/40 p-5 rounded-2xl">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center">
-            <span className="mr-2">🛡️</span> Data Protection
-          </h2>
-          <ul className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> End-to-end encryption (TLS 1.3)</li>
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> AES-256 encrypted storage at rest</li>
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> Row-Level Security — complete company isolation</li>
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> Private document storage with signed URLs</li>
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> Daily automated backups</li>
-            <li className="flex items-start"><span className="text-green-600 mr-2">✓</span> Data stored in India</li>
-          </ul>
+      <div style={{padding:"20px 18px"}}>
+        <div style={{background:C.card,border:"1px solid rgba(99,102,241,0.2)",borderRadius:16,padding:18}}>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.7}}>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>Last Updated:</strong> 16 Oct 2026</p>
+            <p style={{margin:"0 0 12px"}}>BidWell is committed to protecting your privacy and providing transparent services. This document outlines our policies regarding data collection, usage, and user rights.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>1. Data Collection</strong><br/>We collect only essential information required for providing tender intelligence services.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>2. Data Usage</strong><br/>Your data is used solely to improve our service. We do not sell personal information to third parties.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>3. Security</strong><br/>All data is encrypted at rest and in transit. We use industry-standard security practices.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>4. Contact</strong><br/>For questions: legal@bidwell.app</p>
+          </div>
         </div>
-
-        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 p-5 rounded-2xl">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center">
-            <span className="mr-2">🔐</span> Authentication
-          </h2>
-          <ul className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-            <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span> Email verification for signups</li>
-            <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span> Password encryption (bcrypt)</li>
-            <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span> Session expiry & auto-logout</li>
-            <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span> Logout from all devices</li>
-            <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span> Password change anytime</li>
-          </ul>
-        </div>
-
-        <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40 p-5 rounded-2xl">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center">
-            <span className="mr-2">🤖</span> AI Security
-          </h2>
-          <ul className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-            <li className="flex items-start"><span className="text-purple-600 mr-2">✓</span> Human review required for AI decisions</li>
-            <li className="flex items-start"><span className="text-purple-600 mr-2">✓</span> AI provides analysis, not guarantees</li>
-            <li className="flex items-start"><span className="text-purple-600 mr-2">✓</span> Source references (page, section)</li>
-            <li className="flex items-start"><span className="text-purple-600 mr-2">✓</span> No AI training on your data</li>
-            <li className="flex items-start"><span className="text-purple-600 mr-2">✓</span> Zero data retention with AI providers</li>
-          </ul>
-        </div>
-
-        <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 p-5 rounded-2xl">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center">
-            <span className="mr-2">📋</span> Your Rights (DPDP Act 2023)
-          </h2>
-          <ul className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-            <li className="flex items-start"><span className="text-orange-600 mr-2">✓</span> Download your data anytime</li>
-            <li className="flex items-start"><span className="text-orange-600 mr-2">✓</span> Export in CSV format</li>
-            <li className="flex items-start"><span className="text-orange-600 mr-2">✓</span> Delete account permanently</li>
-            <li className="flex items-start"><span className="text-orange-600 mr-2">✓</span> View complete audit log</li>
-            <li className="flex items-start"><span className="text-orange-600 mr-2">✓</span> Right to be forgotten</li>
-          </ul>
-          <Link href="/settings">
-            <button className="w-full mt-4 bg-orange-600 text-white font-bold py-3 rounded-xl text-xs tracking-wide">
-              MANAGE MY DATA →
-            </button>
-          </Link>
-        </div>
-
-        <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40 p-5 rounded-2xl">
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm mb-3 flex items-center">
-            <span className="mr-2">🚨</span> Report a Security Issue
-          </h2>
-          <p className="text-xs text-gray-700 dark:text-gray-300 mb-3">
-            Found a security concern? Report it immediately.
-          </p>
-          <a href="mailto:security@bidwell.app" className="text-xs text-red-600 dark:text-red-400 font-bold">security@bidwell.app</a>
-        </div>
-
-        <p className="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-6 uppercase tracking-wider">
-          Last updated: 4 October 2026
-        </p>
       </div>
-      <BottomNav />
-    </main>
+    </div>
   );
 }

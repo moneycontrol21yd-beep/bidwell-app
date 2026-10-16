@@ -113,7 +113,14 @@ export default function TenderDetailPage({ params }: { params: { id: string } })
                 <span className="font-semibold text-gray-800 dark:text-gray-200">{tender.department}</span>
               </div>
             </div>
-            <button onClick={() => { if (tender.title) { navigator.clipboard.writeText(tender.title); alert("Tender title copied to clipboard!"); } }} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 active:scale-95 transition">
+            {tender.source_url && (
+          <a href={tender.source_url} target="_blank" rel="noopener noreferrer" className="block w-full mb-2">
+            <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs active:scale-95 transition">
+              🔗 Open {tender.source || "Portal"} →
+            </button>
+          </a>
+        )}
+        <button onClick={() => { if (tender.title) { navigator.clipboard.writeText(tender.title); alert("Tender title copied to clipboard!"); } }} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 active:scale-95 transition">
               📋 Copy Tender Title (For easy search on portal)
             </button>
             <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3.5 flex items-start gap-3">

@@ -1,117 +1,141 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
-import { supabase } from "@/lib/supabase";
-import { signOut } from "@/lib/auth";
-import { useLang } from "@/lib/language";
-import { Logo } from "@/components/Logo";
-import { BuildingIcon, FileTextIcon, SettingsIcon, CreditCardIcon, UsersIcon, BellIcon, EyeIcon, LockIcon, HelpCircleIcon, LogOutIcon, ChevronRightIcon } from "@/components/icons";
+import AppNav from "@/components/AppNav";
 
-export default function Profile() {
-  const router = useRouter();
-  const { t } = useLang();
-  const [user, setUser] = useState<any>(null);
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
 
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUser(data.user)); }, []);
+export default function ProfilePage() {
+  const [userName, setUserName] = useState("User");
+  const [userEmail, setUserEmail] = useState("user@example.com");
+  const [initials, setInitials] = useState("U");
 
-  const handleLogout = async () => {
-    if (!confirm("Logout karna hai?")) return;
-    await signOut();
-    router.push("/login");
-  };
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem("user");
+      if (u) {
+        const user = JSON.parse(u);
+        const n = user.name || user.full_name || "User";
+        setUserName(n);
+        setInitials(n.split(" ").map((x: string) => x[0]).join("").slice(0, 2).toUpperCase());
+        if (user.email) setUserEmail(user.email);
+      }
+    } catch {}
+  }, []);
 
-  const menu = [
-    { Icon: BuildingIcon, label: "Company Profile", href: "/company", color: "blue" },
-      { Icon: EyeIcon, label: "Company Brain", href: "/brain", color: "pink" },
-    { Icon: FileTextIcon, label: "Document Vault", href: "/documents", color: "indigo" },
-    { Icon: SettingsIcon, label: t("settings"), href: "/settings", color: "gray" },
-    { Icon: CreditCardIcon, label: "Subscription", href: "/subscription", color: "purple" },
-    { Icon: UsersIcon, label: "Team Members", href: "/team", color: "cyan" },
-    { Icon: BellIcon, label: "Notifications", href: "/notifications", color: "orange" },
-    { Icon: EyeIcon, label: "BidWell Watch", href: "/watch", color: "pink" },
-    { Icon: HelpCircleIcon, label: "Support Tickets", href: "/support", color: "teal" },
-    { Icon: LockIcon, label: "Audit Log", href: "/audit", color: "slate" },
+  const menuItems = [
+    {
+      section: "COMPANY",
+      items: [
+        { icon: "🏢", bg: "linear-gradient(135deg,#6366F1,#8B5CF6)", title: "Company Profile", sub: "Name, GST, ISO, PSARA", href: "/company" },
+        { icon: "🧠", bg: "linear-gradient(135deg,#8B5CF6,#A855F7)", title: "Company Brain", sub: "AI insights for your business", href: "/brain" },
+        { icon: "📄", bg: "linear-gradient(135deg,#059669,#10B981)", title: "Document Vault", sub: "Certificates & documents", href: "/documents" },
+        { icon: "👥", bg: "linear-gradient(135deg,#2563EB,#3B82F6)", title: "Team Members", sub: "Manage your team", href: "/team" },
+      ],
+    },
+    {
+      section: "ACCOUNT",
+      items: [
+        { icon: "⚙️", bg: "linear-gradient(135deg,#D97706,#F59E0B)", title: "Settings", sub: "Theme, language & preferences", href: "/settings" },
+        { icon: "💳", bg: "linear-gradient(135deg,#DB2777,#EC4899)", title: "Subscription", sub: "Plan & billing", href: "/subscription" },
+        { icon: "🔔", bg: "linear-gradient(135deg,#7C3AED,#A855F7)", title: "Notifications", sub: "Alerts & reminders", href: "/notifications" },
+        { icon: "👁️", bg: "linear-gradient(135deg,#0D9488,#14B8A6)", title: "BidWell Watch", sub: "Track tenders you care about", href: "/watch" },
+      ],
+    },
+    {
+      section: "SUPPORT",
+      items: [
+        { icon: "❓", bg: "linear-gradient(135deg,#3B82F6,#6366F1)", title: "Help & Support", sub: "FAQs & contact us", href: "/help" },
+        { icon: "🎫", bg: "linear-gradient(135deg,#F59E0B,#FBBF24)", title: "Support Tickets", sub: "Your open tickets", href: "/support" },
+        { icon: "🛡️", bg: "linear-gradient(135deg,#059669,#10B981)", title: "Audit Log", sub: "Activity history", href: "/audit" },
+      ],
+    },
+    {
+      section: "LEGAL",
+      items: [
+        { icon: "🔒", bg: "linear-gradient(135deg,#1E40AF,#3B82F6)", title: "Privacy Policy", sub: "How we protect your data", href: "/privacy" },
+        { icon: "📋", bg: "linear-gradient(135deg,#0F766E,#14B8A6)", title: "Terms of Service", sub: "Usage terms & conditions", href: "/terms" },
+        { icon: "💸", bg: "linear-gradient(135deg,#DC2626,#EF4444)", title: "Refund Policy", sub: "Cancellation & refunds", href: "/refund" },
+      ],
+    },
   ];
-
-  const legal = [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Refund Policy", href: "/refund" },
-    { label: "Cookie Policy", href: "/cookies" },
-    { label: "Privacy & Security", href: "/privacy" },
-  ];
-
-  const colorMap: any = {
-    blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600",
-    indigo: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600",
-    gray: "bg-gray-100 dark:bg-gray-800 text-gray-600",
-    purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-600",
-    cyan: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600",
-    orange: "bg-orange-100 dark:bg-orange-900/30 text-orange-600",
-    pink: "bg-pink-100 dark:bg-pink-900/30 text-pink-600",
-    slate: "bg-slate-100 dark:bg-slate-900/30 text-slate-600",
-    teal: "bg-teal-100 dark:bg-teal-900/30 text-teal-600",
-  };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-5 pt-6 pb-24 rounded-b-[2rem] relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
-        <div className="relative z-10 flex items-center">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mr-4 border-2 border-white/30 bg-white/10 backdrop-blur-md">
-            <span className="text-3xl font-bold text-white">{user?.user_metadata?.full_name?.[0]?.toUpperCase() || "U"}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 mb-2">← Back</Link>
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 100, color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif" }}>
 
-            <h1 className="text-xl font-bold tracking-tight truncate">{user?.user_metadata?.full_name || "User"}</h1>
-            <p className="text-blue-100/80 text-xs truncate mt-0.5">{user?.email || ""}</p>
-            <span className="inline-flex items-center text-[10px] bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 px-2.5 py-1 rounded-full font-bold mt-2 tracking-wide uppercase">★ Free Plan</span>
+      {/* HEADER */}
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(6,11,40,0.96)", backdropFilter: "blur(12px)", borderBottom: `1px solid rgba(99,102,241,0.15)`, padding: "14px 18px 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link href="/dashboard" style={{ ...LINK, fontSize: 20, opacity: 0.9 }}>←</Link>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 17, fontWeight: 900, lineHeight: 1.1 }}>Profile</div>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>Manage your account</div>
+          </div>
+          <div style={{ position: "relative" }}>
+            <span style={{ fontSize: 20 }}>🔔</span>
+            <div style={{ position: "absolute", top: -2, right: -3, width: 15, height: 15, borderRadius: "50%", background: "#EF4444", color: "#fff", fontSize: 8, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>5</div>
           </div>
         </div>
       </div>
 
-      <div className="px-5 -mt-14 relative z-20">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-          {menu.map((m, i) => (
-            <Link key={i} href={m.href}>
-              <div className={`flex items-center px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${i !== menu.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center mr-3 ${colorMap[m.color]}`}>
-                  <m.Icon size={18} />
-                </div>
-                <p className="flex-1 text-sm font-semibold text-gray-900 dark:text-white">{m.label}</p>
-                <ChevronRightIcon size={16} className="text-gray-400" />
+      {/* USER CARD */}
+      <div style={{ padding: "16px 18px 0" }}>
+        <div style={{ background: "linear-gradient(135deg,#4338CA 0%,#6366F1 50%,#8B5CF6 100%)", borderRadius: 20, padding: 20, position: "relative", overflow: "hidden", boxShadow: "0 10px 30px rgba(99,102,241,0.35)" }}>
+          <div style={{ position: "absolute", top: -50, right: -50, width: 160, height: 160, borderRadius: "50%", background: "rgba(168,85,247,0.5)", filter: "blur(40px)" }} />
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 900, color: "#fff", border: "2px solid rgba(255,255,255,0.4)", flexShrink: 0, backdropFilter: "blur(10px)" }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>{userName}</div>
+              <div style={{ fontSize: 11.5, color: "#C7D2FE", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 8, padding: "3px 10px", borderRadius: 10, background: "rgba(255,255,255,0.22)", fontSize: 9.5, fontWeight: 900, color: "#fff", letterSpacing: 0.5 }}>
+                ⭐ FREE PLAN
               </div>
+            </div>
+            <Link href="/settings" style={{ ...LINK }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, backdropFilter: "blur(10px)" }}>⚙️</div>
             </Link>
-          ))}
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mt-4">
-          {legal.map((l, i) => (
-            <Link key={i} href={l.href}>
-              <div className={`flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${i !== legal.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
-                <p className="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300">{l.label}</p>
-                <ChevronRightIcon size={14} className="text-gray-400" />
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <button onClick={handleLogout} className="w-full mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center px-4 py-3.5">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center mr-3 bg-red-100 dark:bg-red-900/30">
-            <LogOutIcon size={18} className="text-red-600" />
           </div>
-          <p className="flex-1 text-left text-sm font-semibold text-red-600">{t("logout")}</p>
-        </button>
-
-        <div className="flex flex-col items-center mt-8">
-          <Logo size="sm" />
-          <p className="text-center text-[10px] text-gray-400 mt-3 tracking-wider uppercase font-semibold">BidWell v1.0 · Made in India 🇮🇳</p>
         </div>
       </div>
-      <BottomNav />
-    </main>
+
+      {/* SECTIONS */}
+      <div style={{ padding: "20px 18px 20px" }}>
+        {menuItems.map((section, si) => (
+          <div key={si} style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: C.muted, textTransform: "uppercase", marginBottom: 10, paddingLeft: 4 }}>
+              {section.section}
+            </div>
+            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, overflow: "hidden" }}>
+              {section.items.map((item, i) => (
+                <Link key={i} href={item.href} style={{ ...LINK, display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: i < section.items.length - 1 ? `1px solid rgba(99,102,241,0.12)` : "none" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: item.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>{item.title}</div>
+                    <div style={{ fontSize: 10.5, color: C.muted, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.sub}</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: C.muted, flexShrink: 0 }}>›</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* App Info */}
+        <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16, textAlign: "center" }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, margin: "0 auto 10px", background: "linear-gradient(135deg,#3B82F6,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#fff" }}>B</div>
+          <div style={{ fontSize: 13, fontWeight: 900, color: "#fff" }}>BidWell v1.0</div>
+          <div style={{ fontSize: 10.5, color: C.muted, marginTop: 4 }}>Made in India 🇮🇳 · 13 Languages</div>
+        </div>
+      </div>
+
+      {/* BOTTOM NAV */}
+      <AppNav active="more" />
+    </div>
   );
 }

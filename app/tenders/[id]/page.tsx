@@ -1,149 +1,284 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import AppNav from "@/components/AppNav";
 
-export default function TenderDetailPage({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState<"overview" | "analysis" | "eligibility" | "source">("overview");
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
 
-  const tender = {
-    id: params.id,
-    title: "Supply, Installation and Maintenance of Security Systems & Manpower Services",
-    department: "Public Works Department (PWD)",
-    organisation: "Executive Engineer PWD Division Indore",
-    tender_no: "PWD/IND/2026/8942",
-    value_in_cr: "2.5",
-    emd_amount: "₹50,000",
-    deadline: "2026-10-25",
-    published_date: "2026-10-10",
-    source: "CPPP (eprocure.gov.in)",
-    source_url: "https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata",
-    full_description: "Comprehensive tender for providing trained security personnel, CCTV surveillance setup, and 24/7 facility management services across government establishments in MP.",
-    eligibility_criteria: "Minimum 3 years experience in similar works. Valid ISO 9001 and PSARA license mandatory. Minimum turnover of ₹1 Cr in last 3 financial years.",
-    documents_required: "GST Registration, PAN Card, PSARA License, ISO Certificate, TurnOver Certificate from CA, Past Performance Certificates.",
-    payment_terms: "Monthly progressive billing based on milestone verification.",
-    state: "Madhya Pradesh",
-    city: "Indore",
-    risk_level: "Low",
-    ai_summary: "High capability match based on Shivam Security Services profile. Strong track record in security operations aligns well with technical eligibility requirements."
+export default function TenderDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const tenderId = params.id as string;
+
+  const [tender, setTender] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"overview" | "intel" | "source">("overview");
+  const [intel, setIntel] = useState<any>(null);
+  const [intelLoading, setIntelLoading] = useState(false);
+
+  useEffect(() => {
+    if (!tenderId) return;
+    fetch(`/api/tenders/${tenderId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.tender) setTender(d.tender);
+        else if (d.tender) setTender(d.tender);
+        else if (d.data) setTender(d.data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [tenderId]);
+
+  useEffect(() => {
+    if (!tender?.title || intel) return;
+    setIntelLoading(true);
+    fetch(`/api/tender-intel?title=${encodeURIComponent(tender.title)}`)
+      .then((r) => r.json())
+      .then((d) => d.success && setIntel(d))
+      .catch(() => {})
+      .finally(() => setIntelLoading(false));
+  }, [tender]);
+
+  const daysLeft = (d?: string) => {
+    if (!d) return null;
+    try {
+      const t = new Date(d).getTime();
+      if (isNaN(t)) return null;
+      const diff = Math.ceil((t - Date.now()) / 86400000);
+      return isNaN(diff) ? null : diff;
+    } catch { return null; }
   };
 
+  if (loading) {
+    return (
+      <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 36, height: 36, border: "3px solid #3B82F6", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <div style={{ fontSize: 12, color: C.muted }}>Loading tender...</div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tender) {
+    return (
+      <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", padding: 40, textAlign: "center" }}>
+        <div style={{ fontSize: 40, opacity: 0.4 }}>📭</div>
+        <div style={{ fontSize: 14, color: C.sub, marginTop: 12 }}>Tender not found</div>
+        <Link href="/tenders" style={{ display: "inline-block", marginTop: 20, color: "#818CF8", fontWeight: 800 }}>← Back to Tenders</Link>
+      </div>
+    );
+  }
+
+  const dl = daysLeft(tender.deadline);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24">
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6 rounded-b-[2rem] shadow-md">
-        <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-200 hover:text-white mb-3">
-          ← Back to Dashboard
-        </Link>
-        <div className="text-[10px] font-bold tracking-wider uppercase text-blue-200 mb-1">{tender.department}</div>
-        <h1 className="text-xl font-bold leading-tight mb-2">{tender.title}</h1>
-        <div className="flex flex-wrap gap-2 text-xs text-blue-100">
-          <span className="bg-white/20 px-2.5 py-1 rounded-full font-medium">Ref: {tender.tender_no}</span>
-          <span className="bg-white/20 px-2.5 py-1 rounded-full font-medium">Value: ₹{tender.value_in_cr} Cr</span>
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 100, color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif" }}>
+
+      {/* HEADER */}
+      <div style={{ background: "linear-gradient(135deg,#4338CA 0%,#6366F1 100%)", padding: "16px 18px 22px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(139,92,246,0.5)", filter: "blur(50px)" }} />
+        <div style={{ position: "relative" }}>
+          <button onClick={() => router.back()} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 20, cursor: "pointer", padding: 0, marginBottom: 10 }}>←</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.8, padding: "3px 9px", borderRadius: 6, background: "rgba(255,255,255,0.22)", color: "#fff" }}>
+              {(tender.source || "CPPP").toUpperCase()}
+            </span>
+            {tender.state && <span style={{ fontSize: 10, color: "#E0E7FF", fontWeight: 700 }}>📍 {tender.state}</span>}
+            {dl !== null && dl >= 0 && (
+              <span style={{ fontSize: 9.5, fontWeight: 900, padding: "3px 9px", borderRadius: 6, background: dl <= 7 ? "rgba(239,68,68,0.9)" : "rgba(16,185,129,0.9)", color: "#fff" }}>
+                {dl === 0 ? "TODAY" : `${dl} DAYS LEFT`}
+              </span>
+            )}
+          </div>
+
+          <h1 style={{ fontSize: 19, fontWeight: 900, margin: 0, lineHeight: 1.25, color: "#fff" }}>{tender.title}</h1>
+
+          {tender.tender_no && (
+            <div style={{ fontSize: 10.5, color: "#C7D2FE", marginTop: 8, fontWeight: 600 }}>
+              Ref: {tender.tender_no}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        <div className="flex bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800 text-xs font-bold">
-          {(["overview", "analysis", "eligibility", "source"] as const).map((tab) => (
+      {/* TABS */}
+      <div style={{ padding: "14px 18px 0" }}>
+        <div style={{ display: "flex", background: C.card, borderRadius: 14, padding: 4, border: `1px solid rgba(99,102,241,0.2)` }}>
+          {[
+            { id: "overview", label: "Overview" },
+            { id: "intel", label: "🧠 Intel" },
+            { id: "source", label: "Source" },
+          ].map((t) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2.5 text-center rounded-xl capitalize transition ${
-                activeTab === tab ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
+              key={t.id}
+              onClick={() => setTab(t.id as any)}
+              style={{
+                flex: 1, padding: "10px 6px", borderRadius: 10,
+                background: tab === t.id ? "linear-gradient(135deg,#4338CA,#6366F1)" : "transparent",
+                color: tab === t.id ? "#fff" : C.sub,
+                border: "none", fontSize: 11.5, fontWeight: 900, cursor: "pointer", fontFamily: "inherit",
+                boxShadow: tab === t.id ? "0 4px 14px rgba(99,102,241,0.35)" : "none",
+              }}
             >
-              {tab}
+              {t.label}
             </button>
           ))}
         </div>
-
-        {activeTab === "overview" && (
-          <div className="space-y-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Key Details</div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div><span className="text-gray-400 block text-[10px] uppercase">EMD Amount</span><span className="font-semibold">{tender.emd_amount}</span></div>
-                <div><span className="text-gray-400 block text-[10px] uppercase">Deadline</span><span className="font-semibold text-red-600 dark:text-red-400">{tender.deadline}</span></div>
-                <div><span className="text-gray-400 block text-[10px] uppercase">Location</span><span className="font-semibold">{tender.city}, {tender.state}</span></div>
-                <div><span className="text-gray-400 block text-[10px] uppercase">Risk Level</span><span className="font-semibold text-green-600 dark:text-green-400">{tender.risk_level}</span></div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Description</div>
-              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.full_description}</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "analysis" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
-            <div className="text-[10px] font-bold tracking-wider uppercase text-indigo-500 flex items-center gap-1">
-              <span>✨ AI Intelligence Summary</span>
-            </div>
-            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.ai_summary}</p>
-          </div>
-        )}
-
-        {activeTab === "eligibility" && (
-          <div className="space-y-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Eligibility Criteria</div>
-              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.eligibility_criteria}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Documents Required</div>
-              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{tender.documents_required}</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "source" && (
-          <div className="space-y-4">
-            <a href="https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata" target="_blank" rel="noopener noreferrer" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 active:scale-95 transition">
-              <span>Open CPPP Portal</span><span>→</span>
-            </a>
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">Source Information</div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div><span className="text-gray-400 block text-[10px] uppercase">Portal Source</span><span className="font-semibold text-gray-800 dark:text-gray-200">{tender.source}</span></div>
-                <div><span className="text-gray-400 block text-[10px] uppercase">Tender Ref No.</span><span className="font-semibold text-gray-800 dark:text-gray-200">{tender.tender_no}</span></div>
-              </div>
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 block text-[10px] uppercase">Department / Organisation</span>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">{tender.department}</span>
-              </div>
-            </div>
-            {tender.source_url && (
-          <a href={tender.source_url} target="_blank" rel="noopener noreferrer" className="block w-full mb-2">
-            <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs active:scale-95 transition">
-              🔗 Open {tender.source || "Portal"} →
-            </button>
-          </a>
-        )}
-        <button onClick={() => { if (tender.title) { navigator.clipboard.writeText(tender.title); alert("Tender title copied to clipboard!"); } }} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 active:scale-95 transition">
-              📋 Copy Tender Title (For easy search on portal)
-            </button>
-            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3.5 flex items-start gap-3">
-              <span className="text-amber-500 text-lg flex-shrink-0">⚠️</span>
-              <div className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                <strong className="font-semibold block mb-0.5">Important Note:</strong>
-                Downloading official BOQ/tender documents or submitting bids requires direct login on the CPPP portal (`eprocure.gov.in`).
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="pt-2">
-          <Link href={`/match?tenderId=${tender.id}`}>
-            <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-2xl text-sm shadow-lg mb-3 active:scale-95 transition">
-              🎯 View Match Analysis
-            </button>
-          </Link>
-          <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-xl text-sm active:scale-95 transition">
-            Start Bid Preparation
-          </button>
-        </div>
       </div>
+
+      {/* CONTENT */}
+      <div style={{ padding: "16px 18px 20px" }}>
+        {tab === "overview" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Department */}
+            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>🏛️ Department</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#E2E8F0", lineHeight: 1.35 }}>
+                {tender.department || tender.organisation || "Information pending"}
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14 }}>
+                <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>💰 Value</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "#60A5FA" }}>
+                  {tender.value_in_cr && tender.value_in_cr > 0 ? `₹${tender.value_in_cr} Cr` : "Not specified"}
+                </div>
+              </div>
+              <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14 }}>
+                <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>📅 Deadline</div>
+                <div style={{ fontSize: 13, fontWeight: 900, color: "#E2E8F0", lineHeight: 1.3 }}>
+                  {tender.deadline || "Not specified"}
+                </div>
+              </div>
+            </div>
+
+            {/* Match Analysis Button */}
+            <Link href={`/match?tenderId=${tender.id}`} style={{ ...LINK, display: "block" }}>
+              <button style={{ width: "100%", background: "linear-gradient(135deg,#6366F1 0%,#A855F7 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(139,92,246,0.35)", fontFamily: "inherit" }}>
+                🎯 View Match Analysis
+              </button>
+            </Link>
+
+            {/* Bid Prep Button */}
+            <button style={{ width: "100%", background: "linear-gradient(135deg,#2563EB 0%,#3B82F6 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(59,130,246,0.35)", fontFamily: "inherit" }}>
+              ✍️ Start Bid Preparation
+            </button>
+          </div>
+        )}
+
+        {tab === "intel" && (
+          <div>
+            {intelLoading ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0" }}>
+                <div style={{ width: 30, height: 30, border: "3px solid #6366F1", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 12 }}>Analyzing 13.7L records...</div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+              </div>
+            ) : !intel || !intel.totalSimilar ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", background: C.card, borderRadius: 16, border: `1px solid rgba(99,102,241,0.2)` }}>
+                <div style={{ fontSize: 32, opacity: 0.4 }}>📊</div>
+                <div style={{ fontSize: 12, color: C.sub, marginTop: 10, fontWeight: 600 }}>No historical data for this tender</div>
+                <div style={{ fontSize: 10.5, color: C.muted, marginTop: 6 }}>Brain will learn as more data comes in</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Summary stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Similar</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#10B981", marginTop: 4 }}>{intel.totalSimilar}</div>
+                  </div>
+                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Avg Win</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24", marginTop: 4 }}>
+                      ₹{(intel.avgWinningValue / 100000).toFixed(1)}L
+                    </div>
+                  </div>
+                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Avg Bids</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#60A5FA", marginTop: 4 }}>{intel.avgBidders.toFixed(1)}</div>
+                  </div>
+                </div>
+
+                {/* Recommended Bid */}
+                <div style={{ background: "linear-gradient(135deg,#059669 0%,#10B981 100%)", borderRadius: 18, padding: 18, boxShadow: "0 8px 24px rgba(16,185,129,0.3)" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.9)", textTransform: "uppercase", letterSpacing: 1 }}>Recommended Bid</div>
+                  <div style={{ fontSize: 30, fontWeight: 900, color: "#fff", marginTop: 6, lineHeight: 1 }}>
+                    ₹{((intel.avgWinningValue * 0.98) / 100000).toFixed(1)} L
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", marginTop: 8, fontWeight: 600 }}>
+                    Based on {intel.totalSimilar} similar tenders
+                  </div>
+                </div>
+
+                {/* Competitors */}
+                <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 16 }}>⚔️</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: "#E2E8F0", letterSpacing: 0.5 }}>LIKELY COMPETITORS</span>
+                  </div>
+                  {intel.topCompetitors.map((c: any, i: number) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < intel.topCompetitors.length - 1 ? `1px solid rgba(99,102,241,0.12)` : "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: i === 0 ? "rgba(239,68,68,0.2)" : i === 1 ? "rgba(245,158,11,0.2)" : "rgba(99,102,241,0.15)", color: i === 0 ? "#F87171" : i === 1 ? "#FBBF24" : "#94A3B8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>
+                          {i + 1}
+                        </div>
+                        <span style={{ fontSize: 12, color: "#E2E8F0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "#10B981" }}>
+                          ₹{(c.avg_value / 100000).toFixed(1)}L
+                        </div>
+                        <div style={{ fontSize: 9, color: C.muted }}>{c.wins} wins</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "source" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>Source</div>
+              <div style={{ fontSize: 13, color: "#E2E8F0", fontWeight: 600 }}>{tender.source || "CPPP"}</div>
+            </div>
+
+            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>Tender Number</div>
+              <div style={{ fontSize: 13, color: "#E2E8F0", fontWeight: 600, wordBreak: "break-all" }}>{tender.tender_no || "Not specified"}</div>
+            </div>
+
+            {tender.source_url && (
+              <a href={tender.source_url} target="_blank" rel="noopener noreferrer" style={{ ...LINK, display: "block" }}>
+                <button style={{ width: "100%", background: "linear-gradient(135deg,#059669 0%,#10B981 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.3)", fontFamily: "inherit" }}>
+                  🔗 Open Original Tender
+                </button>
+              </a>
+            )}
+
+            <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 14, padding: 14, display: "flex", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>⚠️</span>
+              <div style={{ fontSize: 11, color: "#FBBF24", lineHeight: 1.5, fontWeight: 600 }}>
+                Official PDF download or bid submission requires direct login on the source portal.
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* BOTTOM NAV */}
+      <AppNav active="tenders" />
     </div>
   );
 }

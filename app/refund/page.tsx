@@ -1,81 +1,28 @@
+"use client";
 import Link from "next/link";
-
-export default function Refund() {
-  return (
-    <main className="min-h-screen bg-white dark:bg-gray-950 pb-24">
-      <div className="bg-white dark:bg-gray-900 px-5 pt-5 pb-4 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
-        <Link href="/profile" className="text-blue-600 text-xs font-bold tracking-wide">← PROFILE</Link>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">Refund Policy</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Last updated: 4 October 2026</p>
+const C={bg:"#060B28",card:"#0E1533",text:"#fff",sub:"#94A3B8",muted:"#64748B"};
+const LINK:React.CSSProperties={textDecoration:"none",color:"#fff"};
+export default function RefundPage(){
+  return(
+    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:100,color:C.text,fontFamily:"system-ui,-apple-system,sans-serif"}}>
+      <div style={{position:"sticky",top:0,zIndex:20,background:"rgba(6,11,40,0.96)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(99,102,241,0.15)",padding:"14px 18px 12px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <Link href="/profile" style={{...LINK,fontSize:20}}>←</Link>
+          <div style={{fontSize:17,fontWeight:900}}>Refund</div>
+        </div>
       </div>
-
-      <div className="p-5 space-y-5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">1. Free Plan</h2>
-          <p>The Free plan is free forever. No charges, no refunds needed.</p>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">2. Paid Subscriptions</h2>
-          <p>BidWell offers monthly and annual paid plans. All payments are processed via Razorpay.</p>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">3. Cancellation</h2>
-          <ul className="list-disc pl-5 space-y-1.5">
-            <li>You can cancel your subscription anytime from your profile → Subscription</li>
-            <li>Cancellation takes effect at the end of your current billing cycle</li>
-            <li>You continue to have access until the period ends</li>
-            <li>No further charges after cancellation</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">4. Refund Eligibility</h2>
-          <p>Refunds are available in the following cases:</p>
-          <ul className="list-disc pl-5 mt-2 space-y-1.5">
-            <li><span className="font-semibold">Within 7 days</span> of first purchase — 100% refund if you haven't used more than 3 AI analyses</li>
-            <li><span className="font-semibold">Duplicate charge</span> — full refund</li>
-            <li><span className="font-semibold">Technical failure</span> preventing use of the Service for 48+ hours — prorated refund</li>
-            <li><span className="font-semibold">Unauthorized charge</span> — full refund after verification</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">5. Non-Refundable Cases</h2>
-          <ul className="list-disc pl-5 space-y-1.5">
-            <li>More than 7 days after purchase</li>
-            <li>Heavy usage (more than 3 AI analyses) in the first 7 days</li>
-            <li>Change of mind after using the Service</li>
-            <li>Annual plans after 15 days of activation</li>
-            <li>Violation of Terms of Service</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">6. How to Request a Refund</h2>
-          <p>Email us at <span className="font-semibold text-blue-600">billing@bidwell.app</span> with:</p>
-          <ul className="list-disc pl-5 mt-2 space-y-1.5">
-            <li>Your registered email address</li>
-            <li>Invoice / transaction ID</li>
-            <li>Reason for refund request</li>
-          </ul>
-          <p className="mt-2">We process refunds within 7-10 business days. Money is credited back to the original payment method.</p>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">7. Chargebacks</h2>
-          <p>If you initiate a chargeback without contacting us first, your account may be suspended until the issue is resolved.</p>
-        </section>
-
-        <section>
-          <h2 className="font-bold text-gray-900 dark:text-white mb-2">8. Contact</h2>
-          <p>
-            <span className="font-semibold">Email:</span> billing@bidwell.app<br />
-            <span className="font-semibold">Location:</span> India
-          </p>
-        </section>
+      <div style={{padding:"20px 18px"}}>
+        <div style={{background:C.card,border:"1px solid rgba(99,102,241,0.2)",borderRadius:16,padding:18}}>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.7}}>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>Last Updated:</strong> 16 Oct 2026</p>
+            <p style={{margin:"0 0 12px"}}>BidWell is committed to protecting your privacy and providing transparent services. This document outlines our policies regarding data collection, usage, and user rights.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>1. Data Collection</strong><br/>We collect only essential information required for providing tender intelligence services.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>2. Data Usage</strong><br/>Your data is used solely to improve our service. We do not sell personal information to third parties.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>3. Security</strong><br/>All data is encrypted at rest and in transit. We use industry-standard security practices.</p>
+            <p style={{margin:"0 0 12px"}}><strong style={{color:"#fff"}}>4. Contact</strong><br/>For questions: legal@bidwell.app</p>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

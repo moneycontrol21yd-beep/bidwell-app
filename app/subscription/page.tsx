@@ -1,133 +1,52 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
-
-const PLANS = [
-  {
-    id: "free", name: "Free", price: 0, period: "forever", popular: false,
-    description: "Perfect for getting started",
-    features: ["3 Tender Analyses / month", "10 Saved Tenders", "Basic Eligibility Check", "1 Company Profile", "Email Notifications"],
-    color: "gray",
-  },
-  {
-    id: "starter", name: "Starter", price: 499, period: "month", popular: false,
-    description: "For small contractors",
-    features: ["30 Tender Analyses / month", "100 Saved Tenders", "AI Eligibility Check", "Document Vault", "Deadline Alerts", "Company Profile"],
-    color: "blue",
-  },
-  {
-    id: "professional", name: "Professional", price: 1499, period: "month", popular: true,
-    description: "For growing businesses",
-    features: ["100 Tender Analyses / month", "Unlimited Saved Tenders", "Advanced AI Eligibility", "Bid Workspace", "Contract Tracking", "Invoice Tracking", "Payment Follow-up", "Corrigendum Alerts", "3 Team Members"],
-    color: "purple",
-  },
-  {
-    id: "business", name: "Business", price: 4999, period: "month", popular: false,
-    description: "For large teams",
-    features: ["500 AI Analyses / month", "Multiple Companies", "10 Team Members", "Advanced Contract Management", "Priority Support", "Custom Integrations"],
-    color: "orange",
-  },
-];
-
-export default function Subscription() {
-  const [showContact, setShowContact] = useState(false);
-
-  return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
-      <div className="bg-white dark:bg-gray-900 px-5 pt-5 pb-4 border-b border-gray-200 dark:border-gray-800">
-        <Link href="/profile" className="text-blue-600 text-xs font-bold tracking-wide">← PROFILE</Link>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">💳 Subscription</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Choose the plan that fits your business</p>
-      </div>
-
-      <div className="p-5">
-        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 p-4 rounded-2xl mb-5">
-          <div className="flex items-center">
-            <span className="text-2xl mr-3">⭐</span>
-            <div className="flex-1">
-              <p className="text-xs font-bold tracking-wide uppercase">Current Plan</p>
-              <p className="text-sm font-bold mt-0.5">Free Forever</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {PLANS.map((p) => (
-            <div key={p.id} className={`bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm relative ${p.popular ? "border-2 border-purple-500" : "border border-gray-100 dark:border-gray-800"}`}>
-              {p.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wider uppercase">MOST POPULAR</span>
-              )}
-              
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="font-bold text-gray-900 dark:text-white text-lg">{p.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{p.description}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{p.price.toLocaleString("en-IN")}</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">/{p.period}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                {p.features.map((f, i) => (
-                  <div key={i} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
-                    <span className="text-green-600 font-bold mr-2">✓</span>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              {p.id === "free" ? (
-                <button disabled className="w-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold py-3.5 rounded-xl text-sm tracking-wide cursor-not-allowed">
-                  CURRENT PLAN
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowContact(true)}
-                  className={`w-full font-bold py-3.5 rounded-xl text-sm tracking-wide text-white ${p.popular ? "bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-purple-600/20" : "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/20"}`}
-                >
-                  UPGRADE TO {p.name.toUpperCase()}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 p-4 rounded-2xl">
-          <p className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2">💡 Annual Plans</p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Save up to 20% with annual billing. Contact us for details.</p>
+const C={bg:"#060B28",card:"#0E1533",text:"#fff",sub:"#94A3B8",muted:"#64748B"};
+const LINK:React.CSSProperties={textDecoration:"none",color:"#fff"};
+export default function SubscriptionPage(){
+  const plans=[
+    {id:"free",name:"Free",price:"₹0",per:"FOREVER",color:"#64748B",features:["10 AI Analyses / month","50 Saved Tenders","Basic Search","Email Notifications"],current:true},
+    {id:"starter",name:"Starter",price:"₹499",per:"/MONTH",color:"#3B82F6",features:["50 AI Analyses","500 Saved","WhatsApp Alerts","Competitor Info","Deadline Reminders"],popular:false},
+    {id:"pro",name:"Professional",price:"₹1,499",per:"/MONTH",color:"#A855F7",features:["Unlimited AI","Unlimited Saved","API Access","3 Team Members","Contract Tracking"],popular:true},
+    {id:"business",name:"Business",price:"₹4,999",per:"/MONTH",color:"#10B981",features:["5 Companies","API 100K calls","10 Team Members","Custom Reports","Priority Support"]},
+  ];
+  return(
+    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:100,color:C.text,fontFamily:"system-ui,-apple-system,sans-serif"}}>
+      <div style={{background:"linear-gradient(135deg,#DB2777 0%,#EC4899 100%)",padding:"18px 18px 24px",borderBottomLeftRadius:28,borderBottomRightRadius:28}}>
+        <Link href="/profile" style={{...LINK,fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.85)",letterSpacing:1}}>← PROFILE</Link>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:12}}>
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>💳</div>
+          <div><h1 style={{fontSize:24,fontWeight:900,margin:0}}>Subscription</h1><p style={{fontSize:12,color:"rgba(255,255,255,0.85)",margin:"4px 0 0",fontWeight:600}}>Upgrade to unlock more</p></div>
         </div>
       </div>
-
-      {/* Contact Modal */}
-      {showContact && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-50" onClick={() => setShowContact(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">💳</span>
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">Payment Coming Soon</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
-                BidWell Payments integration is being finalized. Our team will contact you shortly to activate your plan.
-              </p>
-
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl mb-4">
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-wider uppercase mb-2">Contact Us</p>
-                <a href="mailto:billing@bidwell.app" className="text-xs text-blue-600 dark:text-blue-400 font-bold">billing@bidwell.app</a>
-              </div>
-
-              <button onClick={() => setShowContact(false)} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-sm">
-                OK, GOT IT
-              </button>
+      <div style={{padding:"16px 18px 20px",display:"flex",flexDirection:"column",gap:12}}>
+        {plans.map(p=>(
+          <div key={p.id} style={{background:C.card,border:`2px solid ${p.current?p.color:p.popular?p.color:"rgba(99,102,241,0.2)"}`,borderRadius:18,padding:18,position:"relative"}}>
+            {p.popular&&(<div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#6366F1,#A855F7)",color:"#fff",fontSize:9,fontWeight:900,letterSpacing:1,padding:"4px 12px",borderRadius:10}}>MOST POPULAR</div>)}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{fontSize:18,fontWeight:900,color:p.color}}>{p.name}</div>
+              <div style={{textAlign:"right"}}><span style={{fontSize:24,fontWeight:900,color:"#fff"}}>{p.price}</span><div style={{fontSize:9,color:C.muted,fontWeight:700}}>{p.per}</div></div>
             </div>
+            <div style={{borderTop:"1px solid rgba(99,102,241,0.15)",paddingTop:12,marginBottom:14}}>
+              {p.features.map((f,i)=>(
+                <div key={i} style={{display:"flex",gap:8,fontSize:12,color:"#E2E8F0",padding:"6px 0"}}>
+                  <span style={{color:p.color}}>✓</span>{f}
+                </div>
+              ))}
+            </div>
+            <button style={{width:"100%",padding:12,borderRadius:12,background:p.current?"rgba(100,116,139,0.2)":`linear-gradient(135deg,${p.color},${p.color}dd)`,border:"none",color:"#fff",fontSize:12,fontWeight:900,cursor:"pointer",fontFamily:"inherit",opacity:p.current?0.7:1}}>
+              {p.current?"CURRENT PLAN":`Upgrade to ${p.name}`}
+            </button>
           </div>
-        </div>
-      )}
-
-      <BottomNav />
-    </main>
+        ))}
+      </div>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:30,background:"rgba(10,14,39,0.98)",backdropFilter:"blur(12px)",borderTop:"1px solid rgba(99,102,241,0.18)",display:"flex",alignItems:"center",justifyContent:"space-around",padding:"10px 0 14px"}}>
+        {[{icon:"🏠",l:"Home",href:"/dashboard"},{icon:"📄",l:"Tenders",href:"/tenders"},{icon:"🧠",l:"Brain",href:"/brain",center:true},{icon:"✍️",l:"Bids",href:"/bids"},{icon:"⋯",l:"More",href:"/profile",on:true}].map(n=>(
+          <Link key={n.l} href={n.href} style={{...LINK,display:"flex",flexDirection:"column",alignItems:"center",position:"relative",marginTop:n.center?-28:0,minWidth:55}}>
+            {n.center?(<div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#6366F1 0%,#A855F7 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,boxShadow:"0 10px 30px rgba(139,92,246,0.55)",border:`4px solid ${C.bg}`}}>🧠</div>):(<span style={{fontSize:22,opacity:n.on?1:0.55}}>{n.icon}</span>)}
+            <span style={{fontSize:10,fontWeight:900,color:n.on?"#818CF8":C.muted,marginTop:n.center?4:5}}>{n.l}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

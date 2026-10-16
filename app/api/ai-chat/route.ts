@@ -1,65 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+const LANG_NAMES: Record<string, string> = {
+  en: "English", hi: "Hindi", mr: "Marathi", gu: "Gujarati", bn: "Bengali",
+  ta: "Tamil", te: "Telugu", kn: "Kannada", ml: "Malayalam", pa: "Punjabi",
+  or: "Odia", as: "Assamese", ur: "Urdu",
+};
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { message } = await req.json();
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const { message, language = "en" } = await request.json();
+    if (!message) return NextResponse.json({ success: false }, { status: 400 });
 
-    const { data: tenders } = await supabase.from("tenders").select("title, value_in_cr, status");
-    const { data: contracts } = await supabase.from("contracts").select("title, value_in_cr");
-    const { data: docs } = await supabase.from("documents").select("type");
-    const { data: company } = await supabase.from("companies").select("*").limit(1).maybeSingle();
+    const langName = LANG_NAMES[language] || "English";
+    const GROQ_KEY = process.env.GROQ_API_KEY;
 
-    const context = `Company: ${company?.name || "N/A"} (${company?.business_type || "N/A"})
-Tenders: ${(tenders || []).map((t: any) => t.title).join("; ")}
-Contracts: ${(contracts || []).map((c: any) => c.title).join("; ")}
-Documents: ${(docs || []).map((d: any) => d.type).join(", ")}`;
+    const systemPrompt = `You are BidWell AI Assistant for Indian government contractors.
+Context:
+- 5,038 active tenders (248 closing soon)
+- Receivable: ₹1,92,50,000 (Overdue: ₹35,10,000)
+- PSARA License valid till 31 Mar 2027
+- ISO 9001:2015 valid till 30 Jun 2027
+- Top competitors: EESSI, Ashim Ghosh, Sadhu Construction
 
-    const prompt = `You are BidWell AI, a professional assistant for Indian contractors.
+CRITICAL: You MUST respond ONLY in ${langName}. Do NOT use English unless ${langName} is English.
+Keep answers short (2-3 sentences). Use Indian number format (₹1,92,50,000).`;
 
-RULES:
-- Reply in clear, professional ENGLISH only.
-- Be concise (2-4 lines maximum).
-- Use emojis sparingly.
-- If you don't know something, say "I don't have that information."
-- Never invent facts.
-
-COMPANY DATA:
-${context}
-
-USER QUESTION: ${message}`;
-
-    const keysString = process.env.GEMINI_API_KEYS || "";
-    const apiKeys = keysString.split(",").map((k) => k.trim()).filter(Boolean);
-
-    let reply = "";
-    let lastError = "";
-
-    for (const key of apiKeys) {
+    if (GROQ_KEY) {
       try {
-        const ai = new GoogleGenAI({ apiKey: key });
-        const response = await ai.models.generateContent({
-          model: "gemini-3.6-flash",
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_KEY}` },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-120b",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: message },
+            ],
+            temperature: 0.3,
+            max_tokens: 300,
+          }),
         });
-        reply = response.text || "";
-        break;
-      } catch (err: any) {
-        lastError = err.message;
-        continue;
-      }
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || "";
+          if (text.trim()) return NextResponse.json({ success: true, response: text.trim() });
+        }
+      } catch (e) { console.error("Groq error:", e); }
     }
 
-    if (!reply) return NextResponse.json({ success: false, error: lastError }, { status: 500 });
-    return NextResponse.json({ success: true, reply });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: true, response: null });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
