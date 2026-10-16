@@ -168,9 +168,9 @@ export default function TenderDetailPage() {
             </Link>
 
             {/* Bid Prep Button */}
-            <button style={{ width: "100%", background: "linear-gradient(135deg,#2563EB 0%,#3B82F6 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(59,130,246,0.35)", fontFamily: "inherit" }}>
+            <Link href={`/bids/prepare/${tender_id}`} style={{ textDecoration: "none", color: "#fff", display: "block" }}><button style={{ width: "100%", background: "linear-gradient(135deg,#2563EB 0%,#3B82F6 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(59,130,246,0.35)", fontFamily: "inherit" }}>
               ✍️ Start Bid Preparation
-            </button>
+            </button></Link>
           </div>
         )}
 
