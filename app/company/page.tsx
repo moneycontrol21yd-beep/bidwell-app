@@ -18,8 +18,22 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export default function CompanySetupPage() {
   const [step, setStep] = useState(1);
+  
+  const sectors = ["Security & Manpower", "Construction / Roads", "IT & Software", "Healthcare", "Supply & Trading", "Other"];
+  
+  const getRequiredDocs = (sector: string) => {
+    if (sector === "Security & Manpower") return "PSARA License, ESIC Registration, EPF Registration";
+    if (sector === "Construction / Roads") return "Civil Contractor License, ISO 9001, PWD Registration";
+    if (sector === "IT & Software") return "ISO 27001, STPI Registration, MSME Certificate";
+    if (sector === "Healthcare") return "Drug License, Biomedical Certifications";
+    if (sector === "Supply & Trading") return "GST, MSME/Udyam, Trade License";
+    return "GST, PAN, ISO 9001";
+  };
+
   const [form, setForm] = useState({
     name: "Shivam Security Services Pvt. Ltd.",
+    sector: "Security & Manpower",
+    docs: "",
     type: "Security & Manpower",
     address: "Mumbai, Maharashtra",
     gst: "27ABCDE1234F1Z5",
