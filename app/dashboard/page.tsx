@@ -230,7 +230,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>Top Insights for You</div>
             </div>
           </div>
-          <Link href="/brain" style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", textDecoration: "none" }}>View All →</Link>
+          <Link href="/match" style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", textDecoration: "none" }}>View All →</Link>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

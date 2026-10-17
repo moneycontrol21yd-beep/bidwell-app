@@ -52,7 +52,7 @@ export default function TendersListPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setTenders(d.tenders || []);
+          setTenders((d.tenders || d.data?.tenders || []).map((x:any) => ({...x, id: x.id || x.source_tender_id})));
           setTotal(d.tenders?.length || 0);
         }
       })

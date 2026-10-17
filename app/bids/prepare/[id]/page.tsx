@@ -39,12 +39,12 @@ export default function BidPreparePage() {
   const completed = defaultChecks.filter(c => checked[c.key]).length;
   const progress = Math.round((completed / defaultChecks.length) * 100);
 
-  const portalUrl = tender?.source_url || (tender?.source === "CPPP" ? "https://eprocure.gov.in/cppp/" : "#");
+  const portalUrl = tender?.source_url || "https://eprocure.gov.in/cppp/";
 
   return (
     <main style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "system-ui", paddingBottom: 120 }}>
       <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "20px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
-        <Link href={`/tenders/${tenderId}`} style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#C7D2FE" }}>← BACK TO TENDER</Link>
+        <Link href={`/tenders/${encodeURIComponent(tenderId)}`} style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#C7D2FE" }}>← BACK TO TENDER</Link>
         <h1 style={{ fontSize: 22, fontWeight: 900, margin: "10px 0 6px" }}>Bid Preparation</h1>
         <p style={{ fontSize: 12, color: "#E0E7FF", margin: 0 }}>Auto-filled for {company?.name || "Your Company"}</p>
       </div>

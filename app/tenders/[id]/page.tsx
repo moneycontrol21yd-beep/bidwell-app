@@ -142,7 +142,7 @@ export default function TenderDetailPage() {
 
       {/* ACTION BUTTON */}
       <div style={{ padding: "0 18px", marginBottom: 20 }}>
-        <Link href={`/bids/prepare/${tenderId}`} style={{ ...LINK, display: "block" }}>
+        <Link href={`/bids/prepare/${encodeURIComponent(tenderId)}`} style={{ ...LINK, display: "block" }}>
           <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", border: "none", padding: "16px", borderRadius: 16, color: "#fff", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 20px rgba(16,185,129,0.4)" }}>
             ✍️ Start Bid Preparation
           </button>
