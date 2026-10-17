@@ -39,15 +39,15 @@ export default function TendersListPage() {
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (query) params.set("query", query);
+    if (query) params.set("keyword", query);
     if (filterState) params.set("state", filterState);
     params.set("tab", tab);
-    fetch(`/api/tenders?${params.toString()}`)
+    fetch(`/api/search-tenders?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
           setTenders(d.tenders || []);
-          setTotal(d.totalCount || 0);
+          setTotal(d.tenders?.length || 0);
         }
       })
       .catch(() => {})
