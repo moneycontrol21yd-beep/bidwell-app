@@ -155,7 +155,7 @@ export default function TenderDetailPage() {
               <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14 }}>
                 <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>📅 Deadline</div>
                 <div style={{ fontSize: 13, fontWeight: 900, color: "#E2E8F0", lineHeight: 1.3 }}>
-                  {tender.deadline || "Not specified"}
+                  {tender.deadline || "Check Official Portal"}
                 </div>
               </div>
             </div>
