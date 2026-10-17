@@ -21,18 +21,17 @@ export default function TenderDetailPage() {
   useEffect(() => {
     if (!tenderId) return;
     
-    // Fetch with robust error handling
     fetch(`/api/tenders/${encodeURIComponent(tenderId)}`)
       .then(r => r.json())
       .then(d => { 
         const t = d.tender || d;
         setTender({
           id: t.id || t.source_tender_id || tenderId,
-          title: t.title || "Untitled Tender",
-          department: t.department || t.org_name || t.organisation || "Department N/A",
+          title: t.title || "Tender Title Not Available",
+          department: t.department || t.org_name || t.organisation || "Department Not Available",
           state: t.state || "India",
           deadline: t.deadline || t.closing_date || "",
-          source: t.source || "CPPP",
+          source: t.source || "Portal",
           source_url: t.source_url || t.detail_url || ""
         }); 
         setLoading(false); 
@@ -44,7 +43,7 @@ export default function TenderDetailPage() {
   }, [tenderId]);
 
   useEffect(() => {
-    if (tab === "intel" && tender && tender.department !== "Department N/A") {
+    if (tab === "intel" && tender && tender.department !== "Department Not Available") {
       setIntelLoading(true);
       fetch(`/api/competitor-intel?org=${encodeURIComponent(tender.department)}`)
         .then(r => r.json())
@@ -141,7 +140,7 @@ export default function TenderDetailPage() {
         )}
       </div>
 
-      {/* ACTION BUTTON (Now inside normal flow, above BottomNav) */}
+      {/* ACTION BUTTON */}
       <div style={{ padding: "0 18px", marginBottom: 20 }}>
         <Link href={`/bids/prepare/${tenderId}`} style={{ ...LINK, display: "block" }}>
           <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", border: "none", padding: "16px", borderRadius: 16, color: "#fff", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 20px rgba(16,185,129,0.4)" }}>

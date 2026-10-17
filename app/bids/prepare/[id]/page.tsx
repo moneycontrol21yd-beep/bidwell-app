@@ -39,6 +39,8 @@ export default function BidPreparePage() {
   const completed = defaultChecks.filter(c => checked[c.key]).length;
   const progress = Math.round((completed / defaultChecks.length) * 100);
 
+  const portalUrl = tender?.source_url || (tender?.source === "CPPP" ? "https://eprocure.gov.in/cppp/" : "#");
+
   return (
     <main style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "system-ui", paddingBottom: 120 }}>
       <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "20px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
@@ -81,7 +83,7 @@ export default function BidPreparePage() {
         <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: "#10B981", fontWeight: 700, textAlign: "center" }}>Note: You will be redirected to the official government portal to upload these documents and submit your bid.</div>
         </div>
-        <a href={tender?.source_url || "#"} target="_blank" rel="noopener noreferrer" style={{ ...LINK, display: "block" }}>
+        <a href={portalUrl} target="_blank" rel="noopener noreferrer" style={{ ...LINK, display: "block" }}>
           <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.35)" }}>
             🚀 Go to Official Portal & Submit
           </button>
