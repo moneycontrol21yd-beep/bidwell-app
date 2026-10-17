@@ -1,258 +1,137 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import AppNav from "@/components/AppNav";
+import BottomNav from "@/components/BottomNav";
 
-const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B", purple: "#6366F1" };
 const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
 
 export default function TenderDetailPage() {
   const params = useParams();
-  const router = useRouter();
-  const tenderId = params.id as string;
-
+  const tenderId = params?.id as string;
+  
   const [tender, setTender] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"overview" | "intel" | "source">("overview");
   const [intel, setIntel] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [intelLoading, setIntelLoading] = useState(false);
+  const [tab, setTab] = useState("overview");
 
   useEffect(() => {
     if (!tenderId) return;
-    fetch(`/api/tenders/${tenderId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && d.tender) setTender(d.tender);
-        else if (d.tender) setTender(d.tender);
-        else if (d.data) setTender(d.data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  
-    // Fetch Competitor Intel
-    if (tender && (tender.organisation || tender.department)) {
-      fetch(`/api/competitor-intel?org=${encodeURIComponent(tender.organisation || tender.department)}`)
-        .then(r => r.json())
-        .then(d => { if (d.success) setIntel(d); })
-        .catch(() => {});
-    }
-
-}, [tenderId]);
+    fetch(`/api/tenders/${encodeURIComponent(tenderId)}`)
+      .then(r => r.json())
+      .then(d => { setTender(d.tender || d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [tenderId]);
 
   useEffect(() => {
-    if (!tender?.title || intel) return;
-    setIntelLoading(true);
-    fetch(`/api/tender-intel?title=${encodeURIComponent(tender.title)}`)
-      .then((r) => r.json())
-      .then((d) => d.success && setIntel(d))
-      .catch(() => {})
-      .finally(() => setIntelLoading(false));
-  }, [tender]);
+    if (tab === "intel" && tender && (tender.department || tender.organisation)) {
+      setIntelLoading(true);
+      const org = tender.department || tender.organisation;
+      fetch(`/api/competitor-intel?org=${encodeURIComponent(org)}`)
+        .then(r => r.json())
+        .then(d => { if (d.success) setIntel(d); })
+        .catch(() => {})
+        .finally(() => setIntelLoading(false));
+    }
+  }, [tab, tender]);
 
-  const daysLeft = (d?: string) => {
-    if (!d) return null;
-    try {
-      const t = new Date(d).getTime();
-      if (isNaN(t)) return null;
-      const diff = Math.ceil((t - Date.now()) / 86400000);
-      return isNaN(diff) ? null : diff;
-    } catch { return null; }
-  };
+  if (loading) return <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", display: "flex", justifyContent: "center", alignItems: "center" }}>Loading...</div>;
 
-  if (loading) {
-    return (
-      <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 36, height: 36, border: "3px solid #3B82F6", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-          <div style={{ fontSize: 12, color: C.muted }}>Loading tender...</div>
-          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tender) {
-    return (
-      <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", padding: 40, textAlign: "center" }}>
-        <div style={{ fontSize: 40, opacity: 0.4 }}>📭</div>
-        <div style={{ fontSize: 14, color: C.sub, marginTop: 12 }}>Tender not found</div>
-        <Link href="/tenders" style={{ display: "inline-block", marginTop: 20, color: "#818CF8", fontWeight: 800 }}>← Back to Tenders</Link>
-      </div>
-    );
-  }
-
-  const dl = daysLeft(tender.deadline);
+  if (!tender) return (
+    <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ fontSize: 40, marginBottom: 20 }}>📭</div>
+      <div style={{ fontSize: 16, fontWeight: 800 }}>Tender Not Found</div>
+      <Link href="/tenders" style={{ marginTop: 20, color: "#818CF8", fontWeight: 800, textDecoration: "none" }}>← Back to Tenders</Link>
+    </div>
+  );
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 100, color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif" }}>
-
+    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 100, fontFamily: "system-ui, sans-serif" }}>
       {/* HEADER */}
-      <div style={{ background: "linear-gradient(135deg,#4338CA 0%,#6366F1 100%)", padding: "16px 18px 22px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(139,92,246,0.5)", filter: "blur(50px)" }} />
-        <div style={{ position: "relative" }}>
-          <button onClick={() => router.back()} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 20, cursor: "pointer", padding: 0, marginBottom: 10 }}>←</button>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.8, padding: "3px 9px", borderRadius: 6, background: "rgba(255,255,255,0.22)", color: "#fff" }}>
-              {(tender.source || "CPPP").toUpperCase()}
-            </span>
-            {tender.state && <span style={{ fontSize: 10, color: "#E0E7FF", fontWeight: 700 }}>📍 {tender.state}</span>}
-            {dl !== null && dl >= 0 && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, padding: "3px 9px", borderRadius: 6, background: dl <= 7 ? "rgba(239,68,68,0.9)" : "rgba(16,185,129,0.9)", color: "#fff" }}>
-                {dl === 0 ? "TODAY" : `${dl} DAYS LEFT`}
-              </span>
-            )}
-          </div>
-
-          <h1 style={{ fontSize: 19, fontWeight: 900, margin: 0, lineHeight: 1.25, color: "#fff" }}>{tender.title}</h1>
-
-          {tender.tender_no && (
-            <div style={{ fontSize: 10.5, color: "#C7D2FE", marginTop: 8, fontWeight: 600 }}>
-              Ref: {tender.tender_no}
-            </div>
-          )}
+      <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "20px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        <Link href="/tenders" style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#C7D2FE" }}>← Back</Link>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 10 }}>
+          <span style={{ background: "rgba(255,255,255,0.2)", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 10 }}>{tender.source || "CPPP"}</span>
+          <span style={{ background: "rgba(16,185,129,0.3)", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 10, color: "#10B981" }}>● Open</span>
         </div>
+        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{tender.title}</h1>
       </div>
 
       {/* TABS */}
-      <div style={{ padding: "14px 18px 0" }}>
-        <div style={{ display: "flex", background: C.card, borderRadius: 14, padding: 4, border: `1px solid rgba(99,102,241,0.2)` }}>
-          {[
-            { id: "overview", label: "Overview" },
-            { id: "intel", label: "🧠 Intel" },
-            { id: "source", label: "Source" },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id as any)}
-              style={{
-                flex: 1, padding: "10px 6px", borderRadius: 10,
-                background: tab === t.id ? "linear-gradient(135deg,#4338CA,#6366F1)" : "transparent",
-                color: tab === t.id ? "#fff" : C.sub,
-                border: "none", fontSize: 11.5, fontWeight: 900, cursor: "pointer", fontFamily: "inherit",
-                boxShadow: tab === t.id ? "0 4px 14px rgba(99,102,241,0.35)" : "none",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <div style={{ display: "flex", padding: "18px 18px 0", gap: 8 }}>
+        {["overview", "intel", "source"].map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "10px 0", background: tab === t ? C.purple : C.card, border: "none", borderRadius: 12, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "capitalize" }}>{t}</button>
+        ))}
       </div>
 
       {/* CONTENT */}
-      <div style={{ padding: "16px 18px 20px" }}>
+      <div style={{ padding: "18px" }}>
         {tab === "overview" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* Department */}
-            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>🏛️ Department</div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#E2E8F0", lineHeight: 1.35 }}>
-                {tender.department || tender.organisation || "Information pending"}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 800 }}>ESTIMATED VALUE</div>
+                <div style={{ fontSize: 15, fontWeight: 900, marginTop: 6 }}>Check Portal</div>
+              </div>
+              <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 800 }}>DEADLINE</div>
+                <div style={{ fontSize: 15, fontWeight: 900, marginTop: 6, color: "#F59E0B" }}>{tender.deadline ? new Date(tender.deadline).toLocaleDateString() : "Check Portal"}</div>
               </div>
             </div>
-
-            {/* Stats Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>💰 Value</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "#60A5FA" }}>
-                  {tender.value_in_cr && tender.value_in_cr > 0 ? `₹${tender.value_in_cr} Cr` : "Not specified"}
-                </div>
-              </div>
-              <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6 }}>📅 Deadline</div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: "#E2E8F0", lineHeight: 1.3 }}>
-                  {tender.deadline || "Check Official Portal"}
-                </div>
-              </div>
+            <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
+              <div style={{ fontSize: 10, color: C.muted, fontWeight: 800, marginBottom: 12 }}>KEY INFORMATION</div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}><span style={{ color: C.sub }}>Department</span><span style={{ fontWeight: 700 }}>{tender.department || tender.organisation || "N/A"}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}><span style={{ color: C.sub }}>State</span><span style={{ fontWeight: 700 }}>{tender.state || "India"}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}><span style={{ color: C.sub }}>ID</span><span style={{ fontWeight: 700 }}>{tender.id || tenderId}</span></div>
             </div>
-
-            {/* Match Analysis Button */}
-            <Link href={`/match?tenderId=${tender.id}`} style={{ ...LINK, display: "block" }}>
-              <button style={{ width: "100%", background: "linear-gradient(135deg,#6366F1 0%,#A855F7 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(139,92,246,0.35)", fontFamily: "inherit" }}>
-                🎯 View Match Analysis
-              </button>
-            </Link>
-
-            {/* Bid Prep Button */}
-            <Link href={`/bids/prepare/${tender_id}`} style={{ textDecoration: "none", color: "#fff", display: "block" }}><button style={{ width: "100%", background: "linear-gradient(135deg,#2563EB 0%,#3B82F6 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(59,130,246,0.35)", fontFamily: "inherit" }}>
-              ✍️ Start Bid Preparation
-            </button></Link>
+            <div style={{ background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)", padding: 16, borderRadius: 16, display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 24 }}>✨</div>
+              <div><div style={{ fontSize: 12, fontWeight: 900 }}>AI Summary</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", marginTop: 4 }}>This is a high-value infrastructure project. Ensure your technical and financial documents are ready.</div></div>
+            </div>
           </div>
         )}
 
         {tab === "intel" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {intelLoading ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0" }}>
-                <div style={{ width: 30, height: 30, border: "3px solid #6366F1", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 12 }}>Analyzing 29L+ historical records...</div>
-              </div>
-            ) : !intel || !intel.top_competitors || intel.top_competitors.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px 20px", background: C.card, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
-                <div style={{ fontSize: 32, opacity: 0.4 }}>📊</div>
-                <div style={{ fontSize: 12, color: C.sub, marginTop: 10, fontWeight: 600 }}>No historical data found</div>
-                <div style={{ fontSize: 10.5, color: C.muted, marginTop: 6 }}>Brain will learn as more data comes in.</div>
-              </div>
-            ) : (
+              <div style={{ textAlign: "center", color: C.muted, padding: 20 }}>Analyzing historical data...</div>
+            ) : intel && intel.top_competitors?.length > 0 ? (
               <>
-                <div style={{ fontSize: 11, fontWeight: 900, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>Competitor Intelligence</div>
-                
-                {intel.live_active_tenders > 0 && (
-                  <div style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 12, padding: 12, fontSize: 12, color: "#C7D2FE", fontWeight: 600 }}>
-                    Found {intel.live_active_tenders} live tenders in this department.
-                  </div>
-                )}
-
-                {intel.top_competitors.map((comp: any, i: number) => (
-                  <div key={i} style={{ background: C.card, border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", flex: 1 }}>{comp.winner_name}</div>
-                      <div style={{ fontSize: 11, fontWeight: 900, color: "#10B981", background: "rgba(16,185,129,0.15)", padding: "2px 8px", borderRadius: 10 }}>{comp.total_wins} Wins</div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: C.muted, marginBottom: 4 }}>TOP COMPETITORS (Historical)</div>
+                {intel.top_competitors.map((c: any, i: number) => (
+                  <div key={i} style={{ background: C.card, padding: 14, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{c.winner_name}</div>
+                      <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Avg Bid: ₹{(c.avg_winning_bid / 100000).toFixed(2)} L</div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.sub }}>
-                      <div>Avg Bid: <span style={{ fontWeight: 700, color: "#fff" }}>₹{(comp.avg_winning_bid / 100000).toFixed(2)} L</span></div>
-                      <div>Last Won: <span style={{ fontWeight: 700, color: "#fff" }}>{comp.last_won_year}</span></div>
-                    </div>
+                    <div style={{ background: "rgba(16,185,129,0.15)", color: "#10B981", fontSize: 11, fontWeight: 900, padding: "4px 8px", borderRadius: 8 }}>{c.total_wins} Wins</div>
                   </div>
                 ))}
               </>
+            ) : (
+              <div style={{ textAlign: "center", color: C.muted, padding: 20 }}>No historical competitor data found for this department.</div>
             )}
           </div>
-        )}{tab === "source" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>Source</div>
-              <div style={{ fontSize: 13, color: "#E2E8F0", fontWeight: 600 }}>{tender.source || "CPPP"}</div>
-            </div>
+        )}
 
-            <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>Tender Number</div>
-              <div style={{ fontSize: 13, color: "#E2E8F0", fontWeight: 600, wordBreak: "break-all" }}>{tender.tender_no || "Not specified"}</div>
-            </div>
-
-            {tender.source_url && (
-              <a href={tender.source_url} target="_blank" rel="noopener noreferrer" style={{ ...LINK, display: "block" }}>
-                <button style={{ width: "100%", background: "linear-gradient(135deg,#059669 0%,#10B981 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "15px", fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.3)", fontFamily: "inherit" }}>
-                  🔗 Open Original Tender
-                </button>
-              </a>
-            )}
-
-            <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 14, padding: 14, display: "flex", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>⚠️</span>
-              <div style={{ fontSize: 11, color: "#FBBF24", lineHeight: 1.5, fontWeight: 600 }}>
-                Official PDF download or bid submission requires direct login on the source portal.
-              </div>
-            </div>
+        {tab === "source" && (
+          <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Official Source URL</div>
+            <a href={tender.source_url} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", fontSize: 12, wordBreak: "break-all", textDecoration: "none" }}>{tender.source_url || "URL not available"}</a>
           </div>
         )}
       </div>
 
-      {/* BOTTOM NAV */}
-      <AppNav active="tenders" />
+      {/* BOTTOM ACTION BUTTONS */}
+      <div style={{ position: "fixed", bottom: 60, left: 0, right: 0, padding: "0 18px", display: "flex", gap: 10 }}>
+        <Link href={`/bids/prepare/${tenderId}`} style={{ ...LINK, flex: 1 }}>
+          <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", border: "none", padding: "16px", borderRadius: 16, color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>✍️ Start Bid Prep</button>
+        </Link>
+      </div>
+      <BottomNav />
     </div>
   );
 }

@@ -1,47 +1,27 @@
 import { NextResponse } from "next/server";
 
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const VPS_URL = process.env.VPS_API_URL;
+const VPS_TOKEN = process.env.VPS_API_TOKEN;
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
+  const id = params.id;
   try {
-    const { id } = await params;
-
-    const res = await fetch(
-      `${SB_URL}/rest/v1/tenders?id=eq.${encodeURIComponent(id)}&limit=1`,
-      {
-        headers: {
-          apikey: SB_KEY!,
-          Authorization: `Bearer ${SB_KEY}`,
-        },
-        cache: "no-store",
-      }
-    );
-
+    const res = await fetch(`${VPS_URL}/tenders/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${VPS_TOKEN}` },
+      cache: "no-store",
+    });
+    
     if (!res.ok) {
-      return NextResponse.json(
-        { success: false, error: `Supabase error: ${res.status}` },
-        { status: res.status }
-      );
+      if (res.status === 404) return NextResponse.json({ error: "Tender not found" }, { status: 404 });
+      throw new Error("VPS API error");
     }
-
-    const rows = await res.json();
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Tender not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, tender: rows[0] });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    
+    const data = await res.json();
+    return NextResponse.json({ success: true, tender: data });
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
 }
