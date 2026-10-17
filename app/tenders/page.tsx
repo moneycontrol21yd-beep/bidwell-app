@@ -42,7 +42,7 @@ export default function TendersListPage() {
     if (query) params.set("keyword", query);
     if (filterState) params.set("state", filterState);
     params.set("tab", tab);
-    fetch(`/api/search-tenders?${params.toString()}`)
+    fetch(`/api/match-profile?state=${localStorage.getItem("company_state") || "All India"}&keyword=${encodeURIComponent(query)}&limit=10`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
