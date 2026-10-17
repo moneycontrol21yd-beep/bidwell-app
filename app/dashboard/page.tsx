@@ -74,6 +74,13 @@ function NeonBrain() {
 export default function DashboardPage() {
   const t = useT();
   const [userName, setUserName] = useState("BR");
+  const [stats, setStats] = useState({ closing_soon: 0 });
+
+  useEffect(() => {
+    fetch("/api/brain-stats").then(r => r.json()).then(d => {
+      if(d.success) setStats({ closing_soon: d.closing_soon });
+    }).catch(() => {});
+  }, []);
   useEffect(() => {
     try {
       const u = localStorage.getItem("user");
@@ -103,10 +110,10 @@ export default function DashboardPage() {
   ];
 
   const insights = [
-    { bg: "linear-gradient(135deg,#059669,#10B981)", icon: "📈", t: "High Demand Sectors", items: ["Roads & Highways", "Construction", "Health & Medical", "IT & Software"] },
-    { bg: "linear-gradient(135deg,#7C3AED,#8B5CF6)", icon: "📊", t: "Best Winning Chances", items: ["Low Competition", "High Value"], badge: "✨ Your Advantage" },
-    { bg: "linear-gradient(135deg,#2563EB,#3B82F6)", icon: "⏰", t: "Closing Soon", big: "248", bigL: "Tenders", items: ["Next 7 Days"] },
-    { bg: "linear-gradient(135deg,#D97706,#F59E0B)", icon: "📅", t: "Upcoming Projects", big: "1,320", bigL: "Projects", items: ["Next 3 Months"] },
+    { bg: "linear-gradient(135deg,#059669,#10B981)", icon: "📈", t: "High Demand Sectors", href: "/tenders", items: ["Roads & Highways", "Construction", "Health & Medical", "IT & Software"] },
+    { bg: "linear-gradient(135deg,#7C3AED,#8B5CF6)", icon: "📊", t: "Best Winning Chances", href: "/match", items: ["Low Competition", "High Value"], badge: "✨ Your Advantage" },
+    { bg: "linear-gradient(135deg,#2563EB,#3B82F6)", icon: "⏰", t: "Closing Soon", big: stats.closing_soon.toString(), bigL: "Live Tenders", href: "/tenders", items: ["Next 7 Days"] },
+    { bg: "linear-gradient(135deg,#D97706,#F59E0B)", icon: "📅", t: "Upcoming Projects", big: "AI", bigL: "Predictions", href: "/watch", items: ["Next 3 Months"] },
   ];
 
   return (
@@ -235,7 +242,7 @@ export default function DashboardPage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {insights.map((ins, i) => (
-            <div key={i} style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14, minHeight: 165 }}>
+            <div key={i} onClick={() => { if(ins.href) window.location.href = ins.href; }} style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 14, minHeight: 165, cursor: ins.href ? "pointer" : "default" }}>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: ins.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, marginBottom: 11, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>{ins.icon}</div>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: "#fff", lineHeight: 1.25 }}>{ins.t}</div>
 
