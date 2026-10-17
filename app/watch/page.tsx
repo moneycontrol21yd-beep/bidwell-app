@@ -1,53 +1,113 @@
 "use client";
+
+import { useState } from "react";
 import Link from "next/link";
-const C={bg:"#060B28",card:"#0E1533",text:"#fff",sub:"#94A3B8",muted:"#64748B"};
-const LINK:React.CSSProperties={textDecoration:"none",color:"#fff"};
-export default function WatchPage(){
-  const items=[
-    {id:1,t:"Security Services - AIIMS Delhi",d:"AIIMS Delhi",v:"₹2.8 Cr",dl:"25 Oct 2026",match:95,watching:true},
-    {id:2,t:"Road Construction - NHAI Phase 4",d:"NHAI",v:"₹12.5 Cr",dl:"28 Oct 2026",match:78,watching:true},
-    {id:3,t:"Housekeeping - Railway Board",d:"Railway Board",v:"₹1.2 Cr",dl:"30 Oct 2026",match:88,watching:true},
-  ];
-  return(
-    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:100,color:C.text,fontFamily:"system-ui,-apple-system,sans-serif"}}>
-      <div style={{position:"sticky",top:0,zIndex:20,background:"rgba(6,11,40,0.96)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(99,102,241,0.15)",padding:"14px 18px 12px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <Link href="/dashboard" style={{...LINK,fontSize:20}}>←</Link>
-          <div style={{flex:1}}>
-            <div style={{fontSize:17,fontWeight:900}}>Watching</div>
-            <div style={{fontSize:10,color:C.muted,marginTop:3}}>{items.length} tenders tracked</div>
-          </div>
-          <span style={{fontSize:22}}>👁️</span>
+import BottomNav from "@/components/BottomNav";
+
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+
+export default function FutureRadarPage() {
+  const [keyword, setKeyword] = useState("road");
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleSearch = async () => {
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      const res = await fetch(`/api/future-radar?keyword=${encodeURIComponent(keyword)}`);
+      const d = await res.json();
+      if (d.success) setData(d.radar_data || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  const getMonthName = (m: number) => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months[m - 1] || "Unknown";
+  };
+
+  return (
+    <main style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 100, fontFamily: "system-ui" }}>
+      
+      {/* HEADER */}
+      <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "30px 20px 25px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        <Link href="/dashboard" style={{ textDecoration: "none", color: "#C7D2FE", fontSize: 11, fontWeight: 800 }}>← DASHBOARD</Link>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: "10px 0 6px" }}>Future Radar</h1>
+        <p style={{ fontSize: 12, color: "#E0E7FF", margin: 0 }}>AI-driven predictions based on historical cycles.</p>
+      </div>
+
+      {/* SEARCH */}
+      <div style={{ padding: "20px 18px 0" }}>
+        <div style={{ background: C.card, border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 12, display: "flex", gap: 10 }}>
+          <input 
+            type="text" 
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="e.g. road, construction, IT..." 
+            style={{ flex: 1, background: "transparent", border: "none", color: "#fff", outline: "none", fontSize: 13 }}
+          />
+          <button onClick={handleSearch} style={{ background: "linear-gradient(135deg,#6366F1,#A855F7)", border: "none", padding: "10px 16px", borderRadius: 10, color: "#fff", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>
+            Predict
+          </button>
         </div>
       </div>
-      <div style={{padding:"16px 18px"}}>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {items.map(x=>(
-            <Link key={x.id} href="/tenders" style={{...LINK,display:"block"}}>
-              <div style={{background:C.card,border:"1px solid rgba(99,102,241,0.2)",borderRadius:16,padding:14}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-                  <span style={{padding:"3px 9px",borderRadius:12,background:"rgba(16,185,129,0.15)",color:"#10B981",border:"1px solid rgba(16,185,129,0.4)",fontSize:10,fontWeight:900}}>{x.match}% match</span>
-                  <span style={{fontSize:10,color:C.muted,fontWeight:700}}>👁️ Watching</span>
+
+      {/* RESULTS */}
+      <div style={{ padding: "20px 18px" }}>
+        {loading ? (
+          <div style={{ textAlign: "center", color: C.muted, padding: 40 }}>Analyzing historical patterns...</div>
+        ) : !hasSearched ? (
+          <div style={{ textAlign: "center", color: C.muted, padding: 40 }}>
+            Enter a keyword above to predict upcoming tender cycles.
+          </div>
+        ) : data.length === 0 ? (
+          <div style={{ textAlign: "center", color: C.muted, padding: 40 }}>
+            No strong historical patterns found for this keyword.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: C.muted, letterSpacing: 1, marginBottom: 4 }}>PREDICTED OPPORTUNITIES</div>
+            
+            {data.map((item, i) => (
+              <div key={i} style={{ background: C.card, border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: "#fff" }}>{item.department}</div>
+                  <div style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 10, border: "1px solid rgba(245,158,11,0.3)" }}>
+                    ⚡ FORECAST
+                  </div>
                 </div>
-                <div style={{fontSize:13.5,fontWeight:800,color:"#fff",lineHeight:1.35,marginBottom:6}}>{x.t}</div>
-                <div style={{fontSize:10.5,color:C.sub,marginBottom:8}}>🏛️ {x.d}</div>
-                <div style={{display:"flex",justifyContent:"space-between",paddingTop:10,borderTop:"1px solid rgba(99,102,241,0.15)"}}>
-                  <div><div style={{fontSize:9,color:C.muted,fontWeight:800,textTransform:"uppercase"}}>Value</div><div style={{fontSize:12,fontWeight:900,color:"#60A5FA",marginTop:2}}>{x.v}</div></div>
-                  <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.muted,fontWeight:800,textTransform:"uppercase"}}>Deadline</div><div style={{fontSize:11,fontWeight:900,color:"#10B981",marginTop:2}}>{x.dl}</div></div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  <div style={{ background: "rgba(255,255,255,0.05)", padding: 10, borderRadius: 10 }}>
+                    <div style={{ fontSize: 10, color: C.muted }}>EXPECTED MONTH</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "#60A5FA", marginTop: 4 }}>{getMonthName(item.predicted_month)}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.05)", padding: 10, borderRadius: 10 }}>
+                    <div style={{ fontSize: 10, color: C.muted }}>CONFIDENCE</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: item.confidence === "High" ? "#10B981" : "#F59E0B", marginTop: 4 }}>{item.confidence}</div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.4 }}>
+                  <span style={{ color: "#818CF8", fontWeight: 700 }}>Evidence:</span> {item.historical_evidence}
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+            
+            <div style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 12, padding: 14, marginTop: 10 }}>
+              <div style={{ fontSize: 11, color: "#A5B4FC", fontWeight: 600, textAlign: "center" }}>
+                Note: These are AI predictions based on historical trends, not confirmed tenders. We will notify you when the actual tender goes live.
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:30,background:"rgba(10,14,39,0.98)",backdropFilter:"blur(12px)",borderTop:"1px solid rgba(99,102,241,0.18)",display:"flex",alignItems:"center",justifyContent:"space-around",padding:"10px 0 14px"}}>
-        {[{icon:"🏠",l:"Home",href:"/dashboard"},{icon:"📄",l:"Tenders",href:"/tenders"},{icon:"🧠",l:"Brain",href:"/brain",center:true},{icon:"✍️",l:"Bids",href:"/bids"},{icon:"⋯",l:"More",href:"/profile",on:true}].map(n=>(
-          <Link key={n.l} href={n.href} style={{...LINK,display:"flex",flexDirection:"column",alignItems:"center",position:"relative",marginTop:n.center?-28:0,minWidth:55}}>
-            {n.center?(<div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#6366F1 0%,#A855F7 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,boxShadow:"0 10px 30px rgba(139,92,246,0.55)",border:`4px solid ${C.bg}`}}>🧠</div>):(<span style={{fontSize:22,opacity:n.on?1:0.55}}>{n.icon}</span>)}
-            <span style={{fontSize:10,fontWeight:900,color:n.on?"#818CF8":C.muted,marginTop:n.center?4:5}}>{n.l}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
+
+      <BottomNav />
+    </main>
   );
 }
