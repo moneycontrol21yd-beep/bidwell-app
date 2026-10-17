@@ -30,7 +30,16 @@ export default function TenderDetailPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [tenderId]);
+  
+    // Fetch Competitor Intel
+    if (tender && (tender.organisation || tender.department)) {
+      fetch(`/api/competitor-intel?org=${encodeURIComponent(tender.organisation || tender.department)}`)
+        .then(r => r.json())
+        .then(d => { if (d.success) setIntel(d); })
+        .catch(() => {});
+    }
+
+}, [tenderId]);
 
   useEffect(() => {
     if (!tender?.title || intel) return;
@@ -175,79 +184,44 @@ export default function TenderDetailPage() {
         )}
 
         {tab === "intel" && (
-          <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {intelLoading ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0" }}>
                 <div style={{ width: 30, height: 30, border: "3px solid #6366F1", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 12 }}>Analyzing 13.7L records...</div>
-                <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 12 }}>Analyzing 29L+ historical records...</div>
               </div>
-            ) : !intel || !intel.totalSimilar ? (
-              <div style={{ textAlign: "center", padding: "40px 20px", background: C.card, borderRadius: 16, border: `1px solid rgba(99,102,241,0.2)` }}>
+            ) : !intel || !intel.top_competitors || intel.top_competitors.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", background: C.card, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
                 <div style={{ fontSize: 32, opacity: 0.4 }}>📊</div>
-                <div style={{ fontSize: 12, color: C.sub, marginTop: 10, fontWeight: 600 }}>No historical data for this tender</div>
-                <div style={{ fontSize: 10.5, color: C.muted, marginTop: 6 }}>Brain will learn as more data comes in</div>
+                <div style={{ fontSize: 12, color: C.sub, marginTop: 10, fontWeight: 600 }}>No historical data found</div>
+                <div style={{ fontSize: 10.5, color: C.muted, marginTop: 6 }}>Brain will learn as more data comes in.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* Summary stats */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Similar</div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#10B981", marginTop: 4 }}>{intel.totalSimilar}</div>
+              <>
+                <div style={{ fontSize: 11, fontWeight: 900, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>Competitor Intelligence</div>
+                
+                {intel.live_active_tenders > 0 && (
+                  <div style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 12, padding: 12, fontSize: 12, color: "#C7D2FE", fontWeight: 600 }}>
+                    Found {intel.live_active_tenders} live tenders in this department.
                   </div>
-                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Avg Win</div>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24", marginTop: 4 }}>
-                      ₹{(intel.avgWinningValue / 100000).toFixed(1)}L
+                )}
+
+                {intel.top_competitors.map((comp: any, i: number) => (
+                  <div key={i} style={{ background: C.card, border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", flex: 1 }}>{comp.winner_name}</div>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: "#10B981", background: "rgba(16,185,129,0.15)", padding: "2px 8px", borderRadius: 10 }}>{comp.total_wins} Wins</div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.sub }}>
+                      <div>Avg Bid: <span style={{ fontWeight: 700, color: "#fff" }}>₹{(comp.avg_winning_bid / 100000).toFixed(2)} L</span></div>
+                      <div>Last Won: <span style={{ fontWeight: 700, color: "#fff" }}>{comp.last_won_year}</span></div>
                     </div>
                   </div>
-                  <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 14, padding: 12, textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>Avg Bids</div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#60A5FA", marginTop: 4 }}>{intel.avgBidders.toFixed(1)}</div>
-                  </div>
-                </div>
-
-                {/* Recommended Bid */}
-                <div style={{ background: "linear-gradient(135deg,#059669 0%,#10B981 100%)", borderRadius: 18, padding: 18, boxShadow: "0 8px 24px rgba(16,185,129,0.3)" }}>
-                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.9)", textTransform: "uppercase", letterSpacing: 1 }}>Recommended Bid</div>
-                  <div style={{ fontSize: 30, fontWeight: 900, color: "#fff", marginTop: 6, lineHeight: 1 }}>
-                    ₹{((intel.avgWinningValue * 0.98) / 100000).toFixed(1)} L
-                  </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", marginTop: 8, fontWeight: 600 }}>
-                    Based on {intel.totalSimilar} similar tenders
-                  </div>
-                </div>
-
-                {/* Competitors */}
-                <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 16 }}>⚔️</span>
-                    <span style={{ fontSize: 12, fontWeight: 900, color: "#E2E8F0", letterSpacing: 0.5 }}>LIKELY COMPETITORS</span>
-                  </div>
-                  {intel.topCompetitors.map((c: any, i: number) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < intel.topCompetitors.length - 1 ? `1px solid rgba(99,102,241,0.12)` : "none" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: i === 0 ? "rgba(239,68,68,0.2)" : i === 1 ? "rgba(245,158,11,0.2)" : "rgba(99,102,241,0.15)", color: i === 0 ? "#F87171" : i === 1 ? "#FBBF24" : "#94A3B8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>
-                          {i + 1}
-                        </div>
-                        <span style={{ fontSize: 12, color: "#E2E8F0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-                      </div>
-                      <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
-                        <div style={{ fontSize: 12, fontWeight: 900, color: "#10B981" }}>
-                          ₹{(c.avg_value / 100000).toFixed(1)}L
-                        </div>
-                        <div style={{ fontSize: 9, color: C.muted }}>{c.wins} wins</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                ))}
+              </>
             )}
           </div>
-        )}
-
-        {tab === "source" && (
+        )}{tab === "source" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ background: C.card, border: `1px solid rgba(99,102,241,0.2)`, borderRadius: 16, padding: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>Source</div>
