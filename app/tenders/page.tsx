@@ -37,6 +37,12 @@ export default function TendersListPage() {
   const [filterState, setFilterState] = useState("");
 
   useEffect(() => {
+    // Auto-load based on profile
+    try {
+      const p = JSON.parse(localStorage.getItem("company") || "{}");
+      if(p.type) setQuery(p.type);
+    } catch {}
+
     setLoading(true);
     const params = new URLSearchParams();
     if (query) params.set("keyword", query);
@@ -209,6 +215,11 @@ export default function TendersListPage() {
                       overflow: "hidden",
                     }}>
                       {t.title}
+
+<span style={{ fontSize: 10, fontWeight: 900, color: "#10B981", background: "rgba(16,185,129,0.15)", padding: "2px 8px", borderRadius: 10, marginLeft: 8 }}>
+  {t.match_score ? `${t.match_score}% Match` : "AI Match"}
+</span>
+
                     </div>
 
                     {/* Department */}
