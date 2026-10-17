@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 
@@ -12,6 +13,8 @@ const INPUT: React.CSSProperties = {
   color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
 };
 const LABEL: React.CSSProperties = { fontSize: 10, fontWeight: 900, letterSpacing: 1, color: C.muted, textTransform: "uppercase", marginBottom: 6, display: "block" };
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 export default function CompanySetupPage() {
   const [step, setStep] = useState(1);
@@ -44,6 +47,35 @@ export default function CompanySetupPage() {
     else {
       try {
         localStorage.setItem("company", JSON.stringify(form));
+      
+      // Supabase Sync
+      const syncToSupabase = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            console.log("User not logged in. Saved locally only.");
+            return;
+          }
+          
+          await supabase.from("companies").upsert({
+            user_id: user.id,
+            name: form.name,
+            business_type: form.type,
+            gst_number: form.gst,
+            pan_number: form.pan,
+            turnover_cr: parseFloat(form.turnover) || 0,
+            experience_years: parseInt(form.experience) || 0,
+            contact_email: form.email,
+            contact_phone: form.phone,
+            address: form.address
+          }, { onConflict: 'user_id' });
+          
+          console.log("Profile synced to Supabase!");
+        } catch (err) {
+          console.error("Supabase sync failed:", err);
+        }
+      };
+      syncToSupabase();
       } catch {}
       window.location.href = "/dashboard";
     }
