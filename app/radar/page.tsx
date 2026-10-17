@@ -1,105 +1,132 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 
-export default function RadarPage() {
-  const [activeTab, setActiveTab] = useState<"matched" | "upcoming" | "ending">("matched");
+const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
+const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
 
-  const sampleTenders = [
+export default function OpportunityRadarPage() {
+  const [activeTab, setActiveTab] = useState("For Me");
+
+  const mockTenders = [
     {
-      id: "1",
+      id: "2026_MP_001",
+      department: "HEALTH DEPARTMENT MP",
       title: "Provide Manpower & Security Services at Civil Hospital",
-      department: "Health Department MP",
       value: "₹1.8 Cr",
-      deadline: "2026-10-30",
-      matchScore: "92%",
+      deadline: "30 Oct 2026",
+      match: 92,
+      type: "For Me"
     },
     {
-      id: "2",
+      id: "2026_MP_002",
+      department: "SMART CITY INDORE",
       title: "Supply of CCTV Cameras and Facility Monitoring Setup",
-      department: "Smart City Indore",
       value: "₹3.2 Cr",
-      deadline: "2026-10-22",
-      matchScore: "88%",
+      deadline: "22 Oct 2026",
+      match: 88,
+      type: "For Me"
     },
+    {
+      id: "2026_MP_003",
+      department: "PWD MP",
+      title: "Construction of 4 Lane Road from X to Y",
+      value: "₹12.5 Cr",
+      deadline: "15 Nov 2026",
+      match: 85,
+      type: "Upcoming"
+    }
   ];
 
+  const filtered = activeTab === "For Me" 
+    ? mockTenders.filter(t => t.type === "For Me")
+    : activeTab === "Upcoming"
+    ? mockTenders.filter(t => t.type === "Upcoming")
+    : []; // Ending soon logic can be added here
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-5 pt-5 pb-6 rounded-b-[2rem] shadow-md">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1 text-xs font-bold tracking-wider uppercase text-blue-200 hover:text-white mb-3"
-        >
-          ← Back to Dashboard
-        </Link>
-        <h1 className="text-2xl font-bold">Opportunity Radar</h1>
-        <p className="text-xs text-blue-100 mt-1">
-          Smart radar highlighting high-match opportunities tailored for your company
-        </p>
+    <main style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 100, fontFamily: "system-ui, sans-serif" }}>
+      
+      {/* HEADER */}
+      <div style={{ padding: "30px 20px 20px" }}>
+        <Link href="/dashboard" style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#818CF8", letterSpacing: 1 }}>← BACK TO DASHBOARD</Link>
+        <h1 style={{ fontSize: 26, fontWeight: 900, margin: "14px 0 8px" }}>Opportunity Radar</h1>
+        <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.4 }}>Smart radar highlighting high-match opportunities tailored for your company.</p>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Navigation Tabs */}
-        <div className="flex bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800 text-xs font-bold">
-          {(
-            [
-              { id: "matched", label: "For Me" },
-              { id: "upcoming", label: "Upcoming" },
-              { id: "ending", label: "Ending Soon" },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2.5 text-center rounded-xl transition ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* TABS */}
+      <div style={{ padding: "0 20px 20px", overflowX: "auto", display: "flex", gap: 10 }}>
+        {["For Me", "Upcoming", "Ending Soon"].map(tab => (
+          <button 
+            key={tab} 
+            onClick={() => setActiveTab(tab)}
+            style={{ 
+              padding: "10px 16px", 
+              borderRadius: 12, 
+              background: activeTab === tab ? "linear-gradient(135deg,#6366F1,#A855F7)" : C.card, 
+              border: `1px solid ${activeTab === tab ? "transparent" : "rgba(99,102,241,0.2)"}`, 
+              color: "#fff", 
+              fontSize: 12, 
+              fontWeight: 800, 
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-        {/* Radar Tenders List */}
-        <div className="space-y-3">
-          {sampleTenders.map((tender) => (
-            <div
-              key={tender.id}
-              className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3"
-            >
-              <div className="flex justify-between items-start gap-2">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-blue-600 dark:text-blue-400 block">
-                    {tender.department}
-                  </span>
-                  <h3 className="text-sm font-bold mt-0.5 leading-snug text-gray-800 dark:text-gray-200">
-                    {tender.title}
-                  </h3>
+      {/* TENDERS LIST */}
+      <div style={{ padding: "0 20px" }}>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: "center", color: C.muted, padding: 40 }}>No opportunities in this category yet.</div>
+        ) : (
+          filtered.map((tender, i) => (
+            <Link href={`/tenders/${tender.id}`} key={i} style={{ ...LINK, display: "block", marginBottom: 16 }}>
+              <div style={{ background: C.card, border: "1px solid rgba(99,102,241,0.2)", borderRadius: 18, padding: 18, position: "relative", overflow: "hidden" }}>
+                
+                {/* Match Badge */}
+                <div style={{ position: "absolute", top: 18, right: 18, background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#10B981", fontSize: 11, fontWeight: 900, padding: "4px 10px", borderRadius: 10 }}>
+                  {tender.match}% Match
                 </div>
-                <span className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold px-2 py-1 rounded-lg">
-                  {tender.matchScore} Match
-                </span>
-              </div>
 
-              <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-100 dark:border-gray-800">
-                <span className="text-gray-500 font-medium">Value: <strong className="text-gray-800 dark:text-gray-200">{tender.value}</strong></span>
-                <span className="text-red-500 font-medium">Deadline: {tender.deadline}</span>
-              </div>
+                {/* Department */}
+                <div style={{ fontSize: 10, fontWeight: 900, color: "#818CF8", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8, paddingRight: 80 }}>
+                  {tender.department}
+                </div>
 
-              <Link href={`/tenders/${tender.id}`} className="block">
-                <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition">
-                  View Details & Analysis
-                </button>
-              </Link>
-            </div>
-          ))}
-        </div>
+                {/* Title */}
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.4, marginBottom: 16 }}>
+                  {tender.title}
+                </div>
+
+                {/* Value & Deadline Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 12 }}>
+                    <div style={{ fontSize: 9.5, color: C.muted, fontWeight: 800 }}>VALUE</div>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: "#60A5FA", marginTop: 4 }}>{tender.value}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 12 }}>
+                    <div style={{ fontSize: 9.5, color: C.muted, fontWeight: 800 }}>DEADLINE</div>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: "#F59E0B", marginTop: 4 }}>{tender.deadline}</div>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <div style={{ width: "100%", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)", color: "#A5B4FC", textAlign: "center", padding: "12px 0", borderRadius: 12, fontSize: 12, fontWeight: 800 }}>
+                  View Details & Analysis →
+                </div>
+
+              </div>
+            </Link>
+          ))
+        )}
       </div>
-    </div>
+
+      <BottomNav />
+    </main>
   );
 }
