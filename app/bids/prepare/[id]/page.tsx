@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 
 const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
 const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
@@ -39,7 +40,7 @@ export default function BidPreparePage() {
   const progress = Math.round((completed / defaultChecks.length) * 100);
 
   return (
-    <main style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "system-ui", paddingBottom: 100 }}>
+    <main style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "system-ui", paddingBottom: 120 }}>
       <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "20px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <Link href={`/tenders/${tenderId}`} style={{ ...LINK, fontSize: 11, fontWeight: 800, color: "#C7D2FE" }}>← BACK TO TENDER</Link>
         <h1 style={{ fontSize: 22, fontWeight: 900, margin: "10px 0 6px" }}>Bid Preparation</h1>
@@ -76,14 +77,18 @@ export default function BidPreparePage() {
         })}
       </div>
 
-      <div style={{ padding: "0 18px 20px" }}>
+      <div style={{ padding: "0 18px", marginBottom: 20 }}>
         <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: "#10B981", fontWeight: 700, textAlign: "center" }}>Note: You will be redirected to the official government portal to upload these documents and submit your bid.</div>
         </div>
         <a href={tender?.source_url || "#"} target="_blank" rel="noopener noreferrer" style={{ ...LINK, display: "block" }}>
-          <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.35)" }}>🚀 Go to Official Portal & Submit</button>
+          <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.35)" }}>
+            🚀 Go to Official Portal & Submit
+          </button>
         </a>
       </div>
+
+      <BottomNav />
     </main>
   );
 }

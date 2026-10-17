@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 
 const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", muted: "#64748B" };
 const LINK: React.CSSProperties = { textDecoration: "none", color: "#fff" };
@@ -19,27 +20,31 @@ export default function TenderDetailPage() {
 
   useEffect(() => {
     if (!tenderId) return;
+    
+    // Fetch with robust error handling
     fetch(`/api/tenders/${encodeURIComponent(tenderId)}`)
       .then(r => r.json())
       .then(d => { 
-        // Data Mapping Fix
         const t = d.tender || d;
         setTender({
           id: t.id || t.source_tender_id || tenderId,
-          title: t.title || "Tender Details",
-          department: t.department || t.organisation || "Department Info Pending",
+          title: t.title || "Untitled Tender",
+          department: t.department || t.org_name || t.organisation || "Department N/A",
           state: t.state || "India",
-          deadline: t.deadline || "Check Portal",
+          deadline: t.deadline || t.closing_date || "",
           source: t.source || "CPPP",
-          source_url: t.source_url || ""
+          source_url: t.source_url || t.detail_url || ""
         }); 
         setLoading(false); 
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { 
+        console.error(e);
+        setLoading(false); 
+      });
   }, [tenderId]);
 
   useEffect(() => {
-    if (tab === "intel" && tender && tender.department !== "Department Info Pending") {
+    if (tab === "intel" && tender && tender.department !== "Department N/A") {
       setIntelLoading(true);
       fetch(`/api/competitor-intel?org=${encodeURIComponent(tender.department)}`)
         .then(r => r.json())
@@ -53,7 +58,7 @@ export default function TenderDetailPage() {
   if (!tender) return <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", display: "flex", justifyContent: "center", alignItems: "center" }}>Tender Not Found</div>;
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 100, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 120, fontFamily: "system-ui, sans-serif" }}>
       
       {/* HEADER */}
       <div style={{ background: "linear-gradient(135deg, #4338CA 0%, #6366F1 100%)", padding: "20px 18px 24px", borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
@@ -62,7 +67,7 @@ export default function TenderDetailPage() {
           <span style={{ background: "rgba(0,0,0,0.3)", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 10 }}>{tender.source}</span>
           <span style={{ background: "rgba(16,185,129,0.2)", color: "#10B981", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 10 }}>● Open</span>
         </div>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{tender.title}</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{tender.title}</h1>
       </div>
 
       {/* TABS */}
@@ -83,7 +88,9 @@ export default function TenderDetailPage() {
               </div>
               <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
                 <div style={{ fontSize: 10, color: C.muted, fontWeight: 800 }}>DEADLINE</div>
-                <div style={{ fontSize: 15, fontWeight: 900, marginTop: 6, color: "#F59E0B" }}>{tender.deadline !== "Check Portal" ? new Date(tender.deadline).toLocaleDateString() : "Check Portal"}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, marginTop: 6, color: "#F59E0B" }}>
+                  {tender.deadline ? new Date(tender.deadline).toLocaleDateString() : "Check Portal"}
+                </div>
               </div>
             </div>
             <div style={{ background: C.card, padding: 16, borderRadius: 16, border: "1px solid rgba(99,102,241,0.2)" }}>
@@ -134,33 +141,16 @@ export default function TenderDetailPage() {
         )}
       </div>
 
-      {/* FIXED BOTTOM BUTTONS */}
-      <div style={{ position: "fixed", bottom: 70, left: 0, right: 0, padding: "0 18px", display: "flex", gap: 10, zIndex: 10 }}>
-        <Link href={`/bids/prepare/${tenderId}`} style={{ ...LINK, flex: 1 }}>
-          <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", border: "none", padding: "16px", borderRadius: 16, color: "#fff", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 20px rgba(16,185,129,0.4)" }}>✍️ Start Bid Prep</button>
+      {/* ACTION BUTTON (Now inside normal flow, above BottomNav) */}
+      <div style={{ padding: "0 18px", marginBottom: 20 }}>
+        <Link href={`/bids/prepare/${tenderId}`} style={{ ...LINK, display: "block" }}>
+          <button style={{ width: "100%", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", border: "none", padding: "16px", borderRadius: 16, color: "#fff", fontSize: 14, fontWeight: 900, cursor: "pointer", boxShadow: "0 6px 20px rgba(16,185,129,0.4)" }}>
+            ✍️ Start Bid Preparation
+          </button>
         </Link>
       </div>
 
-      {/* FIXED BOTTOM NAV (Custom & Safe) */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#0A0E27", borderTop: "1px solid rgba(99,102,241,0.2)", display: "flex", justifyContent: "space-around", padding: "12px 0 16px", zIndex: 20 }}>
-        <Link href="/dashboard" style={{ ...LINK, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <span style={{ fontSize: 20, opacity: 0.5 }}>🏠</span><span style={{ fontSize: 9, color: C.muted, marginTop: 4 }}>Home</span>
-        </Link>
-        <Link href="/tenders" style={{ ...LINK, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <span style={{ fontSize: 20, color: "#818CF8" }}>📄</span><span style={{ fontSize: 9, color: "#818CF8", fontWeight: 800, marginTop: 4 }}>Tenders</span>
-        </Link>
-        <Link href="/match" style={{ ...LINK, display: "flex", flexDirection: "column", alignItems: "center", marginTop: -15 }}>
-           <div style={{ width: 50, height: 50, borderRadius: "50%", background: "linear-gradient(135deg,#6366F1,#A855F7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: "3px solid #060B28" }}>🧠</div>
-           <span style={{ fontSize: 9, color: C.muted, marginTop: 4 }}>Brain</span>
-        </Link>
-        <Link href="/bids" style={{ ...LINK, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <span style={{ fontSize: 20, opacity: 0.5 }}>✍️</span><span style={{ fontSize: 9, color: C.muted, marginTop: 4 }}>Bids</span>
-        </Link>
-        <Link href="/profile" style={{ ...LINK, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <span style={{ fontSize: 20, opacity: 0.5 }}>⚙️</span><span style={{ fontSize: 9, color: C.muted, marginTop: 4 }}>More</span>
-        </Link>
-      </div>
-
+      <BottomNav />
     </div>
   );
 }
