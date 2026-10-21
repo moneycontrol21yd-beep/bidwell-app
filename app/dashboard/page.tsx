@@ -10,7 +10,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-type Tender = { id: string; title: string; department: string; location: string; value: string; deadline: string; match: number; category: string; status: string; };
+type Tender = { id: string; title: string; department: string; location: string; value: string; deadline: string; match: number; category: string; status: string; source: string; rawDeadline: string; };
 
 const nav = [
   { group: "WORKSPACE", items: [["Overview", "⌂"], ["Live tenders", "⌕"], ["AI tender brain", "✳"], ["Bid workspace", "▤"]] },
@@ -46,10 +46,56 @@ export default function BidWellDashboard() {
   const [mobileMenu, setMobileMenu] = useState(false);
   
   const [tenders, setTenders] = useState<Tender[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("");
 
+  // Filters
+  const [filterState, setFilterState] = useState("All States");
+  const [filterSource, setFilterSource] = useState("All Sources");
+  const [sortBy, setSortBy] = useState("deadline"); // deadline, value, match
+
+  // Profile States
   const [profile, setProfile] = useState<any>({ company_name: "", gstin: "", pan: "", msme: "" });
   const [profileSaving, setProfileSaving] = useState(false);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/login");
+    });
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/tenders?page=0')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.tenders) {
+          const mapped = data.tenders.map((t: any) => ({
+            id: t.source_tender_id || t.id,
+            title: t.title || "Untitled Tender",
+            department: t.org_name || "Unknown Department",
+            location: t.state || "India",
+            value: t.value ? `₹${t.value}` : "Check Portal",
+            deadline: t.closing_date ? new Date(t.closing_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : "Check Portal",
+            rawDeadline: t.closing_date || "",
+            match: t.match_score || 50,
+            category: "General",
+            status: t.closing_date && new Date(t.closing_date) < new Date() ? "Expired" : "Active",
+            source: t.source || "CPPP"
+          }));
+          setTenders(mapped);
+          setLastUpdated(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+        }
+        setLoading(false);
+      }).catch(() => setLoading(false));
+  }, []);
+
+  // Profile API
   useEffect(() => {
     if (active === "Company profile") {
       fetch('/api/company-profile').then(r => r.json()).then(d => {
@@ -69,45 +115,26 @@ export default function BidWellDashboard() {
     alert("Profile Details Saved Successfully!");
   };
 
-  const [loading, setLoading] = useState(true);
+  // Derive Filters & Sort
+  const uniqueStates = useMemo(() => ["All States", ...Array.from(new Set(tenders.map(t => t.location)))], [tenders]);
+  const uniqueSources = useMemo(() => ["All Sources", ...Array.from(new Set(tenders.map(t => t.source)))], [tenders]);
 
-  // Auth Check
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/login");
+  const filtered = useMemo(() => {
+    let result = tenders.filter(t => {
+      const matchesSearch = `${t.title} ${t.department} ${t.location} ${t.id}`.toLowerCase().includes(query.toLowerCase());
+      const matchesState = filterState === "All States" || t.location === filterState;
+      const matchesSource = filterSource === "All Sources" || t.source === filterSource;
+      return matchesSearch && matchesState && matchesSource;
     });
-  }, [router]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
+    if (sortBy === "deadline") {
+      result.sort((a, b) => new Date(a.rawDeadline).getTime() - new Date(b.rawDeadline).getTime());
+    } else if (sortBy === "match") {
+      result.sort((a, b) => b.match - a.match);
+    }
 
-  useEffect(() => {
-    fetch('/api/tenders?page=0')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.tenders) {
-          const mapped = data.tenders.map((t: any) => ({
-            id: t.source_tender_id || t.id,
-            title: t.title || "Untitled Tender",
-            department: t.org_name || "Unknown Department",
-            location: t.state || "India",
-            value: t.value ? `₹${t.value}` : "Check Portal",
-            deadline: t.closing_date || "Check Portal",
-            match: t.match_score || 50,
-            category: "General",
-            status: "Open"
-          }));
-          setTenders(mapped);
-        }
-        setLoading(false);
-      }).catch(() => setLoading(false));
-  }, []);
-
-  const filtered = useMemo(() => tenders.filter(t =>
-    `${t.title} ${t.department} ${t.location} ${t.id}`.toLowerCase().includes(query.toLowerCase())
-  ), [query, tenders]);
+    return result;
+  }, [query, tenders, filterState, filterSource, sortBy]);
 
   const isTenderPage = active === "Live tenders";
   const heading = selected ? "Tender overview" : active;
@@ -130,7 +157,6 @@ export default function BidWellDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "0 12px 25px", color: "#fff", fontSize: 22, fontWeight: 800 }}>
           <div style={{ height: 38, width: 38, borderRadius: 12, background: "#315efb", display: "grid", placeItems: "center" }}>B</div> BidWell
         </div>
-        
         <div style={{ flex: 1 }}>
           {nav.map(section => <div key={section.group} style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: "#7788a6", padding: "0 12px 10px" }}>{section.group}</div>
@@ -139,8 +165,6 @@ export default function BidWellDashboard() {
             </button>)}
           </div>)}
         </div>
-        
-        {/* Logout Button */}
         <div style={{ paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.1)", marginTop: 20 }}>
           <button onClick={handleLogout} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: 0, borderRadius: 9, background: "rgba(239, 68, 68, 0.1)", color: "#fca5a5", textAlign: "left", fontSize: 12, cursor: "pointer" }}>
             <span style={{ fontSize: 16 }}>↪</span> Log Out
@@ -165,98 +189,49 @@ export default function BidWellDashboard() {
             <p style={{ fontSize: 12, color: "#7b879a", margin: 0 }}>{subheading}</p>
           </div>
 
-          {/* OVERVIEW */}
-          {active === "Overview" && !selected && <>
-            <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 19 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#b6c9f6", fontSize: 9, fontWeight: 800 }}><span style={{ fontSize: 18 }}>✳</span> BIDWELL INTELLIGENCE</div>
-                <h2 style={{ fontSize: 28, lineHeight: 1.15, margin: "12px 0 9px" }}>Better tenders.<br /><span style={{ color: "#8eafff" }}>Stronger bids.</span></h2>
-                <p style={{ fontSize: 11, color: "#bdc9df", maxWidth: 355, margin: "0 0 15px" }}>Your AI-powered workspace to discover opportunities, prepare bids and stay on top of every contract.</p>
-                <button onClick={() => setActive("Live tenders")} style={btnStyle}>Explore tenders ↗</button>
-              </div>
-            </section>
-
-            <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginBottom: 19 }}>
-              <div style={{ ...cardStyle, marginBottom: 0 }}>
-                <div style={{ fontSize: 18, marginBottom: 12, color: "#315efb" }}>⌕</div>
-                <div style={{ fontSize: 10, color: "#7b879b" }}>Live Opportunities</div>
-                <div style={{ fontSize: 25, fontWeight: 800, margin: "5px 0" }}>{loading ? "..." : tenders.length}</div>
-                <div style={{ fontSize: 9, color: "#748198" }}><span style={{ color: "#1ba47d", fontWeight: 800 }}>↗</span> From VPS Brain</div>
-              </div>
-              <div style={{ ...cardStyle, marginBottom: 0 }}>
-                <div style={{ fontSize: 18, marginBottom: 12, color: "#8b5cf6" }}>▤</div>
-                <div style={{ fontSize: 10, color: "#7b879b" }}>Active Bids</div>
-                <div style={{ fontSize: 25, fontWeight: 800, margin: "5px 0" }}>06</div>
-                <div style={{ fontSize: 9, color: "#748198" }}><span style={{ color: "#1ba47d", fontWeight: 800 }}>↗</span> 2 due this week</div>
-              </div>
-            </section>
-          </>}
-
-          {/* LIVE TENDERS */}
+          {/* LIVE TENDERS WITH FILTERS */}
           {isTenderPage && !selected && <section style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
-            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f2f7", fontSize: 11, color: "#7c889c" }}>Live Opportunities <span style={{ background: "#f1f4fa", padding: "4px 6px", borderRadius: 5, color: "#55647d", marginLeft: 8, fontWeight: "bold" }}>{filtered.length} results</span></div>
-            {loading ? <div style={{ padding: 20 }}>Fetching...</div> : 
+            
+            {/* Filter Bar */}
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #edf0f6", display: "flex", flexWrap: "wrap", gap: 12, background: "#fafbfe" }}>
+              <select value={filterState} onChange={e => setFilterState(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12, outline: "none", background: "#fff" }}>
+                {uniqueStates.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select value={filterSource} onChange={e => setFilterSource(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12, outline: "none", background: "#fff" }}>
+                {uniqueSources.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12, outline: "none", background: "#fff", marginLeft: "auto" }}>
+                <option value="deadline">Sort: Deadline (Soonest)</option>
+                <option value="match">Sort: Best Match</option>
+              </select>
+            </div>
+
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f2f7", fontSize: 11, color: "#7c889c", display: "flex", justifyContent: "space-between" }}>
+              <span>Showing <b>{filtered.length}</b> live opportunities</span>
+              <span style={{ color: "#10b981" }}>● Synced at {lastUpdated || "Just now"}</span>
+            </div>
+
+            {loading ? <div style={{ padding: 20 }}>Fetching live data...</div> : 
             <div>
               {filtered.map(t => <article key={t.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "19px 20px", borderBottom: "1px solid #edf0f6" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ fontSize: 9, color: "#8994a7" }}><span>{t.id}</span> <span style={{ color: "#178668", background: "#e7f7f0", padding: "4px 7px", borderRadius: 5, fontWeight: 700 }}>● {t.status}</span></div>
-                  <span style={{ background: t.match >= 80 ? "#e3f7ef" : "#fff3db", color: t.match >= 80 ? "#168363" : "#a8751b", padding: "5px 7px", borderRadius: 7, fontSize: 9, fontWeight: 800 }}>{t.match}%</span>
+                  <div style={{ fontSize: 9, color: "#8994a7", display: "flex", gap: 6, alignItems: "center" }}>
+                    <span>{t.id}</span> 
+                    <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4 }}>{t.source}</span>
+                    <span style={{ color: t.status === "Expired" ? "#ef4444" : "#178668", background: t.status === "Expired" ? "#fef2f2" : "#e7f7f0", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>● {t.status}</span>
+                  </div>
+                  <span style={{ background: t.match >= 80 ? "#e3f7ef" : "#fff3db", color: t.match >= 80 ? "#168363" : "#a8751b", padding: "5px 7px", borderRadius: 7, fontSize: 9, fontWeight: 800 }}>{t.match}% Match</span>
                 </div>
                 <div>
-                  <button onClick={() => setSelected(t)} style={{ background: "none", border: 0, padding: 0, textAlign: "left", fontSize: 13, fontWeight: 800, color: "#26354e", marginBottom: 6, cursor: "pointer" }}>{t.title}</button>
-                  <p style={{ margin: 0, fontSize: 10, color: "#8591a5" }}>{t.department} · {t.location}</p>
+                  <button onClick={() => setSelected(t)} style={{ background: "none", border: 0, padding: 0, textAlign: "left", fontSize: 14, fontWeight: 800, color: "#26354e", marginBottom: 6, cursor: "pointer" }}>{t.title}</button>
+                  <p style={{ margin: 0, fontSize: 11, color: "#8591a5" }}>{t.department} · {t.location}</p>
                 </div>
-                <div style={{ display: "flex", gap: 15, fontSize: 9, color: "#8994a6", background: "#f9fafc", padding: 10, borderRadius: 8 }}><span>◈ <b>{t.value}</b> value</span><span>◷ <b>{t.deadline}</b></span></div>
+                <div style={{ display: "flex", gap: 20, fontSize: 10, color: "#8994a6", background: "#f9fafc", padding: 10, borderRadius: 8 }}><span>◈ Value: <b>{t.value}</b></span><span>◷ Deadline: <b>{t.deadline}</b></span></div>
               </article>)}
             </div>}
           </section>}
 
-          {/* TENDER DETAIL */}
-          {selected && <section style={cardStyle}>
-            <button onClick={() => setSelected(null)} style={{ border: 0, background: "transparent", color: "#315efb", fontSize: 11, fontWeight: 700, marginBottom: 22, cursor: "pointer" }}>← Back to opportunities</button>
-            <h2 style={{ fontSize: 20, margin: "11px 0 6px", fontWeight: 800 }}>{selected.title}</h2>
-            <p style={{ fontSize: 11, color: "#8290a5", marginBottom: 20 }}>{selected.department} · {selected.location}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, margin: "0 0 25px 0", padding: 17, background: "#f7f9fd", borderRadius: 12 }}>
-              <div><small style={{ display: "block", color: "#8792a5", fontSize: 9, marginBottom: 8 }}>Value</small><b style={{ fontSize: 14 }}>{selected.value}</b></div>
-              <div><small style={{ display: "block", color: "#8792a5", fontSize: 9, marginBottom: 8 }}>Deadline</small><b style={{ fontSize: 14 }}>{selected.deadline}</b></div>
-            </div>
-            <div style={{ display: "flex", gap: 9, width: "100%" }}>
-              <Link href={`/tenders/${selected.id}`} style={{ ...btnStyle, width: "100%", justifyContent: "center", padding: "12px" }}>Open Full Analysis ↗</Link>
-            </div>
-          </section>}
-
-          {/* BID WORKSPACE - NEW SMART UI */}
-          {active === "Bid workspace" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-            <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: 20, borderRadius: 16, color: "#fff" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <span style={{ fontSize: 20 }}>✳</span>
-                <div style={{ fontSize: 16, fontWeight: 800 }}>AI Rate Suggestion</div>
-              </div>
-              <div style={{ fontSize: 13, color: "#c7d2fe", marginBottom: 16 }}>Based on your past winning bids and current market trends, here is your suggested bidding range for the active tender:</div>
-              <div style={{ display: "flex", gap: 16 }}>
-                <div style={{ background: "rgba(255,255,255,0.1)", padding: 16, borderRadius: 12, flex: 1 }}>
-                  <div style={{ fontSize: 10, color: "#a5b4fc", fontWeight: 700, textTransform: "uppercase" }}>Aggressive (L1)</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: "#10b981", marginTop: 4 }}>₹24,50,000</div>
-                </div>
-                <div style={{ background: "rgba(255,255,255,0.1)", padding: 16, borderRadius: 12, flex: 1 }}>
-                  <div style={{ fontSize: 10, color: "#a5b4fc", fontWeight: 700, textTransform: "uppercase" }}>Safe (L2-L3)</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: "#f59e0b", marginTop: 4 }}>₹25,80,000</div>
-                </div>
-              </div>
-            </div>
-            
-            <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Active Bids Pipeline</div>
-              {["Review EMD for PWD Tender", "Prepare Financial Bid for DDA", "Upload Technical Docs for BSF"].map((item, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f0f2f7" }}>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>{item}</div>
-                  <span style={{ fontSize: 10, background: i === 0 ? "#fef2f2" : "#f0fdf4", color: i === 0 ? "#ef4444" : "#10b981", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{i === 0 ? "Urgent" : "In Progress"}</span>
-                </div>
-              ))}
-            </div>
-          </div>}
-
-          {/* COMPANY PROFILE & DOCUMENT VAULT */}
+          {/* COMPANY PROFILE */}
           {active === "Company profile" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
             <div style={cardStyle}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Company Details (India)</div>
@@ -268,75 +243,21 @@ export default function BidWellDashboard() {
               </div>
               <button onClick={handleSaveProfile} disabled={profileSaving} style={{ ...btnStyle, marginTop: 16, width: "100%", justifyContent: "center" }}>{profileSaving ? "Saving..." : "Save Profile Details"}</button>
             </div>
-
             <div style={cardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ fontSize: 14, fontWeight: 800 }}>Document Vault</div>
-                <div style={{ fontSize: 11, color: "#10b981", background: "#ecfdf5", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>100% Safe & Private</div>
+                <div style={{ fontSize: 11, color: "#10b981", background: "#ecfdf5", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>100% Safe</div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {["GST Certificate", "PAN Card", "MSME / Udyam", "Class-3 DSC", "ISO 9001", "PSARA License"].map(doc => (
                   <div key={doc} style={{ border: "1px dashed #cbd5e1", padding: 16, borderRadius: 10, textAlign: "center", background: "#f8fafc" }}>
                     <div style={{ fontSize: 20, marginBottom: 8 }}>📄</div>
                     <div style={{ fontSize: 12, fontWeight: 700 }}>{doc}</div>
-                    <div style={{ fontSize: 10, color: "#10b981", marginTop: 4, fontWeight: 700 }}>✓ Uploaded</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>}
-
-          {/* SUBSCRIPTION PAGE */}
-          {active === "Subscription" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-            <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", padding: 24, borderRadius: 16, border: "1px solid #bbf7d0", textAlign: "center" }}>
-              <div style={{ fontSize: 16, fontWeight: 900, color: "#166534" }}>🎉 1 Month Free Trial Active</div>
-              <div style={{ fontSize: 12, color: "#15803d", marginTop: 8 }}>You have full access to all features. Upgrade anytime to continue after your trial ends.</div>
-            </div>
-            
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-              <div style={{ ...cardStyle, border: "2px solid #315efb" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 16, fontWeight: 900 }}>Pro Plan</div>
-                  <div style={{ background: "#315efb", color: "#fff", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 800 }}>MOST POPULAR</div>
-                </div>
-                <div style={{ fontSize: 28, fontWeight: 900, margin: "16px 0" }}>₹999<span style={{ fontSize: 12, color: "#64748b", fontWeight: 500 }}>/month</span></div>
-                <ul style={{ paddingLeft: 16, fontSize: 13, color: "#475569", lineHeight: 1.8, marginBottom: 20 }}>
-                  <li>Unlimited Tender Access</li>
-                  <li>AI Rate Suggestions & Analysis</li>
-                  <li>Document Vault (10 GB)</li>
-                  <li>5 Team Members</li>
-                  <li>Priority Support</li>
-                </ul>
-                <button style={{ ...btnStyle, width: "100%", justifyContent: "center", padding: 12 }}>Upgrade to Pro</button>
-              </div>
-            </div>
-          </div>}
-
-          {/* SETTINGS */}
-          {active === "Settings" && !selected && <div style={cardStyle}>
-             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Account Settings</div>
-             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f0f2f7" }}>
-                  <div><div style={{ fontSize: 13, fontWeight: 700 }}>Email Notifications</div><div style={{ fontSize: 11, color: "#64748b" }}>Receive daily tender alerts</div></div>
-                  <div style={{ width: 40, height: 22, background: "#315efb", borderRadius: 11, position: "relative" }}><div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 2, right: 2 }} /></div>
-               </div>
-               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" }}>
-                  <div><div style={{ fontSize: 13, fontWeight: 700 }}>Two-Factor Authentication</div><div style={{ fontSize: 11, color: "#64748b" }}>Secure your account</div></div>
-                  <div style={{ width: 40, height: 22, background: "#e2e8f0", borderRadius: 11, position: "relative" }}><div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 2, left: 2 }} /></div>
-               </div>
-             </div>
-             <button onClick={handleLogout} style={{ ...btnStyle, background: "#fef2f2", color: "#ef4444", width: "100%", justifyContent: "center", marginTop: 24, border: "1px solid #fecaca" }}>Log Out from Device</button>
-          </div>}
-
-          {/* OTHER EMPTY STATES */}
-          {["Contracts", "Payments & invoices", "Documents", "Workforce", "Team", "Notifications", "AI tender brain"].includes(active) && !selected && (
-            <div style={cardStyle}>
-              <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
-                <div style={{ fontSize: 24, marginBottom: 10 }}>✳</div>
-                Your {active.toLowerCase()} workspace is ready to be connected.
-              </div>
-            </div>
-          )}
 
         </div>
       </main>
