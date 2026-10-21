@@ -1,176 +1,40 @@
-import Link from 'next/link';
-import BottomNav from '@/components/BottomNav';
-import CyberDeskCard from '@/components/CyberDeskCard';
+"use client";
+import React from "react";
+import Link from "next/link";
 
-const C = { bg: "#060B28", card: "#0E1533", text: "#fff", sub: "#94A3B8", accent: "#818CF8" };
+const CARDS = [
+  { t: "Tender Analysis", d: "AI insights on tenders & L1 competition.", b: "View Analysis →", h: "/assistant", c: "from-indigo-600 to-purple-700", i: "📊" },
+  { t: "Eligibility Check", d: "Scan GST, Udyam & missing bid docs.", b: "Check Eligibility →", h: "/assistant", c: "from-emerald-500 to-teal-700", i: "🛡️" },
+  { t: "Fast Record", d: "High priority & closing soon tenders.", b: "View Fast Record →", h: "/fast-record", c: "from-amber-500 to-orange-600", i: "⚡" },
+  { t: "Future Record", d: "Upcoming tenders & project forecasts.", b: "Explore Future →", h: "/future-record", c: "from-pink-500 to-rose-600", i: "📅" },
+  { t: "AI Suggestions", d: "95% matched tenders & doc checklist.", b: "Get Recommendations →", h: "/assistant", c: "from-blue-500 to-indigo-700", i: "🤖" },
+  { t: "India Wide Coverage", d: "GeM + CPPP + UP, MP, GJ, RJ, Bihar.", b: "Explore All →", h: "/live-tenders", c: "from-teal-500 to-emerald-700", i: "🇮🇳" }
+];
 
-export default function BrainPage() {
+export default function BrainHubPage() {
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: 100 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ background: "#818CF8", color: "#fff", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 20 }}>B</div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 900 }}>BidWell</div>
-            <div style={{ fontSize: 10, color: C.sub }}>Smarter Tenders. Bigger Opportunities.</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 15, alignItems: "center" }}>
-          <div style={{ position: "relative" }}>
-            <span style={{ fontSize: 24 }}>🔔</span>
-            <div style={{ position: "absolute", top: -5, right: -5, background: "red", color: "white", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: "bold" }}>5</div>
-          </div>
-          <div style={{ background: "#C084FC", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>BR</div>
+    <div className="min-h-screen bg-[#070b18] text-white p-4 pb-28 space-y-4">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div><h1 className="text-lg font-extrabold">BidWell</h1><p className="text-xs text-slate-400">Smarter Tenders. Bigger Opportunities.</p></div>
+        <Link href="/profile" className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-xs font-bold">BR</Link>
+      </div>
+      <div className="p-4 rounded-3xl bg-gradient-to-r from-indigo-950 to-emerald-950 border border-cyan-500/40 space-y-2">
+        <span className="text-[10px] font-extrabold text-cyan-300">⚡ CYBER AI CONSULTANT DESK • LIVE</span>
+        <h2 className="text-sm font-extrabold">95% Matched Tenders & Automated Doc Gap Scanner</h2>
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <Link href="/assistant" className="py-2 rounded-xl bg-cyan-600 text-center text-xs font-bold">🚀 Open AI Engine →</Link>
+          <Link href="/live-tenders" className="py-2 rounded-xl bg-slate-900 text-center text-xs font-bold">📄 50+ Live Tenders</Link>
         </div>
       </div>
-
-      {/* Hero Tags */}
-      <div style={{ padding: "0 20px", display: "flex", gap: 10, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
-        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 20, fontSize: 12, whiteSpace: "nowrap" }}>📊 Analysis</div>
-        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 20, fontSize: 12, whiteSpace: "nowrap" }}>🛡️ Eligibility</div>
-        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 20, fontSize: 12, whiteSpace: "nowrap" }}>⚡ Fast Track</div>
-        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 20, fontSize: 12, whiteSpace: "nowrap" }}>📅 Future Tenders</div>
+      <div className="grid grid-cols-2 gap-3">
+        {CARDS.map((x, idx) => (
+          <Link key={idx} href={x.h} className={`p-4 rounded-3xl bg-gradient-to-br ${x.c} flex flex-col justify-between min-h-[155px]`}>
+            <div className="flex justify-between"><span>{x.i}</span><span>→</span></div>
+            <div><h3 className="text-sm font-extrabold">{x.t}</h3><p className="text-[11px] text-white/85 mt-1">{x.d}</p></div>
+            <span className="px-2.5 py-1 rounded-full bg-black/25 text-[10px] font-bold w-fit">{x.b}</span>
+          </Link>
+        ))}
       </div>
-
-      <div style={{ textAlign: "center", fontSize: 10, fontWeight: 800, letterSpacing: 2, color: C.sub, margin: "20px 0" }}>
-        THINK · ANALYZE · BID · SUCCEED
-      </div>
-
-      {/* Top Scroll Cards */}
-      <div style={{ display: "flex", gap: 12, padding: "0 20px", overflowX: "auto", paddingBottom: 20 }}>
-        <Link href="/tenders" style={{ textDecoration: "none", color: "#fff" }}>
-          <div style={{ minWidth: 140, background: "linear-gradient(135deg, #6366F1, #4F46E5)", padding: 15, borderRadius: 16 }}>
-            <div style={{ fontSize: 24, marginBottom: 10 }}>🧠</div>
-            <div style={{ fontSize: 14, fontWeight: 800 }}>Brain</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>AI Insights</div>
-          </div>
-        </Link>
-        <Link href="/tenders" style={{ textDecoration: "none", color: "#fff" }}>
-          <div style={{ minWidth: 140, background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 15, borderRadius: 16 }}>
-            <div style={{ fontSize: 24, marginBottom: 10 }}>📄</div>
-            <div style={{ fontSize: 14, fontWeight: 800 }}>Live Tenders</div>
-            <div style={{ fontSize: 10, color: C.sub }}>Current Opportunities</div>
-          </div>
-        </Link>
-      </div>
-
-      {/* 2-Column Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "0 20px" }}>
-        
-        <Link href="/tenders" style={{ textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg, #8B5CF6, #6D28D9)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-            <div>
-              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📊</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Tender Analysis</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>AI based insights on tenders, market & competition.</div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>View Analysis →</div>
-          </div>
-        </Link>
-
-        <Link href="/eligibility" style={{ textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg, #10B981, #047857)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-            <div>
-              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🛡️</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Eligibility Check</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Know if you're eligible in seconds.</div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Check Eligibility →</div>
-          </div>
-        </Link>
-
-        {/* 🚀 YAHAN FIX KIYA GAYA HAI - Fast Record ab /fast-record par jayega */}
-        <Link href="/fast-record" style={{ textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg, #F59E0B, #B45309)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-            <div>
-              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>⚡</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Fast Record</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Quick view of high priority, urgent & closing soon tenders.</div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>View Fast Record →</div>
-          </div>
-        </Link>
-
-        <Link href="/tenders" style={{ textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg, #EC4899, #BE185D)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-            <div>
-              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📅</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Future Record</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Upcoming tenders & project forecasts (Central/State/UT).</div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Explore Future Tenders →</div>
-          </div>
-        </Link>
-
-        <div style={{ background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🤖</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>AI Suggestions</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Personalized tender recommendations for your business.</div>
-          </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Get Recommendations →</div>
-        </div>
-
-        <Link href="/tenders" style={{ textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg, #14B8A6, #0F766E)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-            <div>
-              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🇮🇳</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>India Wide Coverage</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Central + State + UT. All in one place.</div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Explore All →</div>
-          </div>
-        </Link>
-      </div>
-
-      {/* 🚀 NAYA CYBER AI DESK CARD YAHAN ADD HO GAYA HAI */}
-      <div style={{ padding: "20px 20px 0 20px" }}>
-        <CyberDeskCard />
-      </div>
-
-      {/* Brain Insights */}
-      <div style={{ padding: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 900 }}>🧠 Brain Insights</div>
-            <div style={{ fontSize: 11, color: C.sub }}>Top Insights for You</div>
-          </div>
-          <div style={{ fontSize: 12, fontWeight: 800 }}>View All →</div>
-        </div>
-        
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-           <div style={{ background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 16, borderRadius: 16 }}>
-             <div style={{ fontSize: 20, marginBottom: 10 }}>📈</div>
-             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>High Demand Sectors</div>
-             <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.8 }}>• Roads & Highways<br/>• Construction<br/>• Health & Medical<br/>• IT & Software</div>
-           </div>
-           <div style={{ background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 16, borderRadius: 16 }}>
-             <div style={{ fontSize: 20, marginBottom: 10 }}>🏢</div>
-             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Best Winning Chances</div>
-             <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.8 }}>• Low Competition<br/>• High Value</div>
-             <div style={{ background: "rgba(245, 158, 11, 0.2)", color: "#F59E0B", border: "1px solid #F59E0B", padding: "6px", borderRadius: 8, fontSize: 10, fontWeight: 800, textAlign: "center", marginTop: 12 }}>✨ Your Advantage</div>
-           </div>
-        </div>
-      </div>
-      
-      {/* Closing Soon & Upcoming */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "0 20px 20px 20px" }}>
-        <div style={{ background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 16, borderRadius: 16 }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>⏰</div>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Closing Soon</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#3B82F6", marginTop: 10 }}>0</div>
-          <div style={{ fontSize: 11, color: C.sub }}>Live Tenders</div>
-        </div>
-        <div style={{ background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 16, borderRadius: 16 }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>📅</div>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Upcoming Projects</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#8B5CF6", marginTop: 10 }}>AI</div>
-          <div style={{ fontSize: 11, color: C.sub }}>Predictions</div>
-        </div>
-      </div>
-
-      <BottomNav />
     </div>
   );
 }
