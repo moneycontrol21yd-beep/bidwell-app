@@ -5,17 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-type Tender = {
-  id: string; title: string; department: string; location: string;
-  value: string; deadline: string; match: number; category: string; status: string;
-};
+type Tender = { id: string; title: string; department: string; location: string; value: string; deadline: string; match: number; category: string; status: string; };
 
 const nav = [
   { group: "WORKSPACE", items: [["Overview", "⌂"], ["Live tenders", "⌕"], ["AI tender brain", "✳"], ["Bid workspace", "▤"]] },
   { group: "DELIVERY", items: [["Contracts", "▣"], ["Payments & invoices", "₹"], ["Documents", "▧"], ["Workforce", "♙"]] },
-  { group: "MANAGE", items: [["Team", "♧"], ["Notifications", "♢"], ["Company profile", "◉"], ["Settings", "⚙"]] },
+  { group: "MANAGE", items: [["Team", "♧"], ["Notifications", "♢"], ["Company profile", "◉"], ["Subscription", "★"], ["Settings", "⚙"]] },
 ];
 
 const descriptions: Record<string, string> = {
@@ -29,7 +29,8 @@ const descriptions: Record<string, string> = {
   "Workforce": "Manage people, attendance and deployment",
   "Team": "Bring your bid and operations team together",
   "Notifications": "Important changes, deadlines and reminders",
-  "Company profile": "Your business profile and eligibility signals",
+  "Company profile": "Your business profile, eligibility signals and document vault",
+  "Subscription": "Manage your plan, billing and usage limits",
   "Settings": "Preferences, security and account controls",
 };
 
@@ -40,18 +41,24 @@ function Icon({ children }: { children: React.ReactNode }) {
 export default function BidWellDashboard() {
   const router = useRouter();
   const [active, setActive] = useState("Overview");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/login");
-    });
-  }, [router]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Tender | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
   
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Auth Check
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/login");
+    });
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   useEffect(() => {
     fetch('/api/tenders?page=0')
@@ -83,57 +90,59 @@ export default function BidWellDashboard() {
   const heading = selected ? "Tender overview" : active;
   const subheading = selected ? selected.title : descriptions[active] || "";
 
-  // Reusable Card Style
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
   const btnStyle = { background: "#315efb", color: "#fff", padding: "10px 14px", borderRadius: 9, border: 0, fontWeight: 700, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f7fb", fontFamily: "system-ui, sans-serif", overflowX: "hidden" }}>
       
-      {/* Mobile Overlay */}
-      {mobileMenu && (
-        <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />
-      )}
+      {mobileMenu && (<div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />)}
 
       {/* Sidebar */}
       <aside style={{ 
         width: 260, background: "linear-gradient(180deg,#101b32 0%,#142442 100%)", color: "#d5deee", padding: "24px 15px", 
         position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 50,
-        transform: mobileMenu ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", overflowY: "auto"
+        transform: mobileMenu ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", overflowY: "auto", display: "flex", flexDirection: "column"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "0 12px 25px", color: "#fff", fontSize: 22, fontWeight: 800 }}>
-          <div style={{ height: 38, width: 38, borderRadius: 12, background: "#315efb", display: "grid", placeItems: "center" }}>B</div>
-          BidWell
+          <div style={{ height: 38, width: 38, borderRadius: 12, background: "#315efb", display: "grid", placeItems: "center" }}>B</div> BidWell
         </div>
-        {nav.map(section => <div key={section.group} style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: "#7788a6", padding: "0 12px 10px" }}>{section.group}</div>
-          {section.items.map(([label, icon]) => <button key={label} onClick={() => { setActive(label); setSelected(null); setMobileMenu(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: 0, borderRadius: 9, background: active === label ? "#315efb" : "transparent", color: active === label ? "#fff" : "#aab8cf", textAlign: "left", margin: "2px 0", fontSize: 12, cursor: "pointer", transition: "all 0.2s" }}>
-            <Icon>{icon}</Icon><span>{label}</span>
-          </button>)}
-        </div>)}
+        
+        <div style={{ flex: 1 }}>
+          {nav.map(section => <div key={section.group} style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: "#7788a6", padding: "0 12px 10px" }}>{section.group}</div>
+            {section.items.map(([label, icon]) => <button key={label} onClick={() => { setActive(label); setSelected(null); setMobileMenu(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: 0, borderRadius: 9, background: active === label ? "#315efb" : "transparent", color: active === label ? "#fff" : "#aab8cf", textAlign: "left", margin: "2px 0", fontSize: 12, cursor: "pointer", transition: "all 0.2s" }}>
+              <Icon>{icon}</Icon><span>{label}</span>
+            </button>)}
+          </div>)}
+        </div>
+        
+        {/* Logout Button */}
+        <div style={{ paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.1)", marginTop: 20 }}>
+          <button onClick={handleLogout} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: 0, borderRadius: 9, background: "rgba(239, 68, 68, 0.1)", color: "#fca5a5", textAlign: "left", fontSize: 12, cursor: "pointer" }}>
+            <span style={{ fontSize: 16 }}>↪</span> Log Out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
       <main style={{ width: "100%", transition: "0.3s" }}>
-        
-        {/* Topbar */}
         <header style={{ height: 75, background: "#fff", borderBottom: "1px solid #e8edf5", display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
           <button onClick={() => setMobileMenu(!mobileMenu)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", display: "block" }}>☰</button>
           <div style={{ display: "flex", alignItems: "center", gap: 11, border: "1px solid #e7ebf3", background: "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 610, width: "100%" }}>
             <span style={{ fontSize: 22, color: "#8794a9" }}>⌕</span>
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search tenders, departments, documents..." style={{ border: 0, outline: 0, background: "transparent", flex: 1, fontSize: 12 }} />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search tenders, departments..." style={{ border: 0, outline: 0, background: "transparent", flex: 1, fontSize: 12 }} />
           </div>
         </header>
 
         <div style={{ padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
-          
           <div style={{ marginBottom: 25 }}>
             <div style={{ fontSize: 10, color: "#7b879d", fontWeight: 800, letterSpacing: 1 }}>BIDWELL WORKSPACE</div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: "9px 0 4px" }}>{heading}</h1>
             <p style={{ fontSize: 12, color: "#7b879a", margin: 0 }}>{subheading}</p>
           </div>
 
-          {/* OVERVIEW TAB */}
+          {/* OVERVIEW */}
           {active === "Overview" && !selected && <>
             <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 19 }}>
               <div>
@@ -158,33 +167,9 @@ export default function BidWellDashboard() {
                 <div style={{ fontSize: 9, color: "#748198" }}><span style={{ color: "#1ba47d", fontWeight: 800 }}>↗</span> 2 due this week</div>
               </div>
             </section>
-
-            <div style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 19 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 800 }}>Recommended opportunities</div>
-                  <div style={{ fontSize: 11, color: "#8792a5" }}>Live from Supabase</div>
-                </div>
-                <button onClick={() => setActive("Live tenders")} style={{ background: "transparent", border: 0, color: "#315efb", fontSize: 11, fontWeight: 700 }}>View all ↗</button>
-              </div>
-              <div style={{ overflowX: "auto", width: "100%" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: 500 }}>
-                  <thead><tr style={{ borderBottom: "1px solid #edf0f6" }}><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>OPPORTUNITY</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>VALUE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>DEADLINE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>MATCH</th></tr></thead>
-                  <tbody>
-                    {loading ? <tr><td colSpan={4} style={{ padding: 20, fontSize: 12 }}>Fetching real tenders...</td></tr> : 
-                    tenders.slice(0, 4).map(t => <tr key={t.id} onClick={() => setSelected(t)} style={{ borderBottom: "1px solid #f0f2f7", cursor: "pointer" }}>
-                      <td style={{ padding: "13px 10px" }}><div style={{ fontWeight: 700, fontSize: 11, color: "#26344d" }}>{t.title}</div><small style={{ fontSize: 9, color: "#8792a5" }}>{t.department} · {t.location}</small></td>
-                      <td style={{ padding: "13px 10px", fontSize: 11, fontWeight: 800 }}>{t.value}</td>
-                      <td style={{ padding: "13px 10px", fontSize: 11, color: "#637087" }}>{t.deadline}</td>
-                      <td style={{ padding: "13px 10px" }}><span style={{ background: t.match >= 80 ? "#e3f7ef" : "#fff3db", color: t.match >= 80 ? "#168363" : "#a8751b", padding: "5px 7px", borderRadius: 7, fontSize: 9, fontWeight: 800 }}>{t.match}%</span></td>
-                    </tr>)}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </>}
 
-          {/* LIVE TENDERS TAB */}
+          {/* LIVE TENDERS */}
           {isTenderPage && !selected && <section style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f2f7", fontSize: 11, color: "#7c889c" }}>Live Opportunities <span style={{ background: "#f1f4fa", padding: "4px 6px", borderRadius: 5, color: "#55647d", marginLeft: 8, fontWeight: "bold" }}>{filtered.length} results</span></div>
             {loading ? <div style={{ padding: 20 }}>Fetching...</div> : 
@@ -203,7 +188,7 @@ export default function BidWellDashboard() {
             </div>}
           </section>}
 
-          {/* TENDER DETAIL VIEW */}
+          {/* TENDER DETAIL */}
           {selected && <section style={cardStyle}>
             <button onClick={() => setSelected(null)} style={{ border: 0, background: "transparent", color: "#315efb", fontSize: 11, fontWeight: 700, marginBottom: 22, cursor: "pointer" }}>← Back to opportunities</button>
             <h2 style={{ fontSize: 20, margin: "11px 0 6px", fontWeight: 800 }}>{selected.title}</h2>
@@ -217,21 +202,26 @@ export default function BidWellDashboard() {
             </div>
           </section>}
 
-          {/* AI TENDER BRAIN */}
-          {active === "AI tender brain" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-             <div style={cardStyle}>
-                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, color: "#315efb" }}>✳ BidWell AI Workspace</div>
-                <p style={{ fontSize: 12, color: "#64748b", marginBottom: 20 }}>Ask about tender requirements, eligibility, EMD, or document checklists.</p>
-                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: 20, minHeight: 200, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "#94a3b8" }}>
-                  <span style={{ fontSize: 30, marginBottom: 10 }}>✳</span>
-                  <span style={{ fontSize: 13 }}>AI Chat interface will initialize here.</span>
-                  <span style={{ fontSize: 11, marginTop: 4 }}>Connecting to VPS Brain...</span>
+          {/* BID WORKSPACE - NEW SMART UI */}
+          {active === "Bid workspace" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+            <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: 20, borderRadius: 16, color: "#fff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <span style={{ fontSize: 20 }}>✳</span>
+                <div style={{ fontSize: 16, fontWeight: 800 }}>AI Rate Suggestion</div>
+              </div>
+              <div style={{ fontSize: 13, color: "#c7d2fe", marginBottom: 16 }}>Based on your past winning bids and current market trends, here is your suggested bidding range for the active tender:</div>
+              <div style={{ display: "flex", gap: 16 }}>
+                <div style={{ background: "rgba(255,255,255,0.1)", padding: 16, borderRadius: 12, flex: 1 }}>
+                  <div style={{ fontSize: 10, color: "#a5b4fc", fontWeight: 700, textTransform: "uppercase" }}>Aggressive (L1)</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#10b981", marginTop: 4 }}>₹24,50,000</div>
                 </div>
-             </div>
-          </div>}
-
-          {/* BID WORKSPACE */}
-          {active === "Bid workspace" && !selected && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+                <div style={{ background: "rgba(255,255,255,0.1)", padding: 16, borderRadius: 12, flex: 1 }}>
+                  <div style={{ fontSize: 10, color: "#a5b4fc", fontWeight: 700, textTransform: "uppercase" }}>Safe (L2-L3)</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#f59e0b", marginTop: 4 }}>₹25,80,000</div>
+                </div>
+              </div>
+            </div>
+            
             <div style={cardStyle}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Active Bids Pipeline</div>
               {["Review EMD for PWD Tender", "Prepare Financial Bid for DDA", "Upload Technical Docs for BSF"].map((item, i) => (
@@ -243,85 +233,59 @@ export default function BidWellDashboard() {
             </div>
           </div>}
 
-          {/* CONTRACTS */}
-          {active === "Contracts" && !selected && <div style={cardStyle}>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Active Contracts</div>
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
-              <div style={{ fontSize: 24, marginBottom: 10 }}>▣</div>
-              No active contracts yet. When you win a bid, it will appear here for milestone tracking.
+          {/* COMPANY PROFILE & DOCUMENT VAULT */}
+          {active === "Company profile" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+            <div style={cardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Company Details (India)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div><label style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>COMPANY NAME</label><input defaultValue="Shivam Security Services Pvt. Ltd." style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e2e8f0", marginTop: 4, fontSize: 12 }} /></div>
+                <div><label style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>GSTIN</label><input defaultValue="23AAAAA0000A1Z5" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e2e8f0", marginTop: 4, fontSize: 12 }} /></div>
+                <div><label style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>PAN</label><input defaultValue="AAAAA0000A" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e2e8f0", marginTop: 4, fontSize: 12 }} /></div>
+                <div><label style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>MSME / UDYAM</label><input defaultValue="UDYAM-MP-01-0000001" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e2e8f0", marginTop: 4, fontSize: 12 }} /></div>
+              </div>
+              <button style={{ ...btnStyle, marginTop: 16, width: "100%", justifyContent: "center" }}>Save Profile Details</button>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>Document Vault</div>
+                <div style={{ fontSize: 11, color: "#10b981", background: "#ecfdf5", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>100% Safe & Private</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {["GST Certificate", "PAN Card", "MSME / Udyam", "Class-3 DSC", "ISO 9001", "PSARA License"].map(doc => (
+                  <div key={doc} style={{ border: "1px dashed #cbd5e1", padding: 16, borderRadius: 10, textAlign: "center", background: "#f8fafc" }}>
+                    <div style={{ fontSize: 20, marginBottom: 8 }}>📄</div>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>{doc}</div>
+                    <div style={{ fontSize: 10, color: "#10b981", marginTop: 4, fontWeight: 700 }}>✓ Uploaded</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>}
 
-          {/* PAYMENTS */}
-          {active === "Payments & invoices" && !selected && <div style={cardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>Invoices & Payments</div>
-              <button style={btnStyle}>+ New Invoice</button>
+          {/* SUBSCRIPTION PAGE */}
+          {active === "Subscription" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+            <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", padding: 24, borderRadius: 16, border: "1px solid #bbf7d0", textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#166534" }}>🎉 1 Month Free Trial Active</div>
+              <div style={{ fontSize: 12, color: "#15803d", marginTop: 8 }}>You have full access to all features. Upgrade anytime to continue after your trial ends.</div>
             </div>
-            <div style={{ background: "#f8fafc", borderRadius: 8, padding: 16 }}>
-               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 800, color: "#64748b", marginBottom: 12, borderBottom: "1px solid #e2e8f0", paddingBottom: 8 }}>
-                  <span>INVOICE</span><span>AMOUNT</span><span>STATUS</span>
-               </div>
-               <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 12 }}>No invoices generated yet.</div>
-            </div>
-          </div>}
-
-          {/* DOCUMENTS */}
-          {active === "Documents" && !selected && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-             {["GST Certificate", "PAN Card", "MSME / Udyam", "Class-3 DSC"].map(doc => (
-               <div key={doc} style={{ ...cardStyle, textAlign: "center", padding: "25px 15px" }}>
-                 <div style={{ fontSize: 28, marginBottom: 10 }}>▧</div>
-                 <div style={{ fontSize: 13, fontWeight: 800 }}>{doc}</div>
-                 <div style={{ fontSize: 11, color: "#10b981", marginTop: 8, background: "#ecfdf5", display: "inline-block", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>Verified</div>
-               </div>
-             ))}
-          </div>}
-
-          {/* WORKFORCE */}
-          {active === "Workforce" && !selected && <div style={cardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>Staff & Workforce</div>
-              <button style={btnStyle}>+ Add Staff</button>
-            </div>
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
-              <div style={{ fontSize: 24, marginBottom: 10 }}>♙</div>
-              No staff records found.
-            </div>
-          </div>}
-
-          {/* TEAM */}
-          {active === "Team" && !selected && <div style={cardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>Workspace Team</div>
-              <button style={btnStyle}>+ Invite Member</button>
-            </div>
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
-              <div style={{ fontSize: 24, marginBottom: 10 }}>♧</div>
-              Only you have access to this workspace currently.
-            </div>
-          </div>}
-
-          {/* NOTIFICATIONS */}
-          {active === "Notifications" && !selected && <div style={cardStyle}>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Notifications</div>
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
-              <div style={{ fontSize: 24, marginBottom: 10 }}>♢</div>
-              You have no new notifications.
-            </div>
-          </div>}
-
-          {/* COMPANY PROFILE */}
-          {active === "Company profile" && !selected && <div style={cardStyle}>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Company Profile</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-               <div style={{ background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                 <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700 }}>COMPANY NAME</div>
-                 <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4 }}>Shivam Security Services Pvt. Ltd.</div>
-               </div>
-               <div style={{ background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                 <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700 }}>GST NUMBER</div>
-                 <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4 }}>23AAAAA0000A1Z5</div>
-               </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+              <div style={{ ...cardStyle, border: "2px solid #315efb" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 16, fontWeight: 900 }}>Pro Plan</div>
+                  <div style={{ background: "#315efb", color: "#fff", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 800 }}>MOST POPULAR</div>
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 900, margin: "16px 0" }}>₹999<span style={{ fontSize: 12, color: "#64748b", fontWeight: 500 }}>/month</span></div>
+                <ul style={{ paddingLeft: 16, fontSize: 13, color: "#475569", lineHeight: 1.8, marginBottom: 20 }}>
+                  <li>Unlimited Tender Access</li>
+                  <li>AI Rate Suggestions & Analysis</li>
+                  <li>Document Vault (10 GB)</li>
+                  <li>5 Team Members</li>
+                  <li>Priority Support</li>
+                </ul>
+                <button style={{ ...btnStyle, width: "100%", justifyContent: "center", padding: 12 }}>Upgrade to Pro</button>
+              </div>
             </div>
           </div>}
 
@@ -338,7 +302,18 @@ export default function BidWellDashboard() {
                   <div style={{ width: 40, height: 22, background: "#e2e8f0", borderRadius: 11, position: "relative" }}><div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 2, left: 2 }} /></div>
                </div>
              </div>
+             <button onClick={handleLogout} style={{ ...btnStyle, background: "#fef2f2", color: "#ef4444", width: "100%", justifyContent: "center", marginTop: 24, border: "1px solid #fecaca" }}>Log Out from Device</button>
           </div>}
+
+          {/* OTHER EMPTY STATES */}
+          {["Contracts", "Payments & invoices", "Documents", "Workforce", "Team", "Notifications", "AI tender brain"].includes(active) && !selected && (
+            <div style={cardStyle}>
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
+                <div style={{ fontSize: 24, marginBottom: 10 }}>✳</div>
+                Your {active.toLowerCase()} workspace is ready to be connected.
+              </div>
+            </div>
+          )}
 
         </div>
       </main>
