@@ -27,9 +27,9 @@ export default function BidWellDashboard() {
   const [tenders, setTenders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Naye Features ke States
-  const [visibleCount, setVisibleCount] = useState(10); // Load More ke liye
-  const [showForMe, setShowForMe] = useState(false); // Profile match toggle
+  // Features States
+  const [visibleCount, setVisibleCount] = useState(10); 
+  const [showForMe, setShowForMe] = useState(false); 
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => { if (!session) router.push("/login"); });
@@ -37,7 +37,6 @@ export default function BidWellDashboard() {
     fetch('/api/tenders?page=0').then(res => res.json()).then(data => {
       if (data.success && data.tenders) {
         const today = new Date();
-        // Sirf active tenders aur sort by match score
         const activeTenders = data.tenders.filter((t: any) => t.closing_date && new Date(t.closing_date) >= today)
                                            .sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
         setTenders(activeTenders);
@@ -48,11 +47,10 @@ export default function BidWellDashboard() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push("/login"); };
 
-  // Filter Logic (Search + For Me)
   const filteredTenders = useMemo(() => {
     return tenders.filter(t => {
       const matchSearch = `${t.title} ${t.org_name} ${t.state}`.toLowerCase().includes(query.toLowerCase());
-      const matchProfile = showForMe ? (t.match_score >= 60) : true; // 60% se upar wale hi "For Me" me aayenge
+      const matchProfile = showForMe ? (t.match_score >= 60) : true; 
       return matchSearch && matchProfile;
     });
   }, [tenders, query, showForMe]);
@@ -88,17 +86,14 @@ export default function BidWellDashboard() {
             <p style={{ fontSize: 12, color: "#7b879a", margin: 0 }}>{descriptions[active]}</p>
           </div>
 
-          {/* LIVE TENDERS LIST WITH LOAD MORE & FOR ME */}
+          {/* LIVE TENDERS LIST */}
           {active === "Live tenders" && (
             <div>
-              {/* Toggle & Counter Bar */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: "#fff", padding: "12px 20px", borderRadius: 12, border: "1px solid #e8edf5" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#17233b" }}>
-                  Total: {filteredTenders.length} Tenders
-                </div>
-                <div style={{ display: "flex", gap: 8, background: "#f1f5f9", padding: 4, borderRadius: 8 }}>
-                  <button onClick={() => setShowForMe(false)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: !showForMe ? "#fff" : "transparent", color: !showForMe ? "#315efb" : "#64748b", boxShadow: !showForMe ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>All Tenders</button>
-                  <button onClick={() => setShowForMe(true)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: showForMe ? "#fff" : "transparent", color: showForMe ? "#315efb" : "#64748b", boxShadow: showForMe ? "0 1px 3px rgba(0,0,0,0.1)" : "none", display: "flex", alignItems: "center", gap: 4 }}>
+              {/* Clean Toggle Bar */}
+              <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 20 }}>
+                <div style={{ display: "flex", gap: 8, background: "#fff", padding: 4, borderRadius: 10, border: "1px solid #e8edf5" }}>
+                  <button onClick={() => setShowForMe(false)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: !showForMe ? "#315efb" : "transparent", color: !showForMe ? "#fff" : "#64748b", transition: "0.2s" }}>All Tenders</button>
+                  <button onClick={() => setShowForMe(true)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: showForMe ? "#315efb" : "transparent", color: showForMe ? "#fff" : "#64748b", display: "flex", alignItems: "center", gap: 4, transition: "0.2s" }}>
                     <span>✨</span> For Me
                   </button>
                 </div>
