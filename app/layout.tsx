@@ -1,29 +1,24 @@
-import type { Metadata, Viewport } from "next";
-import "./globals.css";
-import { ThemeProvider } from "@/lib/theme";
-import { LanguageProvider } from "@/lib/language";
+import './globals.css';
+import { Inter } from 'next/font/google';
 
-export const metadata: Metadata = {
-  title: "BidWell — From Tender to Payment",
-  description: "AI Contract Operating System for Contractors",
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'BidWell | Global AI Tender Consultant & Legal Suite',
+  description: 'World-class automated tender intelligence and legal document generator.',
 };
 
-export const viewport: Viewport = {
-  themeColor: "#2563eb",
-  width: "device-width",
-  initialScale: 1,
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="/icon-192.png" />
-      </head>
-      <body className="bg-white dark:bg-gray-950">
-        <ThemeProvider>
-          <LanguageProvider>{children}</LanguageProvider>
-        </ThemeProvider>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-[#030712] text-slate-100 antialiased min-h-screen selection:bg-cyan-500 selection:text-black`}>
+        <main className="max-w-md mx-auto sm:max-w-2xl lg:max-w-4xl min-h-screen relative shadow-2xl border-x border-slate-800/60 bg-[#070b18]">
+          {children}
+        </main>
       </body>
     </html>
   );
