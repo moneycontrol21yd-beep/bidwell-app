@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 
 const C = { 
   bg: "#f5f7fb", card: "#ffffff", text: "#17233b", sub: "#64748b", accent: "#315efb", border: "#e2e8f0", success: "#10b981"
@@ -94,7 +93,12 @@ export default function TenderDetailPage() {
               <div style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, padding: 20 }}><div style={{ fontSize: 11, fontWeight: 800, color: C.sub, textTransform: "uppercase", marginBottom: 8 }}>Tender Value</div><div style={{ fontSize: 18, fontWeight: 900 }}>{formatCurrency(tender.value)}</div></div>
               <div style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, padding: 20 }}><div style={{ fontSize: 11, fontWeight: 800, color: C.sub, textTransform: "uppercase", marginBottom: 8 }}>EMD Amount</div><div style={{ fontSize: 18, fontWeight: 900 }}>{formatCurrency(tender.emd)}</div></div>
             </div>
-            <a href={tender.source_url || "#"} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", background: C.accent, color: "#fff", padding: "14px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 800, textAlign: "center" }}>Visit Official Portal ↗</a>
+            
+            {/* FIXED BUTTON ALIGNMENT HERE */}
+            <a href={tender.source_url || "#"} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", background: C.accent, color: "#fff", padding: "14px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 800 }}>
+              <span>Visit Official Portal</span>
+              <span style={{ fontSize: 16 }}>↗</span>
+            </a>
           </>
         )}
 
