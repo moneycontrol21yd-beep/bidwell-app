@@ -2,28 +2,28 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { prompt } = await request.json();
+    const { prompt, language } = await request.json();
+    const VPS_AI_URL = "http://187.127.139.195:11434/api/generate"; 
 
-    // VPS Brain (Ollama) ko request bhej rahe hain
-    // Note: VPS 11434 port par exposed hai jaisa humne docker ps me dekha tha
-    const response = await fetch("http://187.127.139.195:11434/api/generate", {
+    const langInstruction = language === "hi" ? "Reply strictly in Hindi (Devanagari script)." : 
+                            language === "mr" ? "Reply strictly in Marathi." :
+                            "Reply in English.";
+
+    const response = await fetch(VPS_AI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "llama3", // Agar VPS me llama3 nahi hai, toh model name yahan change karna
-        prompt: `You are BidWell AI, a professional Indian Tender Consultant. Answer the user's query clearly and professionally in the context of government tenders. Query: ${prompt}`,
+        model: "llama3", 
+        prompt: `You are BidWell AI. ${langInstruction} Answer the query professionally. If asked for missing documents, provide official links. Query: ${prompt}`,
         stream: false
       })
     });
 
-    if (!response.ok) {
-      throw new Error("VPS Brain connection failed");
-    }
-
+    if (!response.ok) throw new Error("VPS Brain offline");
     const data = await response.json();
     return NextResponse.json({ success: true, reply: data.response });
 
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message });
+    return NextResponse.json({ success: false, error: "VPS AI connection failed." });
   }
 }
