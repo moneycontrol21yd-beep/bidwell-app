@@ -1,0 +1,57 @@
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get("query") || "";
+  const source = searchParams.get("source") || "all";
+
+  // Aggregated Tenders Data Structure
+  const mockTenders = [
+    {
+      id: "CPPP-2026-991",
+      title: "Provide Integrated Security Personnel and Facility Surveillance",
+      department: "Central Public Works Department (CPWD)",
+      value: "₹3.5 Cr",
+      deadline: "2026-11-05",
+      source: "CPPP Central",
+      location: "New Delhi",
+      category: "Security & Manpower",
+    },
+    {
+      id: "GEM-2026-442",
+      title: "Supply and Maintenance of CCTV Cameras and Control Systems",
+      department: "Smart City Development Authority",
+      value: "₹1.8 Cr",
+      deadline: "2026-10-29",
+      source: "GeM",
+      location: "Indore, MP",
+      category: "CCTV & IT Hardware",
+    },
+    {
+      id: "STATE-MP-108",
+      title: "Annual Housekeeping & Sanitation Services for District Hospitals",
+      department: "Health & Family Welfare Dept MP",
+      value: "₹2.1 Cr",
+      deadline: "2026-11-12",
+      source: "MP Tenders (State)",
+      location: "Bhopal, MP",
+      category: "Housekeeping",
+    },
+    {
+      id: "UT-JK-301",
+      title: "Road Construction & Civil Infrastructure Maintenance Work",
+      department: "Public Works Department (PWD) J&K",
+      value: "₹5.0 Cr",
+      deadline: "2026-11-20",
+      source: "J&K eProcure (UT)",
+      location: "Srinagar, J&K",
+      category: "Civil Works",
+    },
+  ];
+
+  return NextResponse.json({
+    success: true,
+    totalCount: 72450,
+    tenders: mockTenders,
+  });
+}
