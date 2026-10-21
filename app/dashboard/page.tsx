@@ -27,19 +27,19 @@ export default function BidWellDashboard() {
   const [tenders, setTenders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Naye Features ke States
+  const [visibleCount, setVisibleCount] = useState(10); // Load More ke liye
+  const [showForMe, setShowForMe] = useState(false); // Profile match toggle
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => { if (!session) router.push("/login"); });
     
-    // Dukan (Supabase) se sirf LIVE aur MATCHED tenders lana
     fetch('/api/tenders?page=0').then(res => res.json()).then(data => {
       if (data.success && data.tenders) {
         const today = new Date();
-        // Filter: Only active + Sort: Highest Match first
-        const activeTenders = data.tenders.filter((t: any) => {
-           const isLive = t.closing_date && new Date(t.closing_date) >= today;
-           return isLive;
-        }).sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
-        
+        // Sirf active tenders aur sort by match score
+        const activeTenders = data.tenders.filter((t: any) => t.closing_date && new Date(t.closing_date) >= today)
+                                           .sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
         setTenders(activeTenders);
       }
       setLoading(false);
@@ -47,6 +47,15 @@ export default function BidWellDashboard() {
   }, [router]);
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push("/login"); };
+
+  // Filter Logic (Search + For Me)
+  const filteredTenders = useMemo(() => {
+    return tenders.filter(t => {
+      const matchSearch = `${t.title} ${t.org_name} ${t.state}`.toLowerCase().includes(query.toLowerCase());
+      const matchProfile = showForMe ? (t.match_score >= 60) : true; // 60% se upar wale hi "For Me" me aayenge
+      return matchSearch && matchProfile;
+    });
+  }, [tenders, query, showForMe]);
 
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
 
@@ -69,7 +78,7 @@ export default function BidWellDashboard() {
       <main style={{ width: "100%" }}>
         <header style={{ height: 75, background: "#fff", borderBottom: "1px solid #e8edf5", display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
           <button onClick={() => setMobileMenu(!mobileMenu)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer" }}>☰</button>
-          <div style={{ display: "flex", alignItems: "center", border: "1px solid #e7ebf3", background: "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 400, width: "100%" }}><span style={{ fontSize: 22, color: "#8794a9", marginRight: 8 }}>⌕</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search..." style={{ border: 0, outline: 0, background: "transparent", flex: 1, fontSize: 12 }} /></div>
+          <div style={{ display: "flex", alignItems: "center", border: "1px solid #e7ebf3", background: "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 400, width: "100%" }}><span style={{ fontSize: 22, color: "#8794a9", marginRight: 8 }}>⌕</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search tenders..." style={{ border: 0, outline: 0, background: "transparent", flex: 1, fontSize: 12 }} /></div>
         </header>
 
         <div style={{ padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
@@ -79,13 +88,65 @@ export default function BidWellDashboard() {
             <p style={{ fontSize: 12, color: "#7b879a", margin: 0 }}>{descriptions[active]}</p>
           </div>
 
-          {/* OVERVIEW - Only Top 3 Matched Tenders */}
+          {/* LIVE TENDERS LIST WITH LOAD MORE & FOR ME */}
+          {active === "Live tenders" && (
+            <div>
+              {/* Toggle & Counter Bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: "#fff", padding: "12px 20px", borderRadius: 12, border: "1px solid #e8edf5" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#17233b" }}>
+                  Total: {filteredTenders.length} Tenders
+                </div>
+                <div style={{ display: "flex", gap: 8, background: "#f1f5f9", padding: 4, borderRadius: 8 }}>
+                  <button onClick={() => setShowForMe(false)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: !showForMe ? "#fff" : "transparent", color: !showForMe ? "#315efb" : "#64748b", boxShadow: !showForMe ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>All Tenders</button>
+                  <button onClick={() => setShowForMe(true)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: showForMe ? "#fff" : "transparent", color: showForMe ? "#315efb" : "#64748b", boxShadow: showForMe ? "0 1px 3px rgba(0,0,0,0.1)" : "none", display: "flex", alignItems: "center", gap: 4 }}>
+                    <span>✨</span> For Me
+                  </button>
+                </div>
+              </div>
+
+              {/* Tender Cards */}
+              {loading ? <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Fetching live data...</div> : 
+              <div>
+                {filteredTenders.slice(0, visibleCount).map(t => (
+                  <article key={t.id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "20px", marginBottom: 12, background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ fontSize: 10, color: "#8994a7", display: "flex", gap: 8, alignItems: "center" }}>
+                        <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4 }}>{t.source || "LIVE"}</span>
+                        <span>{t.source_tender_id || t.id}</span>
+                      </div>
+                      <span style={{ background: t.match_score >= 80 ? "#e3f7ef" : "#fff3db", color: t.match_score >= 80 ? "#168363" : "#a8751b", padding: "5px 8px", borderRadius: 7, fontSize: 10, fontWeight: 800 }}>{t.match_score || 0}% Match</span>
+                    </div>
+                    <div>
+                      <h3 style={{ margin: "0 0 6px 0", fontSize: 14, fontWeight: 800, color: "#26354e" }}>{t.title}</h3>
+                      <p style={{ margin: 0, fontSize: 11, color: "#8591a5" }}>{t.org_name || "Unknown Department"} · {t.state || "India"}</p>
+                    </div>
+                    <div style={{ display: "flex", gap: 20, fontSize: 11, color: "#8994a6", background: "#f9fafc", padding: 12, borderRadius: 8, marginTop: 4 }}>
+                      <span>◈ Value: <b style={{ color: "#17233b" }}>{t.value ? `₹${t.value}` : "Check Portal"}</b></span>
+                      <span>◷ Deadline: <b style={{ color: "#ef4444" }}>{t.closing_date ? new Date(t.closing_date).toLocaleDateString('en-IN') : "Check Portal"}</b></span>
+                    </div>
+                  </article>
+                ))}
+              </div>}
+
+              {/* Load More Button */}
+              {!loading && visibleCount < filteredTenders.length && (
+                <div style={{ textAlign: "center", marginTop: 20 }}>
+                  <button onClick={() => setVisibleCount(prev => prev + 10)} style={{ background: "#fff", color: "#315efb", border: "1px solid #315efb", padding: "12px 30px", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 2px 8px rgba(49, 94, 251, 0.1)" }}>
+                    Load More Tenders ↓
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* OVERVIEW (Top 3 Matched) */}
           {active === "Overview" && <>
             <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 19 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#b6c9f6", fontSize: 9, fontWeight: 800 }}><span style={{ fontSize: 18 }}>✳</span> BIDWELL INTELLIGENCE</div>
                 <h2 style={{ fontSize: 28, lineHeight: 1.15, margin: "12px 0 9px" }}>Better tenders.<br /><span style={{ color: "#8eafff" }}>Stronger bids.</span></h2>
                 <p style={{ fontSize: 11, color: "#bdc9df", maxWidth: 355, margin: "0 0 15px" }}>Your AI-powered workspace to discover opportunities, prepare bids and stay on top of every contract.</p>
+                <button onClick={() => setActive("Live tenders")} style={{ background: "#fff", color: "#1b2c4a", padding: "10px 14px", borderRadius: 9, border: 0, fontWeight: 700, cursor: "pointer" }}>Explore tenders ↗</button>
               </div>
             </section>
 
@@ -93,7 +154,7 @@ export default function BidWellDashboard() {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 19 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>Top 3 Matched Tenders</div>
-                  <div style={{ fontSize: 11, color: "#8792a5" }}>High probability of winning</div>
+                  <div style={{ fontSize: 11, color: "#8792a5" }}>Highest probability of winning</div>
                 </div>
                 <button onClick={() => setActive("Live tenders")} style={{ background: "transparent", border: 0, color: "#315efb", fontSize: 11, fontWeight: 700 }}>View all ↗</button>
               </div>
@@ -101,8 +162,7 @@ export default function BidWellDashboard() {
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: 500 }}>
                   <thead><tr style={{ borderBottom: "1px solid #edf0f6" }}><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>OPPORTUNITY</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>VALUE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>DEADLINE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>MATCH</th></tr></thead>
                   <tbody>
-                    {loading ? <tr><td colSpan={4} style={{ padding: 20, fontSize: 12 }}>Fetching live tenders...</td></tr> : 
-                    tenders.slice(0, 3).map(t => <tr key={t.id} onClick={() => router.push(`/tenders/${t.source_tender_id}`)} style={{ borderBottom: "1px solid #f0f2f7", cursor: "pointer" }}>
+                    {tenders.slice(0, 3).map(t => <tr key={t.id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ borderBottom: "1px solid #f0f2f7", cursor: "pointer" }}>
                       <td style={{ padding: "13px 10px" }}><div style={{ fontWeight: 700, fontSize: 11, color: "#26344d" }}>{t.title}</div><small style={{ fontSize: 9, color: "#8792a5" }}>{t.org_name} · {t.state}</small></td>
                       <td style={{ padding: "13px 10px", fontSize: 11, fontWeight: 800 }}>{t.value || "N/A"}</td>
                       <td style={{ padding: "13px 10px", fontSize: 11, color: "#637087" }}>{new Date(t.closing_date).toLocaleDateString('en-IN')}</td>
@@ -114,9 +174,7 @@ export default function BidWellDashboard() {
             </div>
           </>}
 
-          {/* AI CHAT (Baki tabs same rahenge) */}
-          {active === "AI tender brain" && <div style={cardStyle}><h2 style={{ fontSize: 20 }}>AI Chat Connected to Factory</h2><p style={{ color: "#64748b" }}>Model llama3 is now running on VPS.</p></div>}
-          {active === "Live tenders" && <div style={cardStyle}><h2>All Active Tenders ({tenders.length})</h2><p>Sorted by match score.</p></div>}
+          {active === "AI tender brain" && <div style={cardStyle}><h2 style={{ fontSize: 20 }}>AI Chat</h2><p style={{ color: "#64748b" }}>Ready to answer.</p></div>}
 
         </div>
       </main>
