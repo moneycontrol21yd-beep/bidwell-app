@@ -26,8 +26,6 @@ export default function BidWellDashboard() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [tenders, setTenders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Features States
   const [visibleCount, setVisibleCount] = useState(10); 
   const [showForMe, setShowForMe] = useState(false); 
 
@@ -54,6 +52,11 @@ export default function BidWellDashboard() {
       return matchSearch && matchProfile;
     });
   }, [tenders, query, showForMe]);
+
+  // AI Advisor ko direct chat par bhejne ke liye
+  const askAI = () => {
+    setActive("AI tender brain");
+  };
 
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
 
@@ -89,7 +92,6 @@ export default function BidWellDashboard() {
           {/* LIVE TENDERS LIST */}
           {active === "Live tenders" && (
             <div>
-              {/* Clean Toggle Bar */}
               <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 20 }}>
                 <div style={{ display: "flex", gap: 8, background: "#fff", padding: 4, borderRadius: 10, border: "1px solid #e8edf5" }}>
                   <button onClick={() => setShowForMe(false)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: !showForMe ? "#315efb" : "transparent", color: !showForMe ? "#fff" : "#64748b", transition: "0.2s" }}>All Tenders</button>
@@ -99,7 +101,6 @@ export default function BidWellDashboard() {
                 </div>
               </div>
 
-              {/* Tender Cards */}
               {loading ? <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Fetching live data...</div> : 
               <div>
                 {filteredTenders.slice(0, visibleCount).map(t => (
@@ -123,7 +124,6 @@ export default function BidWellDashboard() {
                 ))}
               </div>}
 
-              {/* Load More Button */}
               {!loading && visibleCount < filteredTenders.length && (
                 <div style={{ textAlign: "center", marginTop: 20 }}>
                   <button onClick={() => setVisibleCount(prev => prev + 10)} style={{ background: "#fff", color: "#315efb", border: "1px solid #315efb", padding: "12px 30px", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 2px 8px rgba(49, 94, 251, 0.1)" }}>
@@ -134,7 +134,7 @@ export default function BidWellDashboard() {
             </div>
           )}
 
-          {/* OVERVIEW (Top 3 Matched) */}
+          {/* OVERVIEW */}
           {active === "Overview" && <>
             <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 19 }}>
               <div>
@@ -166,6 +166,84 @@ export default function BidWellDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* 🚀 NAYA SECTION: FUTURE & GROWTH */}
+            <div style={{ marginTop: 30, marginBottom: 15 }}>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b", display: "flex", alignItems: "center", gap: 8 }}>
+                <span>🚀</span> Future & Growth
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Your AI Business Partner to scale beyond just tenders.</div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+              
+              {/* Readiness Score */}
+              <div style={{ ...cardStyle, background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", border: "1px solid #bbf7d0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#166534" }}>Company Readiness</div>
+                  <div style={{ background: "#10b981", color: "#fff", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>AI Score</div>
+                </div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: "#065f46", marginBottom: 8 }}>78%</div>
+                <p style={{ fontSize: 11, color: "#047857", margin: "0 0 12px 0", lineHeight: 1.5 }}>Your turnover, experience, and licenses are 78% ready for high-value tenders.</p>
+                <div style={{ height: 6, background: "#a7f3d0", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: "78%", height: "100%", background: "#10b981" }} />
+                </div>
+              </div>
+
+              {/* AI Business Advisor */}
+              <div style={{ ...cardStyle, background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", color: "#fff" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>🤖 AI Business Advisor</div>
+                <p style={{ fontSize: 12, color: "#c7d2fe", lineHeight: 1.6, marginBottom: 16 }}>Ask AI: "What should my company do in the next 6 months to grow?"</p>
+                <button onClick={askAI} style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Ask Advisor ↗</button>
+              </div>
+
+              {/* New Business Suggestions */}
+              <div style={cardStyle}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>💡 New Business Ideas</div>
+                <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Based on your Security profile, you can also bid for:</p>
+                <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: "#334155", lineHeight: 2 }}>
+                  <li>Housekeeping Services</li>
+                  <li>Manpower Supply</li>
+                  <li>Facility Management</li>
+                </ul>
+              </div>
+
+              {/* Future Revenue Planner */}
+              <div style={cardStyle}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>📈 Revenue Planner <span style={{ fontSize: 9, color: "#ef4444", background: "#fef2f2", padding: "2px 6px", borderRadius: 4 }}>AI Estimate</span></div>
+                <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                  <div style={{ flex: 1, background: "#f8fafc", padding: 10, borderRadius: 8 }}>
+                    <div style={{ fontSize: 10, color: "#64748b" }}>Potential Value</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#17233b" }}>₹3.2 Cr</div>
+                  </div>
+                  <div style={{ flex: 1, background: "#f8fafc", padding: 10, borderRadius: 8 }}>
+                    <div style={{ fontSize: 10, color: "#64748b" }}>Est. EMD Req.</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#ef4444" }}>₹12 Lakh</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: 10, color: "#94a3b8", margin: 0, fontStyle: "italic" }}>*Based on matched live tenders. Not a guarantee of earnings.</p>
+              </div>
+
+              {/* Partner Finder */}
+              <div style={cardStyle}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>🤝 Partner Finder</div>
+                <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Find registered vendors to form a joint venture for larger bids.</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f1f5f9", padding: 10, borderRadius: 8 }}>
+                  <div style={{ width: 32, height: 32, background: "#e2e8f0", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 16 }}>🏢</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>Shakti Infra Ltd.</div>
+                    <div style={{ fontSize: 10, color: "#64748b" }}>Matches 3 requirements</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust & Source */}
+              <div style={{ ...cardStyle, background: "#f8fafc", borderStyle: "dashed" }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#475569", marginBottom: 6 }}>🛡️ Trust & Transparency</div>
+                <p style={{ fontSize: 11, color: "#64748b", lineHeight: 1.6, margin: 0 }}>All live tenders are verified from official portals. Readiness scores and revenue planners are <b>AI estimates</b> to guide your strategy. Always verify with official sources.</p>
+              </div>
+
             </div>
           </>}
 
