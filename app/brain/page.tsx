@@ -72,7 +72,7 @@ export default function BrainPage() {
           <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Check Eligibility →</div>
         </div>
 
-        <div style={{ background: "linear-gradient(135deg, #F59E0B, #B45309)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+        <Link href="/fast-record" style={{ textDecoration: "none", display: "block" }}><div style={{ background: "linear-gradient(135deg, #F59E0B, #B45309)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
           <div>
             <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>⚡</div>
             <div style={{ fontSize: 15, fontWeight: 800 }}>Fast Record</div>
