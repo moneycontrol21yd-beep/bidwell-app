@@ -1,44 +1,20 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 
 export default function GlobalNavbar() {
-  const [lang, setLang] = useState("EN");
-  const [isDark, setIsDark] = useState(true);
-
   return (
-    <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-4">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center font-extrabold text-white text-sm shadow-lg">B</div>
-        <div>
-          <h1 className="text-sm font-extrabold text-cyan-400">BidWell Global</h1>
-          <p className="text-[10px] text-slate-400">World-Class Tender Intelligence</p>
-        </div>
-      </div>
-
+    <nav className="p-3 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
       <div className="flex items-center gap-2">
-        {/* Language Selector */}
-        <select 
-          value={lang} 
-          onChange={(e) => setLang(e.target.value)}
-          className="bg-slate-900 border border-slate-700 text-xs text-slate-200 px-2 py-1 rounded-xl outline-none font-bold"
-        >
-          <option value="EN">🌐 English</option>
-          <option value="HI">🇮🇳 Hindi (हिन्दी)</option>
-          <option value="GU">🟢 Gujarati (ગુજરાતી)</option>
-          <option value="MR">🟣 Marathi (मराठी)</option>
-          <option value="TA">🔵 Tamil (தமிழ்)</option>
-          <option value="TE">🟠 Telugu (తెలుగు)</option>
-        </select>
-
-        {/* Theme Toggle */}
-        <button 
-          onClick={() => setIsDark(!isDark)} 
-          className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-xs"
-        >
-          {isDark ? "🌙" : "☀️"}
-        </button>
+        <span className="font-black text-cyan-400 text-sm tracking-wider">BidWell Pro</span>
+        <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">Enterprise AI</span>
       </div>
-    </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Link href="/" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">Dashboard</Link>
+        <Link href="/match" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">Live Tenders</Link>
+        <Link href="/bids" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">Workspace</Link>
+        <Link href="/upload" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">Documents</Link>
+      </div>
+    </nav>
   );
 }
