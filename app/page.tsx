@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import GlobalNavbar from "../components/GlobalNavbar";
+import GlobalNavbar from "./components/GlobalNavbar";
 
 export default function MasterBrainDashboard() {
   const [activeTab, setActiveTab] = useState("tenders");
