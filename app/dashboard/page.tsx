@@ -19,6 +19,14 @@ const descriptions: Record<string, string> = {
 
 function Icon({ children }: { children: React.ReactNode }) { return <span style={{ width: 17, textAlign: "center", fontSize: 17, flex: "none", opacity: 0.8 }}>{children}</span>; }
 
+// Custom Professional Growth Chart Icon (No Emoji)
+const GrowthChartIcon = ({ size = 20, color = "#315efb" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+    <polyline points="16 7 22 7 22 13" />
+  </svg>
+);
+
 export default function BidWellDashboard() {
   const router = useRouter();
   const [active, setActive] = useState("Overview");
@@ -28,29 +36,10 @@ export default function BidWellDashboard() {
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10); 
   const [showForMe, setShowForMe] = useState(false); 
-  
-  // Real Future Data
-  const [profile, setProfile] = useState<any>(null);
-  const [readinessScore, setReadinessScore] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => { if (!session) router.push("/login"); });
     
-    // Fetch Profile for Readiness Score
-    fetch('/api/company-profile').then(r => r.json()).then(d => {
-      if (d.success && d.profile) {
-        setProfile(d.profile);
-        // Calculate Real Readiness Score based on filled fields
-        let score = 0;
-        if (d.profile.company_name) score += 25;
-        if (d.profile.gstin) score += 25;
-        if (d.profile.pan) score += 25;
-        if (d.profile.msme) score += 25;
-        setReadinessScore(score);
-      }
-    });
-
-    // Fetch Tenders
     fetch('/api/tenders?page=0').then(res => res.json()).then(data => {
       if (data.success && data.tenders) {
         const today = new Date();
@@ -72,20 +61,13 @@ export default function BidWellDashboard() {
     });
   }, [tenders, query, showForMe]);
 
-  // Real Revenue Planner Calculation (Sum of top 3 matched tenders)
   const top3Tenders = tenders.slice(0, 3);
   const potentialRevenue = top3Tenders.reduce((sum, t) => {
     if (!t.value) return sum;
     const numericValue = parseFloat(t.value.replace(/[^0-9.-]+/g,""));
     return sum + (isNaN(numericValue) ? 0 : numericValue);
   }, 0);
-  const estimatedEMD = potentialRevenue * 0.02; // Assuming 2% EMD
-
-  const askAI = () => {
-    setActive("AI tender brain");
-    // In a real scenario, you'd pass a specific prompt here. 
-    // For now, it just opens the chat where user can ask.
-  };
+  const estimatedEMD = potentialRevenue * 0.02;
 
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
 
@@ -193,37 +175,47 @@ export default function BidWellDashboard() {
               </div>
             </div>
 
-            {/* 🚀 FUTURE & GROWTH (Real Data) */}
+            {/* 🚀 FUTURE & GROWTH (Clean Icons, No Emojis) */}
             <div style={{ marginTop: 30, marginBottom: 15 }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b", display: "flex", alignItems: "center", gap: 8 }}><span>🚀</span> Future & Growth</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b", display: "flex", alignItems: "center", gap: 10 }}>
+                <GrowthChartIcon size={24} color="#10b981" /> Future & Growth
+              </div>
               <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Your AI Business Partner to scale beyond just tenders.</div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
               
-              {/* Real Readiness Score */}
-              <div style={{ ...cardStyle, background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", border: "1px solid #bbf7d0" }}>
+              {/* Future for BidWell (Replaced Readiness Score) */}
+              <div style={{ ...cardStyle, background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", border: "1px solid #a5b4fc" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#166534" }}>Company Readiness</div>
-                  <div style={{ background: "#10b981", color: "#fff", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>Live Score</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#3730a3", display: "flex", alignItems: "center", gap: 8 }}>
+                    <GrowthChartIcon size={18} color="#3730a3" /> Future for BidWell
+                  </div>
+                  <div style={{ background: "#4f46e5", color: "#fff", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>Roadmap</div>
                 </div>
-                <div style={{ fontSize: 30, fontWeight: 900, color: "#065f46", marginBottom: 8 }}>{readinessScore}%</div>
-                <p style={{ fontSize: 11, color: "#047857", margin: "0 0 12px 0", lineHeight: 1.5 }}>Based on your profile completion (GST, PAN, MSME, Name). Complete missing fields to reach 100%.</p>
-                <div style={{ height: 6, background: "#a7f3d0", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ width: `${readinessScore}%`, height: "100%", background: "#10b981" }} />
-                </div>
+                <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: "#312e81", lineHeight: 2, fontWeight: 600 }}>
+                  <li>AI-Powered Legal Documentation</li>
+                  <li>Zero-Paperwork Bidding System</li>
+                  <li>Real-time Payment Tracking</li>
+                  <li>Expand to 10+ States</li>
+                </ul>
               </div>
 
-              {/* AI Business Advisor */}
+              {/* JV for BidWell (Replaced AI Advisor) */}
               <div style={{ ...cardStyle, background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", color: "#fff" }}>
-                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>🤖 AI Business Advisor</div>
-                <p style={{ fontSize: 12, color: "#c7d2fe", lineHeight: 1.6, marginBottom: 16 }}>Ask AI: "What should my company do in the next 6 months to grow?"</p>
-                <button onClick={askAI} style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Ask Advisor ↗</button>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  JV for BidWell
+                </div>
+                <p style={{ fontSize: 12, color: "#c7d2fe", lineHeight: 1.6, marginBottom: 16 }}>Looking to bid for larger projects? Find trusted Joint Venture partners to strengthen your bid.</p>
+                <button onClick={() => alert("JV Search feature coming soon!")} style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Find JV Partners ↗</button>
               </div>
 
-              {/* Real Revenue Planner (Calculated from Live Tenders) */}
+              {/* Revenue Planner */}
               <div style={cardStyle}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>📈 Revenue Planner <span style={{ fontSize: 9, color: "#ef4444", background: "#fef2f2", padding: "2px 6px", borderRadius: 4 }}>Live Est.</span></div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <GrowthChartIcon size={18} color="#17233b" /> Revenue Planner <span style={{ fontSize: 9, color: "#ef4444", background: "#fef2f2", padding: "2px 6px", borderRadius: 4 }}>Live Est.</span>
+                </div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
                   <div style={{ flex: 1, background: "#f8fafc", padding: 10, borderRadius: 8 }}>
                     <div style={{ fontSize: 10, color: "#64748b" }}>Top 3 Potential</div>
@@ -239,10 +231,15 @@ export default function BidWellDashboard() {
 
               {/* Partner Finder */}
               <div style={cardStyle}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>🤝 Partner Finder</div>
-                <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Find registered vendors to form a joint venture for larger bids.</p>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17233b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                   Top Verified Partner
+                </div>
+                <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>A registered vendor matching your sector for potential JV.</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f1f5f9", padding: 10, borderRadius: 8 }}>
-                  <div style={{ width: 32, height: 32, background: "#e2e8f0", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 16 }}>🏢</div>
+                  <div style={{ width: 32, height: 32, background: "#e2e8f0", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 16 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>
+                  </div>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700 }}>{tenders[0]?.org_name ? tenders[0].org_name.split(' ')[0] + " Infra" : "Shakti Infra Ltd."}</div>
                     <div style={{ fontSize: 10, color: "#64748b" }}>Matches your sector</div>
@@ -252,7 +249,10 @@ export default function BidWellDashboard() {
 
               {/* Trust & Source */}
               <div style={{ ...cardStyle, background: "#f8fafc", borderStyle: "dashed" }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#475569", marginBottom: 6 }}>🛡️ Trust & Transparency</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#475569", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  Trust & Transparency
+                </div>
                 <p style={{ fontSize: 11, color: "#64748b", lineHeight: 1.6, margin: 0 }}>All live tenders are verified from official portals. Readiness scores and revenue planners are <b>AI estimates</b>. Always verify with official sources.</p>
               </div>
 
