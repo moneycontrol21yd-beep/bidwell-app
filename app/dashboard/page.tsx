@@ -2,6 +2,10 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 type Tender = {
   id: string; title: string; department: string; location: string;
@@ -34,7 +38,14 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 export default function BidWellDashboard() {
+  const router = useRouter();
   const [active, setActive] = useState("Overview");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/login");
+    });
+  }, [router]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Tender | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
