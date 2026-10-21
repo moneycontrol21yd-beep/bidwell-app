@@ -39,56 +39,69 @@ export default function BrainPage() {
 
       {/* Top Scroll Cards */}
       <div style={{ display: "flex", gap: 12, padding: "0 20px", overflowX: "auto", paddingBottom: 20 }}>
-        <div style={{ minWidth: 140, background: "linear-gradient(135deg, #6366F1, #4F46E5)", padding: 15, borderRadius: 16 }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>🧠</div>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Brain</div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>AI Insights</div>
-        </div>
-        <div style={{ minWidth: 140, background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 15, borderRadius: 16 }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>📄</div>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Live Tenders</div>
-          <div style={{ fontSize: 10, color: C.sub }}>Current Opportunities</div>
-        </div>
+        <Link href="/tenders" style={{ textDecoration: "none", color: "#fff" }}>
+          <div style={{ minWidth: 140, background: "linear-gradient(135deg, #6366F1, #4F46E5)", padding: 15, borderRadius: 16 }}>
+            <div style={{ fontSize: 24, marginBottom: 10 }}>🧠</div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Brain</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>AI Insights</div>
+          </div>
+        </Link>
+        <Link href="/tenders" style={{ textDecoration: "none", color: "#fff" }}>
+          <div style={{ minWidth: 140, background: C.card, border: "1px solid rgba(255,255,255,0.1)", padding: 15, borderRadius: 16 }}>
+            <div style={{ fontSize: 24, marginBottom: 10 }}>📄</div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Live Tenders</div>
+            <div style={{ fontSize: 10, color: C.sub }}>Current Opportunities</div>
+          </div>
+        </Link>
       </div>
 
       {/* 2-Column Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "0 20px" }}>
         
-        <div style={{ background: "linear-gradient(135deg, #8B5CF6, #6D28D9)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📊</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Tender Analysis</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>AI based insights on tenders, market & competition.</div>
+        <Link href="/tenders" style={{ textDecoration: "none" }}>
+          <div style={{ background: "linear-gradient(135deg, #8B5CF6, #6D28D9)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+            <div>
+              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📊</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Tender Analysis</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>AI based insights on tenders, market & competition.</div>
+            </div>
+            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>View Analysis →</div>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>View Analysis →</div>
-        </div>
+        </Link>
 
-        <div style={{ background: "linear-gradient(135deg, #10B981, #047857)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🛡️</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Eligibility Check</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Know if you're eligible in seconds.</div>
+        <Link href="/eligibility" style={{ textDecoration: "none" }}>
+          <div style={{ background: "linear-gradient(135deg, #10B981, #047857)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+            <div>
+              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🛡️</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Eligibility Check</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Know if you're eligible in seconds.</div>
+            </div>
+            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Check Eligibility →</div>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Check Eligibility →</div>
-        </div>
+        </Link>
 
-        <Link href="/fast-record" style={{ textDecoration: "none", display: "block" }}><div style={{ background: "linear-gradient(135deg, #F59E0B, #B45309)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>⚡</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Fast Record</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Quick view of high priority, urgent & closing soon tenders.</div>
+        {/* 🚀 YAHAN FIX KIYA GAYA HAI - Fast Record ab /fast-record par jayega */}
+        <Link href="/fast-record" style={{ textDecoration: "none" }}>
+          <div style={{ background: "linear-gradient(135deg, #F59E0B, #B45309)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+            <div>
+              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>⚡</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Fast Record</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Quick view of high priority, urgent & closing soon tenders.</div>
+            </div>
+            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>View Fast Record →</div>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>View Fast Record →</div>
-        </div>
+        </Link>
 
-        <div style={{ background: "linear-gradient(135deg, #EC4899, #BE185D)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📅</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Future Record</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Upcoming tenders & project forecasts (Central/State/UT).</div>
+        <Link href="/tenders" style={{ textDecoration: "none" }}>
+          <div style={{ background: "linear-gradient(135deg, #EC4899, #BE185D)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+            <div>
+              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>📅</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Future Record</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Upcoming tenders & project forecasts (Central/State/UT).</div>
+            </div>
+            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Explore Future Tenders →</div>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Explore Future Tenders →</div>
-        </div>
+        </Link>
 
         <div style={{ background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
           <div>
@@ -99,14 +112,16 @@ export default function BrainPage() {
           <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Get Recommendations →</div>
         </div>
 
-        <div style={{ background: "linear-gradient(135deg, #14B8A6, #0F766E)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
-          <div>
-            <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🇮🇳</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>India Wide Coverage</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Central + State + UT. All in one place.</div>
+        <Link href="/tenders" style={{ textDecoration: "none" }}>
+          <div style={{ background: "linear-gradient(135deg, #14B8A6, #0F766E)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 160 }}>
+            <div>
+              <div style={{ background: "rgba(255,255,255,0.2)", width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 10 }}>🇮🇳</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>India Wide Coverage</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>Central + State + UT. All in one place.</div>
+            </div>
+            <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10, color: "#fff" }}>Explore All →</div>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, textAlign: "center", marginTop: 10 }}>Explore All →</div>
-        </div>
+        </Link>
       </div>
 
       {/* 🚀 NAYA CYBER AI DESK CARD YAHAN ADD HO GAYA HAI */}
