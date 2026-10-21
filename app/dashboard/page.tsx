@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -21,7 +21,7 @@ const nav = [
 const descriptions: Record<string, string> = {
   "Overview": "Your business command centre",
   "Live tenders": "Discover opportunities matched to your company",
-  "AI tender brain": "Turn tender documents into clear next steps",
+  "AI tender brain": "Ask AI anything about tenders, eligibility, or documents",
   "Bid workspace": "Move every bid from preparation to submission",
   "Contracts": "Keep delivery, milestones and obligations under control",
   "Payments & invoices": "Track invoices, receivables and payment status",
@@ -49,14 +49,24 @@ export default function BidWellDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // Phase 3 Filters
   const [filterState, setFilterState] = useState("All States");
   const [filterSource, setFilterSource] = useState("All Sources");
   const [sortBy, setSortBy] = useState("deadline");
 
-  // Phase 2 Profile
   const [profile, setProfile] = useState<any>({ company_name: "", gstin: "", pan: "", msme: "" });
   const [profileSaving, setProfileSaving] = useState(false);
+
+  // AI Chat States
+  const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([
+    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain." }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -112,6 +122,31 @@ export default function BidWellDashboard() {
     });
     setProfileSaving(false);
     alert("Profile Details Saved Successfully!");
+  };
+
+  const handleSendMessage = async () => {
+    if(!chatInput.trim()) return;
+    const userMsg = chatInput;
+    setChatHistory(prev => [...prev, { role: "user", content: userMsg }]);
+    setChatInput("");
+    setChatLoading(true);
+    
+    try {
+      const res = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: userMsg })
+      });
+      const data = await res.json();
+      if(data.success) {
+        setChatHistory(prev => [...prev, { role: "assistant", content: data.reply }]);
+      } else {
+        setChatHistory(prev => [...prev, { role: "assistant", content: "Sorry, VPS Brain is currently unreachable. Please try again." }]);
+      }
+    } catch (e) {
+      setChatHistory(prev => [...prev, { role: "assistant", content: "Error connecting to AI Brain." }]);
+    }
+    setChatLoading(false);
   };
 
   const uniqueStates = useMemo(() => ["All States", ...Array.from(new Set(tenders.map(t => t.location)))], [tenders]);
@@ -238,7 +273,7 @@ export default function BidWellDashboard() {
             </div>
           </>}
 
-          {/* LIVE TENDERS WITH FILTERS */}
+          {/* LIVE TENDERS */}
           {isTenderPage && !selected && <section style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #edf0f6", display: "flex", flexWrap: "wrap", gap: 12, background: "#fafbfe" }}>
               <select value={filterState} onChange={e => setFilterState(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 12, outline: "none", background: "#fff" }}>
@@ -276,7 +311,7 @@ export default function BidWellDashboard() {
             </div>}
           </section>}
 
-          {/* TENDER DETAIL VIEW */}
+          {/* TENDER DETAIL */}
           {selected && <section style={cardStyle}>
             <button onClick={() => setSelected(null)} style={{ border: 0, background: "transparent", color: "#315efb", fontSize: 11, fontWeight: 700, marginBottom: 22, cursor: "pointer" }}>← Back to opportunities</button>
             <h2 style={{ fontSize: 20, margin: "11px 0 6px", fontWeight: 800 }}>{selected.title}</h2>
@@ -289,6 +324,33 @@ export default function BidWellDashboard() {
               <Link href={`/tenders/${selected.id}`} style={{ ...btnStyle, width: "100%", justifyContent: "center", padding: "12px" }}>Open Full Analysis ↗</Link>
             </div>
           </section>}
+
+          {/* AI TENDER BRAIN */}
+          {active === "AI tender brain" && !selected && (
+            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", overflow: "hidden" }}>
+              <div style={{ padding: 20, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, background: "#f8fafc" }}>
+                {chatHistory.map((msg, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                     <div style={{ background: msg.role === "user" ? "#315efb" : "#fff", color: msg.role === "user" ? "#fff" : "#17233b", padding: "14px 18px", borderRadius: 16, borderTopRightRadius: msg.role === "user" ? 4 : 16, borderTopLeftRadius: msg.role === "assistant" ? 4 : 16, maxWidth: "80%", fontSize: 14, lineHeight: 1.6, boxShadow: msg.role === "assistant" ? "0 2px 5px rgba(0,0,0,0.05)" : "none", border: msg.role === "assistant" ? "1px solid #e8edf5" : "none" }}>
+                       {msg.content}
+                     </div>
+                  </div>
+                ))}
+                {chatLoading && <div style={{ color: "#64748b", fontSize: 12, padding: "10px 14px", background: "#fff", borderRadius: 16, borderTopLeftRadius: 4, border: "1px solid #e8edf5", display: "inline-block", width: "fit-content" }}>BidWell AI is analyzing VPS Brain...</div>}
+                <div ref={chatEndRef} />
+              </div>
+              <div style={{ padding: 16, borderTop: "1px solid #e8edf5", display: "flex", gap: 10, background: "#fff" }}>
+                <input 
+                  value={chatInput} 
+                  onChange={e => setChatInput(e.target.value)} 
+                  onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                  placeholder="Ask about tender eligibility, EMD, documents..." 
+                  style={{ flex: 1, padding: "14px 20px", borderRadius: 24, border: "1px solid #e8edf5", outline: "none", fontSize: 14, background: "#f8fafc" }}
+                />
+                <button onClick={handleSendMessage} style={{ background: "#315efb", color: "#fff", border: "none", padding: "0 24px", borderRadius: 24, fontWeight: 800, cursor: "pointer", fontSize: 14 }}>Send</button>
+              </div>
+            </div>
+          )}
 
           {/* BID WORKSPACE */}
           {active === "Bid workspace" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
@@ -320,7 +382,7 @@ export default function BidWellDashboard() {
             </div>
           </div>}
 
-          {/* COMPANY PROFILE & VAULT */}
+          {/* COMPANY PROFILE */}
           {active === "Company profile" && !selected && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
             <div style={cardStyle}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Company Details (India)</div>
@@ -387,8 +449,8 @@ export default function BidWellDashboard() {
              <button onClick={handleLogout} style={{ ...btnStyle, background: "#fef2f2", color: "#ef4444", width: "100%", justifyContent: "center", marginTop: 24, border: "1px solid #fecaca" }}>Log Out from Device</button>
           </div>}
 
-          {/* EMPTY STATES (Contracts, Payments, etc.) */}
-          {["Contracts", "Payments & invoices", "Documents", "Workforce", "Team", "Notifications", "AI tender brain"].includes(active) && !selected && (
+          {/* EMPTY STATES */}
+          {["Contracts", "Payments & invoices", "Documents", "Workforce", "Team", "Notifications"].includes(active) && !selected && (
             <div style={cardStyle}>
               <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: 13 }}>
                 <div style={{ fontSize: 24, marginBottom: 10 }}>✳</div>
