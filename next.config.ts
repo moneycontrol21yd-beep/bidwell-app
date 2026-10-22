@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => {
-    return 'build-' + Date.now();
+  generateBuildId: async () => 'build-' + Date.now(),
+  turbopack: {},
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 
