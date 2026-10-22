@@ -54,6 +54,15 @@ export default function Dashboard() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [attachment, setAttachment] = useState<{name: string, type: string} | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // JV Feature States
@@ -162,7 +171,68 @@ export default function Dashboard() {
     setUploadingDoc("");
   };
 
-  const handleSendMessage = async (customPrompt?: string) => {
+  
+  const speakText = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop previous
+      const cleanText = text.replace(/[*#]/g, ''); // Remove markdown
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = language === 'hi' ? 'hi-IN' : 'en-US';
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Text-to-speech not supported in this browser.");
+    }
+  };
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Voice input is not supported in this browser.");
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = language === 'hi' ? 'hi-IN' : 'en-US';
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setChatInput(prev => prev + " " + transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    
+    recognition.start();
+    recognitionRef.current = recognition;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAttachment({ name: file.name, type: file.type });
+      setShowAttachMenu(false);
+    }
+  };
+
+  const downloadChatPDF = () => {
+    const doc = new jsPDF();
+    let y = 15;
+    doc.setFontSize(16);
+    doc.text("BidWell AI - Tender Consultation", 10, y);
+    y += 10;
+    doc.setFontSize(11);
+    chatHistory.forEach((msg) => {
+      const sender = msg.role === "user" ? "YOU: " : "BIDWELL AI: ";
+      const cleanContent = msg.content.replace(/[*#]/g, ''); 
+      const lines = doc.splitTextToSize(`${sender}${cleanContent}`, 180);
+      if (y + lines.length * 6 > 280) { doc.addPage(); y = 15; }
+      doc.text(lines, 10, y);
+      y += lines.length * 6 + 5;
+    });
+    doc.save("BidWell_Chat_History.pdf");
+  };
+
+const handleSendMessage = async (customPrompt?: string) => {
     const msg = customPrompt || chatInput;
     if(!msg.trim()) return;
     
@@ -359,29 +429,30 @@ export default function Dashboard() {
 
           {/* AI CHAT */}
           {active === "AI tender brain" && (
-            <div style={{ ...cardStyle, padding: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", overflow: "hidden", border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 130px)", background: isDarkMode ? "#0f172a" : "#fff", borderRadius: 16, border: `1px solid ${C.border}`, position: "relative", overflow: "hidden" }}>
               
-              <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: isDarkMode ? "#0f172a" : "#f8fafc" }}>
+              {/* Chat Header */}
+              <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: isDarkMode ? "#1e293b" : "#f8fafc" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>Language:</span>
                   <select value={language} onChange={e => setLanguage(e.target.value)} style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: C.card, color: C.text, fontWeight: 600 }}>
                     <option value="en">English</option>
                     <option value="hi">Hindi (हिंदी)</option>
                   </select>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                   <button onClick={() => window.print()} style={{ background: C.card, border: `1px solid ${C.border}`, padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", color: C.text }}>📄 PDF</button>
-                   <button onClick={() => { setChatHistory([{ role: "assistant", content: "Namaste! Main BidWell AI hoon." }]); }} style={{ background: C.card, border: `1px solid ${C.border}`, padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", color: C.text }}>🗑️ Clear</button>
+                   <button onClick={downloadChatPDF} style={{ background: C.card, border: `1px solid ${C.border}`, padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", color: C.text }}>📄 PDF</button>
+                   <button onClick={() => { setChatHistory([{ role: "assistant", content: "Namaste! Main BidWell AI hoon." }]); }} style={{ background: C.card, border: `1px solid ${C.border}`, padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", color: C.text }}>🗑️ Clear</button>
                 </div>
               </div>
 
-              <div style={{ padding: "20px 20px 0 20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, background: isDarkMode ? "#0f172a" : "#fff" }}>
+              {/* Chat Messages */}
+              <div style={{ padding: "20px", flex: 1, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", gap: 16, background: isDarkMode ? "#0f172a" : "#fff" }}>
                 {chatHistory.map((msg, i) => (
                   <div key={i} style={{ display: "flex", gap: 12, flexDirection: msg.role === "user" ? "row-reverse" : "row", alignItems: "flex-start" }}>
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: msg.role === "user" ? "#cbd5e1" : C.accent, display: "grid", placeItems: "center", flexShrink: 0, color: "#fff", fontSize: 16, fontWeight: 800 }}>
                       {msg.role === "user" ? "U" : "✳"}
                     </div>
-                    <div style={{ background: msg.role === "user" ? (isDarkMode ? "#334155" : "#f1f5f9") : C.card, color: C.text, padding: "12px 16px", borderRadius: 12, borderTopRightRadius: msg.role === "user" ? 2 : 12, borderTopLeftRadius: msg.role === "assistant" ? 2 : 12, maxWidth: "80%", fontSize: 14, lineHeight: 1.6, border: msg.role === "assistant" ? `1px solid ${C.border}` : "none", boxShadow: msg.role === "assistant" ? "0 1px 3px rgba(0,0,0,0.05)" : "none" }}>
+                    <div style={{ background: msg.role === "user" ? (isDarkMode ? "#334155" : "#f1f5f9") : C.card, color: C.text, padding: "12px 16px", borderRadius: 16, borderTopRightRadius: msg.role === "user" ? 4 : 16, borderTopLeftRadius: msg.role === "assistant" ? 4 : 16, maxWidth: "80%", fontSize: 14, lineHeight: 1.6, border: msg.role === "assistant" ? `1px solid ${C.border}` : "none", boxShadow: msg.role === "assistant" ? "0 1px 3px rgba(0,0,0,0.05)" : "none" }}>
                       {msg.role === "user" ? (
                         msg.content
                       ) : (
@@ -390,29 +461,86 @@ export default function Dashboard() {
                           {chatLoading && i === chatHistory.length - 1 && (
                             <span style={{ display: "inline-block", width: 6, height: 14, background: C.accent, marginLeft: 4, animation: "blink 1s step-end infinite" }} />
                           )}
+                          {/* Text to Speech Button */}
+                          {!chatLoading && i !== 0 && (
+                            <button onClick={() => speakText(msg.content)} style={{ background: "none", border: "none", cursor: "pointer", marginTop: 8, padding: 0, color: C.sub, display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+                              🔊 Play
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
-                <div ref={chatEndRef} style={{ paddingBottom: 20 }} />
+                <div ref={chatEndRef} style={{ paddingBottom: 10 }} />
               </div>
 
-              <div style={{ padding: "10px 20px", display: "flex", gap: 8, overflowX: "auto", background: isDarkMode ? "#0f172a" : "#fff", borderTop: `1px solid ${C.border}` }}>
-                <button onClick={() => handleSendMessage(language === "hi" ? "Mujhe tender ke liye kaunse documents chahiye?" : "What documents are required?")} style={{ whiteSpace: "nowrap", padding: "8px 14px", borderRadius: 20, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>
-                  {language === "hi" ? "📄 Zaruri Documents" : "📄 Required Documents"}
-                </button>
-                <button onClick={() => handleSendMessage(language === "hi" ? "Payment condition kya hai?" : "Payment condition?")} style={{ whiteSpace: "nowrap", padding: "8px 14px", borderRadius: 20, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>
-                  {language === "hi" ? "💰 Payment Info" : "💰 Payment Info"}
-                </button>
+              {/* Attachment Preview */}
+              {attachment && (
+                <div style={{ padding: "10px 20px", background: isDarkMode ? "#1e293b" : "#f8fafc", borderTop: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>📎</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{attachment.name}</span>
+                  <button onClick={() => setAttachment(null)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", borderRadius: 12, width: 24, height: 24, cursor: "pointer", display: "grid", placeItems: "center", fontSize: 12 }}>✕</button>
+                </div>
+              )}
+
+              {/* DeepSeek Style Input Area */}
+              <div style={{ padding: "12px 16px", background: C.card, borderTop: `1px solid ${C.border}` }}>
+                
+                {/* Attach Menu (Bottom Sheet) */}
+                {showAttachMenu && (
+                  <div style={{ position: "absolute", bottom: 80, left: 16, right: 16, background: isDarkMode ? "#1e293b" : "#fff", borderRadius: 16, padding: 16, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)", border: `1px solid ${C.border}`, zIndex: 10, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                      <button onClick={() => cameraInputRef.current?.click()} style={{ background: isDarkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${C.border}`, padding: 16, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", color: C.text }}>
+                        <span style={{ fontSize: 24 }}>📸</span> <span style={{ fontSize: 11, fontWeight: 700 }}>Camera</span>
+                      </button>
+                      <button onClick={() => photoInputRef.current?.click()} style={{ background: isDarkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${C.border}`, padding: 16, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", color: C.text }}>
+                        <span style={{ fontSize: 24 }}>🖼️</span> <span style={{ fontSize: 11, fontWeight: 700 }}>Photo</span>
+                      </button>
+                      <button onClick={() => docInputRef.current?.click()} style={{ background: isDarkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${C.border}`, padding: 16, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", color: C.text }}>
+                        <span style={{ fontSize: 24 }}>📄</span> <span style={{ fontSize: 11, fontWeight: 700 }}>Document</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", background: isDarkMode ? "#0f172a" : "#f4f4f5", borderRadius: 24, padding: "6px 8px 6px 12px", border: `1px solid ${C.border}`, position: "relative" }}>
+                  
+                  {/* Attach (+) Icon */}
+                  <button onClick={() => setShowAttachMenu(!showAttachMenu)} style={{ background: "none", border: "none", fontSize: 24, color: C.sub, cursor: "pointer", padding: "0 8px" }}>
+                    +
+                  </button>
+                  
+                  {/* Text Input */}
+                  <input 
+                    value={chatInput} 
+                    onChange={e => setChatInput(e.target.value)} 
+                    onKeyDown={e => e.key === "Enter" && handleSendMessage()} 
+                    placeholder={language === "hi" ? "Kuch bhi puchein..." : "Type a message..."} 
+                    style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: C.text, fontSize: 14, padding: "8px 0" }} 
+                  />
+                  
+                  {/* Mic or Send Button */}
+                  {chatInput.trim() || attachment ? (
+                    <button onClick={() => handleSendMessage()} style={{ background: C.accent, color: "#fff", border: "none", width: 36, height: 36, borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                    </button>
+                  ) : (
+                    <button onClick={startListening} style={{ background: isListening ? "#fef2f2" : "none", border: "none", fontSize: 20, color: isListening ? "#ef4444" : C.sub, cursor: "pointer", padding: "8px" }}>
+                      🎤
+                    </button>
+                  )}
+                </div>
+                
+                <div style={{ textAlign: "center", fontSize: 9, color: C.sub, marginTop: 8 }}>
+                  BidWell AI can make mistakes. Verify important info.
+                </div>
               </div>
 
-              <div style={{ padding: 16, borderTop: `1px solid ${C.border}`, display: "flex", gap: 10, background: C.card }}>
-                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} placeholder={language === "hi" ? "Kuch bhi puchein..." : "Ask anything..."} style={{ flex: 1, padding: "14px 20px", borderRadius: 24, border: `1px solid ${C.border}`, outline: "none", background: isDarkMode ? "#0f172a" : "#f8fafc", color: C.text, fontSize: 14 }} />
-                <button onClick={() => handleSendMessage()} disabled={chatLoading} style={{ background: chatLoading ? "#94a3b8" : C.accent, color: "#fff", border: "none", padding: "0 24px", borderRadius: 24, fontWeight: 800, cursor: chatLoading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                  {chatLoading ? "..." : (language === "hi" ? "Bhejein" : "Send")}
-                </button>
-              </div>
+              {/* Hidden Inputs for Camera, Photo, Documents */}
+              <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: "none" }} />
+              <input type="file" ref={photoInputRef} accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
+              <input type="file" ref={docInputRef} accept=".pdf,.doc,.docx" onChange={handleFileChange} style={{ display: "none" }} />
             </div>
           )}
 
