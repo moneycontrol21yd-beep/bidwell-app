@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   generateBuildId: async () => 'build-' + Date.now(),
-  // turbopack: {}, // --webpack use kar rahe hain isliye iski zaroorat nahi
 };
 
 export default nextConfig;
