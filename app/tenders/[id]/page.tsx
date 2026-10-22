@@ -20,16 +20,13 @@ export default function TenderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "intel">("overview");
   
-  // Workspace State
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [workspaceMsg, setWorkspaceMsg] = useState("");
 
-  // Intel State
   const [intel, setIntel] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState(false);
 
-  // JV States
   const [showJVModal, setShowJVModal] = useState(false);
   const [jvPartners, setJvPartners] = useState<any[]>([]);
   const [jvLoading, setJvLoading] = useState(false);
@@ -46,7 +43,6 @@ export default function TenderDetailPage() {
       .catch(() => setLoading(false));
   }, [tenderId]);
 
-  // INTEL FETCH LOGIC WAPAS ADD KIYA
   useEffect(() => {
     if (activeTab === "intel" && tender && !intel && !intelLoading) {
       setIntelLoading(true);
@@ -222,27 +218,35 @@ export default function TenderDetailPage() {
           </>
         )}
 
-        {/* AI INTEL TAB (Restored) */}
+        {/* AI INTEL TAB (Master Report) */}
         {activeTab === "intel" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {intelLoading ? (
               <div style={{ textAlign: "center", padding: 40, color: C.sub }}>Generating Consultant Report from VPS Brain...</div>
             ) : intel ? (
               <>
-                {/* Verdict */}
+                {/* 1. Verdict & Risk */}
                 <div style={{ background: C.card, border: `2px solid ${intel.analysis?.verdictColor || C.border}`, padding: 20, borderRadius: 16, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: intel.analysis?.verdictColor || C.accent }} />
                   <div style={{ fontSize: 11, color: C.sub, fontWeight: 800, textTransform: "uppercase", marginBottom: 4 }}>AI Consultant Verdict</div>
                   <div style={{ fontSize: 20, fontWeight: 900, color: intel.analysis?.verdictColor || C.text, marginBottom: 12 }}>{intel.analysis?.verdict || "REVIEW REQUIRED"}</div>
-                  <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: `1px solid ${C.border}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: C.sub, marginBottom: 8, textTransform: "uppercase" }}>Key Insights & Risks:</div>
+                  
+                  <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: C.sub, marginBottom: 8, textTransform: "uppercase" }}>Risk Factors:</div>
                     <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: C.text, lineHeight: 1.6 }}>
                       {intel.analysis?.riskReasons?.map((r: string, i: number) => (<li key={i} style={{ marginBottom: 4 }}>{r}</li>))}
                     </ul>
                   </div>
+
+                  <div style={{ background: "#f0fdf4", padding: 14, borderRadius: 10, border: "1px solid #bbf7d0" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "#166534", marginBottom: 8, textTransform: "uppercase" }}>Next Recommended Actions:</div>
+                    <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: "#14532d", lineHeight: 1.6 }}>
+                      {intel.analysis?.nextActions?.map((action: string, i: number) => (<li key={i} style={{ marginBottom: 4 }}>{action}</li>))}
+                    </ul>
+                  </div>
                 </div>
 
-                {/* Kundli */}
+                {/* 2. Stats */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div style={{ background: C.card, padding: 16, borderRadius: 12, border: `1px solid ${C.border}` }}>
                     <div style={{ fontSize: 10, color: C.sub, fontWeight: 800, textTransform: "uppercase" }}>Total Live Tenders</div>
@@ -258,11 +262,11 @@ export default function TenderDetailPage() {
                   </div>
                 </div>
 
-                {/* Competitors */}
+                {/* 3. Competitors */}
                 <div style={{ background: C.card, padding: 20, borderRadius: 16, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: "#f59e0b", marginBottom: 16 }}>🏆 Top Competitors (Award History)</div>
                   {intel.analysis?.competitors?.length > 0 ? intel.analysis.competitors.map((c: any, i: number) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, padding: "12px 0" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", borderBottom: i !== intel.analysis.competitors.length - 1 ? `1px solid ${C.border}` : "none", padding: "12px 0" }}>
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{c.winner_name || "Unknown"}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: C.success }}>{c.wins || 0} Wins</div>
                     </div>
