@@ -17,8 +17,9 @@ export default function TenderDetailPage() {
   // Workspace State
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [workspaceMsg, setWorkspaceMsg] = useState("");
 
-  // JV States (from previous step)
+  // JV States
   const [showJVModal, setShowJVModal] = useState(false);
   const [jvPartners, setJvPartners] = useState<any[]>([]);
   const [jvLoading, setJvLoading] = useState(false);
@@ -37,26 +38,37 @@ export default function TenderDetailPage() {
 
   const handleAddToWorkspace = async () => {
     if (!tender) return;
+    // FIX: Tender ID properly extract karo
+    const finalTenderId = tender.source_tender_id || tender.id || tenderId;
+    
     setSaving(true);
+    setWorkspaceMsg("");
     try {
       const res = await fetch("/api/workspace", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tender_id: tender.source_tender_id || tender.id,
-          title: tender.title,
-          org_name: tender.org_name,
-          value: tender.value,
-          closing_date: tender.closing_date
+          tender_id: finalTenderId,
+          title: tender.title || "Untitled Tender",
+          org_name: tender.org_name || "Unknown",
+          value: tender.value || "N/A",
+          closing_date: tender.closing_date || "N/A"
         })
       });
       const data = await res.json();
-      if (data.success) setSaved(true);
-    } catch (e) { alert("Error saving to workspace"); }
+      if (data.success) {
+        setSaved(true);
+        setWorkspaceMsg("✅ Successfully added to your Bid Workspace!");
+        setTimeout(() => setWorkspaceMsg(""), 3000);
+      } else {
+        setWorkspaceMsg("❌ Error: " + data.error);
+      }
+    } catch (e) { 
+      setWorkspaceMsg("❌ Error connecting to server."); 
+    }
     setSaving(false);
   };
 
-  // JV Handlers
   const handleOpenTenderJV = async () => {
     setShowJVModal(true);
     setSelectedPartner(null);
@@ -83,7 +95,8 @@ export default function TenderDetailPage() {
       });
       const data = await res.json();
       if (data.success) setDraftText(data.draft);
-    } catch (e) {}
+      else alert("Failed to generate draft. VPS might be offline.");
+    } catch (e) { alert("Error generating draft."); }
     setDraftLoading(false);
   };
 
@@ -104,18 +117,24 @@ export default function TenderDetailPage() {
             <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
               {jvLoading ? <div style={{ textAlign: "center", padding: 30 }}>Finding partners...</div> : selectedPartner ? (
                 <div>
-                  <button onClick={() => setSelectedPartner(null)} style={{ background: "none", border: "none", color: "#315efb", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 16 }}>← Back</button>
+                  <button onClick={() => setSelectedPartner(null)} style={{ background: "none", border: "none", color: "#315efb", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 16 }}>← Back to list</button>
                   <div style={{ fontSize: 18, fontWeight: 900 }}>{selectedPartner.vendor_name}</div>
                   <div style={{ display: "flex", gap: 12, marginTop: 16, marginBottom: 16 }}>
                     <div style={{ flex: 1, background: "#f8fafc", padding: 12, borderRadius: 8 }}><div style={{ fontSize: 10, color: "#64748b" }}>Turnover</div><div style={{ fontSize: 14, fontWeight: 800 }}>₹{(selectedPartner.total_value / 10000000).toFixed(2)} Cr</div></div>
                     <div style={{ flex: 1, background: "#f8fafc", padding: 12, borderRadius: 8 }}><div style={{ fontSize: 10, color: "#64748b" }}>Wins</div><div style={{ fontSize: 14, fontWeight: 800 }}>{selectedPartner.total_wins} Tenders</div></div>
                   </div>
                   {draftText ? (
-                    <div style={{ background: "#f8fafc", padding: 16, borderRadius: 8, maxHeight: 200, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 12 }}>{draftText}<button onClick={() => window.print()} style={{ marginTop: 16, background: "#315efb", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6 }}>Print</button></div>
+                    <div style={{ background: "#f8fafc", padding: 16, borderRadius: 8, maxHeight: 200, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 12, border: "1px solid #e2e8f0" }}>{draftText}<button onClick={() => window.print()} style={{ marginTop: 12, background: "#315efb", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, width: "100%", fontWeight: 700 }}>🖨️ Print / Save PDF</button></div>
                   ) : (
-                    <button onClick={handleGenerateDraft} disabled={draftLoading} style={{ width: "100%", background: "#f1f5f9", color: "#315efb", border: "1px dashed #cbd5e1", padding: "12px", borderRadius: 8, fontWeight: 800, cursor: "pointer" }}>{draftLoading ? "Generating..." : "📄 Generate AI Draft"}</button>
+                    <button onClick={handleGenerateDraft} disabled={draftLoading} style={{ width: "100%", background: "#f1f5f9", color: "#315efb", border: "1px dashed #cbd5e1", padding: "12px", borderRadius: 8, fontWeight: 800, cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+                      {draftLoading ? "⏳ Generating..." : "📝 Auto-Draft JV Agreement"}
+                    </button>
                   )}
-                  {!requestSent ? <button onClick={() => setRequestSent(true)} style={{ width: "100%", background: "#315efb", color: "#fff", border: "none", padding: "12px", borderRadius: 8, fontWeight: 800, cursor: "pointer", marginTop: 12 }}>Send Request</button> : <div style={{ background: "#ecfdf5", padding: 12, borderRadius: 8, textAlign: "center", color: "#065f46", fontWeight: 800, marginTop: 12 }}>✅ Request Sent!</div>}
+                  {!requestSent ? (
+                    <button onClick={() => setRequestSent(true)} style={{ width: "100%", background: "#315efb", color: "#fff", border: "none", padding: "12px", borderRadius: 8, fontWeight: 800, cursor: "pointer", marginTop: 12 }}>Send JV Request</button>
+                  ) : (
+                    <div style={{ background: "#ecfdf5", padding: 12, borderRadius: 8, textAlign: "center", color: "#065f46", fontWeight: 800, marginTop: 12 }}>✅ Request Sent Successfully!</div>
+                  )}
                 </div>
               ) : (
                 jvPartners.map((p, i) => (
@@ -152,9 +171,12 @@ export default function TenderDetailPage() {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}><span>Value</span><b style={{ color: C.accent }}>₹{tender.value ? Number(tender.value).toLocaleString('en-IN') : "N/A"}</b></div>
             </div>
 
-            {/* NAYA: Add to Workspace Button */}
-            <button onClick={handleAddToWorkspace} disabled={saving || saved} style={{ width: "100%", background: saved ? "#10b981" : C.accent, color: "#fff", border: "none", padding: "16px", borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: saved ? "default" : "pointer", marginBottom: 16, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
-              {saving ? "Saving..." : saved ? "✅ Added to Bid Workspace" : "➕ Add to Bid Workspace"}
+            {/* Workspace Message */}
+            {workspaceMsg && <div style={{ background: workspaceMsg.includes("✅") ? "#ecfdf5" : "#fef2f2", color: workspaceMsg.includes("✅") ? "#065f46" : "#991b1b", padding: 12, borderRadius: 8, fontSize: 13, fontWeight: 700, marginBottom: 16, textAlign: "center" }}>{workspaceMsg}</div>}
+
+            {/* Add to Workspace Button */}
+            <button onClick={handleAddToWorkspace} disabled={saving || saved} style={{ width: "100%", background: saved ? "#10b981" : C.accent, color: "#fff", border: "none", padding: "16px", borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: saved ? "default" : "pointer", marginBottom: 16, display: "flex", justifyContent: "center", alignItems: "center", gap: 8, boxShadow: "0 4px 10px rgba(49, 94, 251, 0.2)" }}>
+              {saving ? "Saving..." : saved ? "✅ Added to Workspace" : "➕ Track this Tender in Workspace"}
             </button>
 
             {/* Tender-Specific JV */}
