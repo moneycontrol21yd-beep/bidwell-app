@@ -3,7 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Token header se nikalo
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+
+  const { data: { user } } = await supabase.auth.getUser(token || undefined);
   if (!user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { data, error } = await supabase
@@ -18,7 +23,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  const { data: { user } } = await supabase.auth.getUser();
+  
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+
+  const { data: { user } } = await supabase.auth.getUser(token || undefined);
   if (!user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
@@ -42,7 +51,11 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  const { data: { user } } = await supabase.auth.getUser();
+  
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+
+  const { data: { user } } = await supabase.auth.getUser(token || undefined);
   if (!user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();

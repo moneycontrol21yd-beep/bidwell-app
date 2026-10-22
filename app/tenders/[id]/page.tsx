@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const C = { bg: "#f5f7fb", card: "#ffffff", text: "#17233b", sub: "#64748b", accent: "#315efb", border: "#e2e8f0", success: "#10b981", danger: "#ef4444" };
 
@@ -14,12 +20,10 @@ export default function TenderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "intel">("overview");
   
-  // Workspace State
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [workspaceMsg, setWorkspaceMsg] = useState("");
 
-  // JV States
   const [showJVModal, setShowJVModal] = useState(false);
   const [jvPartners, setJvPartners] = useState<any[]>([]);
   const [jvLoading, setJvLoading] = useState(false);
@@ -38,15 +42,21 @@ export default function TenderDetailPage() {
 
   const handleAddToWorkspace = async () => {
     if (!tender) return;
-    // FIX: Tender ID properly extract karo
     const finalTenderId = tender.source_tender_id || tender.id || tenderId;
     
     setSaving(true);
     setWorkspaceMsg("");
+    
     try {
+      // GET SESSION TOKEN
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const res = await fetch("/api/workspace", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}` // Token pass kiya
+        },
         body: JSON.stringify({
           tender_id: finalTenderId,
           title: tender.title || "Untitled Tender",
