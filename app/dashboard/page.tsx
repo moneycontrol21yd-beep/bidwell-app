@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -18,14 +17,6 @@ const descriptions: Record<string, string> = {
 };
 
 function Icon({ children }: { children: React.ReactNode }) { return <span style={{ width: 17, textAlign: "center", fontSize: 17, flex: "none", opacity: 0.8 }}>{children}</span>; }
-
-// Custom Professional Growth Chart Icon (No Emoji)
-const GrowthChartIcon = ({ size = 20, color = "#315efb" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-    <polyline points="16 7 22 7 22 13" />
-  </svg>
-);
 
 export default function BidWellDashboard() {
   const router = useRouter();
@@ -61,21 +52,12 @@ export default function BidWellDashboard() {
     });
   }, [tenders, query, showForMe]);
 
-  const top3Tenders = tenders.slice(0, 3);
-  const potentialRevenue = top3Tenders.reduce((sum, t) => {
-    if (!t.value) return sum;
-    const numericValue = parseFloat(t.value.replace(/[^0-9.-]+/g,""));
-    return sum + (isNaN(numericValue) ? 0 : numericValue);
-  }, 0);
-  const estimatedEMD = potentialRevenue * 0.02;
-
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f7fb", fontFamily: "system-ui, sans-serif", overflowX: "hidden" }}>
       {mobileMenu && (<div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />)}
       
-      {/* Sidebar */}
       <aside style={{ width: 260, background: "linear-gradient(180deg,#101b32 0%,#142442 100%)", color: "#d5deee", padding: "24px 15px", position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 50, transform: mobileMenu ? "translateX(0)" : "translateX(-100%)", transition: "0.3s", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "0 12px 25px", color: "#fff", fontSize: 22, fontWeight: 800 }}><div style={{ height: 38, width: 38, borderRadius: 12, background: "#315efb", display: "grid", placeItems: "center" }}>B</div> BidWell</div>
         <div style={{ flex: 1 }}>
@@ -100,13 +82,12 @@ export default function BidWellDashboard() {
             <p style={{ fontSize: 12, color: "#7b879a", margin: 0 }}>{descriptions[active]}</p>
           </div>
 
-          {/* LIVE TENDERS LIST */}
           {active === "Live tenders" && (
             <div>
               <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 20 }}>
                 <div style={{ display: "flex", gap: 8, background: "#fff", padding: 4, borderRadius: 10, border: "1px solid #e8edf5" }}>
                   <button onClick={() => setShowForMe(false)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: !showForMe ? "#315efb" : "transparent", color: !showForMe ? "#fff" : "#64748b", transition: "0.2s" }}>All Tenders</button>
-                  <button onClick={() => setShowForMe(true)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: showForMe ? "#315efb" : "transparent", color: showForMe ? "#fff" : "#64748b", display: "flex", alignItems: "center", gap: 4, transition: "0.2s" }}><span>✨</span> For Me</button>
+                  <button onClick={() => setShowForMe(true)} style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: showForMe ? "#315efb" : "transparent", color: showForMe ? "#fff" : "#64748b", transition: "0.2s" }}>✨ For Me</button>
                 </div>
               </div>
 
@@ -141,7 +122,6 @@ export default function BidWellDashboard() {
             </div>
           )}
 
-          {/* OVERVIEW */}
           {active === "Overview" && <>
             <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 19 }}>
               <div>
@@ -175,22 +155,16 @@ export default function BidWellDashboard() {
               </div>
             </div>
 
-            {/* 🚀 FUTURE & GROWTH (Clean Icons, No Emojis) */}
             <div style={{ marginTop: 30, marginBottom: 15 }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b", display: "flex", alignItems: "center", gap: 10 }}>
-                <GrowthChartIcon size={24} color="#10b981" /> Future & Growth
-              </div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b" }}>Future & Growth</div>
               <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Your AI Business Partner to scale beyond just tenders.</div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
               
-              {/* Future for BidWell (Replaced Readiness Score) */}
               <div style={{ ...cardStyle, background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", border: "1px solid #a5b4fc" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#3730a3", display: "flex", alignItems: "center", gap: 8 }}>
-                    <GrowthChartIcon size={18} color="#3730a3" /> Future for BidWell
-                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#3730a3" }}>Future for BidWell</div>
                   <div style={{ background: "#4f46e5", color: "#fff", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>Roadmap</div>
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: "#312e81", lineHeight: 2, fontWeight: 600 }}>
@@ -201,21 +175,14 @@ export default function BidWellDashboard() {
                 </ul>
               </div>
 
-              {/* JV for BidWell (Replaced AI Advisor) */}
               <div style={{ ...cardStyle, background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", color: "#fff" }}>
-                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                  JV for BidWell
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>JV for BidWell</div>
                 <p style={{ fontSize: 12, color: "#c7d2fe", lineHeight: 1.6, marginBottom: 16 }}>Looking to bid for larger projects? Find trusted Joint Venture partners to strengthen your bid.</p>
                 <button onClick={() => alert("JV Search feature coming soon!")} style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Find JV Partners ↗</button>
               </div>
 
-              {/* Revenue Planner */}
               <div style={cardStyle}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <GrowthChartIcon size={18} color="#17233b" /> Revenue Planner <span style={{ fontSize: 9, color: "#ef4444", background: "#fef2f2", padding: "2px 6px", borderRadius: 4 }}>Live Est.</span>
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>Revenue Planner <span style={{ fontSize: 9, color: "#ef4444", background: "#fef2f2", padding: "2px 6px", borderRadius: 4 }}>Live Est.</span></div>
                 <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
                   <div style={{ flex: 1, background: "#f8fafc", padding: 10, borderRadius: 8 }}>
                     <div style={{ fontSize: 10, color: "#64748b" }}>Top 3 Potential</div>
@@ -229,17 +196,11 @@ export default function BidWellDashboard() {
                 <p style={{ fontSize: 10, color: "#94a3b8", margin: 0, fontStyle: "italic" }}>*Calculated from your top 3 matched live tenders.</p>
               </div>
 
-              {/* Partner Finder */}
               <div style={cardStyle}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17233b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                   Top Verified Partner
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#17233b", marginBottom: 12 }}>Top Verified Partner</div>
                 <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>A registered vendor matching your sector for potential JV.</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f1f5f9", padding: 10, borderRadius: 8 }}>
-                  <div style={{ width: 32, height: 32, background: "#e2e8f0", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 16 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>
-                  </div>
+                  <div style={{ width: 32, height: 32, background: "#e2e8f0", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 16 }}>🏢</div>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700 }}>{tenders[0]?.org_name ? tenders[0].org_name.split(' ')[0] + " Infra" : "Shakti Infra Ltd."}</div>
                     <div style={{ fontSize: 10, color: "#64748b" }}>Matches your sector</div>
@@ -247,12 +208,8 @@ export default function BidWellDashboard() {
                 </div>
               </div>
 
-              {/* Trust & Source */}
               <div style={{ ...cardStyle, background: "#f8fafc", borderStyle: "dashed" }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#475569", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                  Trust & Transparency
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#475569", marginBottom: 6 }}>Trust & Transparency</div>
                 <p style={{ fontSize: 11, color: "#64748b", lineHeight: 1.6, margin: 0 }}>All live tenders are verified from official portals. Readiness scores and revenue planners are <b>AI estimates</b>. Always verify with official sources.</p>
               </div>
 
@@ -260,7 +217,6 @@ export default function BidWellDashboard() {
           </>}
 
           {active === "AI tender brain" && <div style={cardStyle}><h2 style={{ fontSize: 20 }}>AI Chat</h2><p style={{ color: "#64748b" }}>Ready to answer.</p></div>}
-
         </div>
       </main>
     </div>
