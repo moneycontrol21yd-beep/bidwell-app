@@ -216,7 +216,7 @@ export default function Dashboard() {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\\n');
+        const lines = chunk.split('\n');
         
         for (const line of lines) {
           if (line.trim()) {
@@ -273,7 +273,6 @@ export default function Dashboard() {
 
   const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text, width: "100%", boxSizing: "border-box" as const };
 
-  // --- MAIN RENDER ---
   return (
     <div style={{ height: "100dvh", width: "100vw", overflow: "hidden", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text }}>
       

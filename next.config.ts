@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => 'build-' + Date.now(),
-  turbopack: {},
   typescript: {
     ignoreBuildErrors: true,
   },
+  generateBuildId: async () => 'build-' + Date.now(),
+  // turbopack: {}, // --webpack use kar rahe hain isliye iski zaroorat nahi
 };
 
 export default nextConfig;
