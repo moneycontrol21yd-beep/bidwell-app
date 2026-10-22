@@ -4,7 +4,10 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const nav = [
   { group: "WORKSPACE", items: [["Overview", "⌂"], ["Live tenders", "⌕"], ["AI tender brain", "✳"], ["Bid workspace", "▤"]] },
@@ -51,6 +54,15 @@ export default function BidWellDashboard() {
       return matchSearch && matchProfile;
     });
   }, [tenders, query, showForMe]);
+
+  // Calculation for Revenue Planner (Fixing the missing variable)
+  const top3Tenders = tenders.slice(0, 3);
+  const potentialRevenue = top3Tenders.reduce((sum, t) => {
+    if (!t.value) return sum;
+    const numericValue = parseFloat(t.value.replace(/[^0-9.-]+/g,""));
+    return sum + (isNaN(numericValue) ? 0 : numericValue);
+  }, 0);
+  const estimatedEMD = potentialRevenue * 0.02;
 
   const cardStyle = { background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" };
 
