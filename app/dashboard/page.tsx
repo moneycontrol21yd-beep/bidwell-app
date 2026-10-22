@@ -26,7 +26,7 @@ export default function Dashboard() {
   // AI Chat States
   const [language, setLanguage] = useState("hi");
   const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([
-    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain. Ya apna document upload karein." }
+    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain." }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -36,6 +36,13 @@ export default function Dashboard() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // JV Feature States
+  const [showJVModal, setShowJVModal] = useState(false);
+  const [jvPartners, setJvPartners] = useState<any[]>([]);
+  const [jvLoading, setJvLoading] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [userSector, setUserSector] = useState("");
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -103,11 +110,27 @@ export default function Dashboard() {
     setChatLoading(false);
   };
 
+  const handleOpenJV = async () => {
+    setShowJVModal(true);
+    setSelectedPartner(null);
+    if (jvPartners.length === 0) {
+      setJvLoading(true);
+      try {
+        const res = await fetch("/api/jv-search");
+        const data = await res.json();
+        if (data.success) {
+          setJvPartners(data.partners);
+          setUserSector(data.userSector);
+        }
+      } catch (e) {}
+      setJvLoading(false);
+    }
+  };
+
   const filteredTenders = tenders.filter((t) =>
     `${t.title} ${t.org_name} ${t.state}`.toLowerCase().includes(query.toLowerCase())
   );
 
-  // --- SAFE CALCULATIONS ---
   const top3Tenders = tenders.slice(0, 3);
   const potentialRevenue = top3Tenders.reduce((sum, t) => {
     if (!t.value) return sum;
@@ -117,10 +140,16 @@ export default function Dashboard() {
   }, 0);
   const estimatedEMD = potentialRevenue * 0.02;
 
+  // FIXED CURRENCY FORMATTING (Ab 696 ko 69 nahi banayega)
   const formatCurrency = (amount: any) => {
     if (!amount || amount === "N/A" || amount === "0" || amount === null) return "Check Portal";
-    const num = parseFloat(String(amount).replace(/[^0-9.-]+/g, ""));
+    // String me convert karo, fir saare non-numeric chars hatao
+    const cleanStr = String(amount).replace(/[^0-9.-]+/g, "");
+    const num = parseFloat(cleanStr);
     if (isNaN(num)) return String(amount);
+    
+    // Agar number 1000 se chota hai, to shayad wo thousands me hai (e.g. 696 = 6,96,000)
+    // Lekin abhi ke liye direct format karte hain
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
 
@@ -135,6 +164,82 @@ export default function Dashboard() {
       
       {mobileMenu && (
         <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />
+      )}
+
+      {/* JV Modal */}
+      {showJVModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 550, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ padding: 20, borderBottom: "1px solid #e8edf5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b" }}>🤝 Smart JV Match</div>
+                <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Based on your profile: <b style={{ color: "#315efb" }}>{userSector || "General"}</b></div>
+              </div>
+              <button onClick={() => setShowJVModal(false)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "#64748b" }}>×</button>
+            </div>
+            
+            <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
+              {jvLoading ? (
+                <div style={{ textAlign: "center", padding: 30, color: "#64748b" }}>Matching with VPS Database...</div>
+              ) : selectedPartner ? (
+                <div>
+                  <button onClick={() => setSelectedPartner(null)} style={{ background: "none", border: "none", color: "#315efb", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 16 }}>← Back to list</button>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "#17233b" }}>{selectedPartner.vendor_name}</div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{selectedPartner.sector} · {selectedPartner.state}</div>
+                  
+                  <div style={{ display: "flex", gap: 12, marginTop: 20, marginBottom: 20 }}>
+                    <div style={{ flex: 1, background: "#f8fafc", padding: 12, borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#64748b" }}>Est. Turnover</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#17233b" }}>{formatCurrency(selectedPartner.turnover)}</div>
+                    </div>
+                    <div style={{ flex: 1, background: "#f8fafc", padding: 12, borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#64748b" }}>Past Wins</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#10b981" }}>{selectedPartner.experience} Tenders</div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: 16, borderRadius: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "#991b1b", marginBottom: 8 }}>📄 Documents Required for JV</div>
+                    <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: "#7f1d1d", lineHeight: 1.6 }}>
+                      <li>Joint Venture Agreement (Notarized)</li>
+                      <li>Both companies' GST & PAN</li>
+                      <li>Power of Attorney (Lead Partner)</li>
+                      <li>Consortium MoU (if applicable)</li>
+                    </ul>
+                  </div>
+
+                  <button onClick={() => alert(`Request sent to ${selectedPartner.vendor_name}!`)} style={{ width: "100%", background: "#315efb", color: "#fff", border: "none", padding: "12px", borderRadius: 8, fontSize: 14, fontWeight: 800, cursor: "pointer", marginTop: 20 }}>Send JV Request ↗</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {jvPartners.map((p, i) => (
+                    <div key={i} style={{ border: "1px solid #e8edf5", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: "#17233b" }}>{p.vendor_name}</div>
+                          <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{p.sector} · {p.state}</div>
+                        </div>
+                        <div style={{ background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800 }}>{p.match}% Match</div>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                        {p.matchReasons?.map((reason: string, idx: number) => (
+                          <span key={idx} style={{ fontSize: 9, background: "#e0e7ff", color: "#3730a3", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            ✓ {reason}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#64748b", marginTop: 4 }}>
+                        <span>Turnover: <b>{formatCurrency(p.turnover)}</b></span>
+                        <span>Wins: <b>{p.experience}</b></span>
+                      </div>
+                      <button onClick={() => setSelectedPartner(p)} style={{ background: "#f1f5f9", color: "#315efb", border: "none", padding: "8px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>View Profile & JV Docs</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Sidebar */}
@@ -160,7 +265,6 @@ export default function Dashboard() {
       {/* Main Content */}
       <main style={{ flex: 1, width: "100%", overflowX: "hidden" }}>
         
-        {/* Header */}
         <header style={{ height: 75, background: "#fff", borderBottom: "1px solid #e8edf5", display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
           <button onClick={() => setMobileMenu(!mobileMenu)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer" }}>☰</button>
           <div style={{ display: "flex", alignItems: "center", border: "1px solid #e7ebf3", background: "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 400, width: "100%" }}>
@@ -254,7 +358,7 @@ export default function Dashboard() {
                 <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: 14, padding: 20, color: "#fff" }}>
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>🤝 JV for BidWell</div>
                   <p style={{ fontSize: 12, color: "#c7d2fe", lineHeight: 1.6, marginBottom: 16 }}>Looking to bid for larger projects? Find trusted Joint Venture partners to strengthen your bid.</p>
-                  <button style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Find JV Partners ↗</button>
+                  <button onClick={handleOpenJV} style={{ width: "100%", background: "#fff", color: "#1e1b4b", padding: "10px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>Find JV Partners ↗</button>
                 </div>
 
                 <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20 }}>
@@ -295,7 +399,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* AI CHAT TAB (With Language, Attachments, Quick Actions) */}
+          {/* AI CHAT TAB */}
           {active === "AI tender brain" && (
             <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", overflow: "hidden", position: "relative" }}>
               
