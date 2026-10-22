@@ -372,7 +372,7 @@ const handleSendMessage = async (customPrompt?: string) => {
 
       {/* Main Content */}
       <main style={{ flex: 1, width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <header style={{ height: 75, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
+        <header style={{ height: 75, flexShrink: 0, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
           <button onClick={() => setMobileMenu(!mobileMenu)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.text }}>☰</button>
           <div style={{ display: "flex", alignItems: "center", border: `1px solid ${C.border}`, background: isDarkMode ? "#0f172a" : "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 400, width: "100%" }}>
             <span style={{ fontSize: 20, color: C.sub, marginRight: 8 }}>⌕</span>
@@ -429,9 +429,9 @@ const handleSendMessage = async (customPrompt?: string) => {
 
           {/* AI CHAT */}
           {active === "AI tender brain" && (
-            <div style={{ height: "calc(100dvh - 75px)", display: "flex", flexDirection: "column", background: isDarkMode ? "#0f172a" : "#fff", borderTop: `1px solid ${C.border}`, overflow: "hidden" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", background: isDarkMode ? "#0f172a" : "#fff", overflow: "hidden" }}>
               
-              {/* Chat Header */}
+              {/* Chat Header (Fixed) */}
               <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: isDarkMode ? "#1e293b" : "#f8fafc", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <select value={language} onChange={e => setLanguage(e.target.value)} style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: C.card, color: C.text, fontWeight: 600, outline: "none" }}>
@@ -445,8 +445,8 @@ const handleSendMessage = async (customPrompt?: string) => {
                 </div>
               </div>
 
-              {/* Chat Messages */}
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", gap: 16, background: isDarkMode ? "#0f172a" : "#fff" }}>
+              {/* Chat Messages (Scrollable) */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16, background: isDarkMode ? "#0f172a" : "#fff" }}>
                 {chatHistory.map((msg, i) => (
                   <div key={i} style={{ display: "flex", gap: 12, flexDirection: msg.role === "user" ? "row-reverse" : "row", alignItems: "flex-start" }}>
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: msg.role === "user" ? "#cbd5e1" : C.accent, display: "grid", placeItems: "center", flexShrink: 0, color: "#fff", fontSize: 16, fontWeight: 800 }}>
@@ -471,22 +471,20 @@ const handleSendMessage = async (customPrompt?: string) => {
                     </div>
                   </div>
                 ))}
-                <div ref={chatEndRef} style={{ paddingBottom: 10 }} />
+                <div ref={chatEndRef} style={{ height: 1 }} />
               </div>
-
-              {/* Attachment Preview */}
-              {attachment && (
-                <div style={{ padding: "10px 20px", background: isDarkMode ? "#1e293b" : "#f8fafc", borderTop: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <span style={{ fontSize: 20 }}>📎</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{attachment.name}</span>
-                  <button onClick={() => setAttachment(null)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", borderRadius: 12, width: 24, height: 24, cursor: "pointer", display: "grid", placeItems: "center", fontSize: 12 }}>✕</button>
-                </div>
-              )}
 
               {/* Input Area (Fixed at bottom) */}
               <div style={{ padding: "12px 16px", background: C.card, borderTop: `1px solid ${C.border}`, flexShrink: 0, position: "relative" }}>
                 
-                {/* Attach Menu */}
+                {attachment && (
+                  <div style={{ padding: "8px 12px", background: isDarkMode ? "#1e293b" : "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <span style={{ fontSize: 16 }}>📎</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{attachment.name}</span>
+                    <button onClick={() => setAttachment(null)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", borderRadius: 12, width: 20, height: 20, cursor: "pointer", marginLeft: "auto" }}>✕</button>
+                  </div>
+                )}
+
                 {showAttachMenu && (
                   <div style={{ position: "absolute", bottom: 70, left: 16, right: 16, background: isDarkMode ? "#1e293b" : "#fff", borderRadius: 16, padding: 16, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)", border: `1px solid ${C.border}`, zIndex: 10 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
@@ -503,7 +501,7 @@ const handleSendMessage = async (customPrompt?: string) => {
                   </div>
                 )}
 
-                <div style={{ display: "flex", alignItems: "center", background: isDarkMode ? "#0f172a" : "#f4f4f5", borderRadius: 24, padding: "6px 8px 6px 12px", border: `1px solid ${C.border}`, position: "relative" }}>
+                <div style={{ display: "flex", alignItems: "center", background: isDarkMode ? "#0f172a" : "#f4f4f5", borderRadius: 24, padding: "6px 8px 6px 12px", border: `1px solid ${C.border}` }}>
                   
                   <button onClick={() => setShowAttachMenu(!showAttachMenu)} style={{ background: "none", border: "none", fontSize: 24, color: C.sub, cursor: "pointer", padding: "0 8px" }}>
                     +
@@ -526,10 +524,6 @@ const handleSendMessage = async (customPrompt?: string) => {
                       🎤
                     </button>
                   )}
-                </div>
-                
-                <div style={{ textAlign: "center", fontSize: 9, color: C.sub, marginTop: 8 }}>
-                  BidWell AI can make mistakes.
                 </div>
               </div>
 
