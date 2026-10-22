@@ -55,6 +55,10 @@ export default function Dashboard() {
 
   // JV Feature States
   const [showJVModal, setShowJVModal] = useState(false);
+
+  const [workspace, setWorkspace] = useState<any[]>([]);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+
   const [jvPartners, setJvPartners] = useState<any[]>([]);
   const [jvLoading, setJvLoading] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
@@ -110,6 +114,40 @@ export default function Dashboard() {
       });
     }
   }, [active]);
+
+  
+  // Fetch Workspace
+  useEffect(() => {
+    if (active === "Bid workspace") {
+      setWorkspaceLoading(true);
+      fetch('/api/workspace').then(r => r.json()).then(d => {
+        if (d.success) setWorkspace(d.workspace);
+        setWorkspaceLoading(false);
+      });
+    }
+  }, [active]);
+
+  const updateWorkspaceStatus = async (id: string, newStatus: string) => {
+    const updated = workspace.map(w => w.id === id ? { ...w, status: newStatus } : w);
+    setWorkspace(updated);
+    await fetch('/api/workspace', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: newStatus })
+    });
+  };
+
+  const toggleChecklist = async (id: string, key: string) => {
+    const item = workspace.find(w => w.id === id);
+    const newChecklist = { ...item.checklist, [key]: !item.checklist[key] };
+    const updated = workspace.map(w => w.id === id ? { ...w, checklist: newChecklist } : w);
+    setWorkspace(updated);
+    await fetch('/api/workspace', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, checklist: newChecklist })
+    });
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
