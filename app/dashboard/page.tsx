@@ -90,8 +90,21 @@ export default function Dashboard() {
       fetch('/api/company-profile').then(r => r.json()).then(d => {
         if (d.success && d.profile) {
           const prof = { ...d.profile };
-          if (!prof.documents) prof.documents = {};
           if (!prof.business_type) prof.business_type = "Construction";
+          
+          // --- MIGRATION LOGIC: Purane string URL ko object me badlo ---
+          const safeDocs: any = {};
+          const oldDocs = prof.documents || {};
+          Object.keys(oldDocs).forEach(key => {
+            const val = oldDocs[key];
+            if (typeof val === 'string') {
+              safeDocs[key] = { number: "", url: val }; // Purana upload object me convert
+            } else if (typeof val === 'object' && val !== null) {
+              safeDocs[key] = val; // Naya format
+            }
+          });
+          prof.documents = safeDocs;
+          
           setProfile(prof);
         }
       });
@@ -111,7 +124,15 @@ export default function Dashboard() {
       body: JSON.stringify(profile)
     });
     setProfileSaving(false);
-    alert("Profile & Sector Documents Saved Successfully!");
+    alert("Profile & Documents Saved Successfully!");
+  };
+
+  // Text Input Handler (Number dalne ke liye)
+  const handleDocTextChange = (docName: string, value: string) => {
+    const updatedDocs = { ...profile.documents };
+    if (!updatedDocs[docName]) updatedDocs[docName] = { number: "", url: "" };
+    updatedDocs[docName].number = value;
+    setProfile({ ...profile, documents: updatedDocs });
   };
 
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>, docName: string) => {
@@ -126,9 +147,15 @@ export default function Dashboard() {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success) {
-        const updatedDocs = { ...profile.documents, [docName]: data.url };
+        // URL ko object me save karo
+        const updatedDocs = { ...profile.documents };
+        if (!updatedDocs[docName]) updatedDocs[docName] = { number: "", url: "" };
+        updatedDocs[docName].url = data.url;
+        
         const updatedProfile = { ...profile, documents: updatedDocs };
         setProfile(updatedProfile);
+        
+        // Auto save
         await fetch('/api/company-profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,9 +175,7 @@ export default function Dashboard() {
     if(!msg.trim() && !attachment) return;
 
     let displayMsg = msg;
-    if (attachment) {
-      displayMsg = `[Attached: ${attachment.name}] ${msg || "Please analyze this document."}`;
-    }
+    if (attachment) displayMsg = `[Attached: ${attachment.name}] ${msg || "Please analyze this document."}`;
 
     setChatHistory(prev => [...prev, { role: "user", content: displayMsg }]);
     setChatInput("");
@@ -223,7 +248,7 @@ export default function Dashboard() {
         <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />
       )}
 
-      {/* JV Modal (Same as before) */}
+      {/* JV Modal */}
       {showJVModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
           <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 550, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -565,36 +590,50 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <button onClick={handleSaveProfile} disabled={profileSaving} style={{ background: "#315efb", color: "#fff", border: "none", padding: "12px 20px", borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: "pointer", marginTop: 20, width: "100%" }}>
-                  {profileSaving ? "Saving..." : "Save Company Details"}
+                  {profileSaving ? "Saving..." : "Save Company Details & Documents"}
                 </button>
               </div>
 
-              {/* DYNAMIC Document Vault Card */}
+              {/* DYNAMIC Document Vault Card (Text + Upload) */}
               <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: "#17233b" }}>Required Documents ({profile.business_type})</div>
                   <div style={{ fontSize: 11, color: "#10b981", background: "#ecfdf5", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>Saved Once, Used Forever</div>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748b", marginBottom: 20 }}>Based on your sector, upload these documents. They will be auto-attached to your future bids.</p>
+                <p style={{ fontSize: 12, color: "#64748b", marginBottom: 20 }}>Enter the document number and upload the file. They will be auto-attached to your future bids.</p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
                   {(SECTOR_DOCS[profile.business_type] || SECTOR_DOCS["General Supply"]).map((docName) => {
-                    const isUploaded = profile.documents && profile.documents[docName];
+                    const docData = profile.documents && profile.documents[docName] ? profile.documents[docName] : { number: "", url: "" };
+                    const isUploaded = docData.url;
+
                     return (
-                      <div key={docName} style={{ border: "1px dashed #cbd5e1", borderRadius: 10, padding: 16, textAlign: "center", background: isUploaded ? "#f0fdf4" : "#fff" }}>
-                        <div style={{ fontSize: 24, marginBottom: 8 }}>{isUploaded ? "✅" : "📄"}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: isUploaded ? "#166534" : "#17233b" }}>{docName}</div>
+                      <div key={docName} style={{ border: "1px solid #e8edf5", borderRadius: 12, padding: 16, background: isUploaded ? "#f0fdf4" : "#fff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                          <div style={{ fontSize: 20 }}>{isUploaded ? "✅" : "📄"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: isUploaded ? "#166534" : "#17233b" }}>{docName}</div>
+                        </div>
                         
+                        {/* Text Input for Number */}
+                        <input 
+                          type="text" 
+                          placeholder={`Enter ${docName} Number`} 
+                          value={docData.number || ""} 
+                          onChange={(e) => handleDocTextChange(docName, e.target.value)} 
+                          style={{ width: "100%", padding: "10px", borderRadius: 8, border: "1px solid #cbd5e1", fontSize: 12, marginBottom: 10 }} 
+                        />
+
+                        {/* Upload Section */}
                         {isUploaded ? (
-                          <div style={{ marginTop: 8 }}>
-                            <span style={{ fontSize: 11, color: "#10b981", fontWeight: 700 }}>Uploaded</span>
-                            <a href={profile.documents[docName]} target="_blank" style={{ display: "block", fontSize: 10, color: "#315efb", marginTop: 4, textDecoration: "underline" }}>View File</a>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#dcfce7", padding: "8px 12px", borderRadius: 8 }}>
+                            <span style={{ fontSize: 11, color: "#10b981", fontWeight: 700 }}>File Attached</span>
+                            <a href={docData.url} target="_blank" style={{ fontSize: 11, color: "#315efb", fontWeight: 700, textDecoration: "underline" }}>View File</a>
                           </div>
                         ) : (
-                          <div style={{ marginTop: 8 }}>
+                          <div>
                             <input type="file" id={`upload-${docName}`} style={{ display: "none" }} onChange={(e) => handleDocUpload(e, docName)} />
-                            <label htmlFor={`upload-${docName}`} style={{ background: "#f1f5f9", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", color: "#315efb", display: "inline-block" }}>
-                              {uploadingDoc === docName ? "Uploading..." : "Upload File"}
+                            <label htmlFor={`upload-${docName}`} style={{ background: "#f1f5f9", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", color: "#315efb", display: "block", textAlign: "center", border: "1px dashed #cbd5e1" }}>
+                              {uploadingDoc === docName ? "Uploading..." : "Upload File (PDF/Image)"}
                             </label>
                           </div>
                         )}
