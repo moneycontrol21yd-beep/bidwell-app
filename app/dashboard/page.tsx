@@ -317,7 +317,7 @@ const handleSendMessage = async (customPrompt?: string) => {
   const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text, transition: "0.3s" }}>
+    <div style={{ height: "100dvh", width: "100vw", overflow: "hidden", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text }}>
       
       {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />}
 
@@ -371,7 +371,7 @@ const handleSendMessage = async (customPrompt?: string) => {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, width: "100%", overflowX: "hidden" }}>
+      <main style={{ flex: 1, width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <header style={{ height: 75, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
           <button onClick={() => setMobileMenu(!mobileMenu)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.text }}>☰</button>
           <div style={{ display: "flex", alignItems: "center", border: `1px solid ${C.border}`, background: isDarkMode ? "#0f172a" : "#fafbfe", borderRadius: 10, padding: "0 13px", height: 40, maxWidth: 400, width: "100%" }}>
@@ -380,7 +380,7 @@ const handleSendMessage = async (customPrompt?: string) => {
           </div>
         </header>
 
-        <div style={{ padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ flex: 1, padding: active === "AI tender brain" ? "0" : "20px", maxWidth: 1200, margin: "0 auto", width: "100%", overflowY: active === "AI tender brain" ? "hidden" : "auto" }}>
           <div style={{ marginBottom: 25 }}>
             <div style={{ fontSize: 10, color: C.sub, fontWeight: 800, letterSpacing: 1 }}>BIDWELL WORKSPACE</div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: "9px 0 4px", color: C.text }}>{active}</h1>
@@ -429,12 +429,12 @@ const handleSendMessage = async (customPrompt?: string) => {
 
           {/* AI CHAT */}
           {active === "AI tender brain" && (
-            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 130px)", background: isDarkMode ? "#0f172a" : "#fff", borderRadius: 16, border: `1px solid ${C.border}`, position: "relative", overflow: "hidden" }}>
+            <div style={{ height: "calc(100dvh - 75px)", display: "flex", flexDirection: "column", background: isDarkMode ? "#0f172a" : "#fff", borderTop: `1px solid ${C.border}`, overflow: "hidden" }}>
               
               {/* Chat Header */}
-              <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: isDarkMode ? "#1e293b" : "#f8fafc" }}>
+              <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: isDarkMode ? "#1e293b" : "#f8fafc", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <select value={language} onChange={e => setLanguage(e.target.value)} style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: C.card, color: C.text, fontWeight: 600 }}>
+                  <select value={language} onChange={e => setLanguage(e.target.value)} style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: C.card, color: C.text, fontWeight: 600, outline: "none" }}>
                     <option value="en">English</option>
                     <option value="hi">Hindi (हिंदी)</option>
                   </select>
@@ -461,7 +461,6 @@ const handleSendMessage = async (customPrompt?: string) => {
                           {chatLoading && i === chatHistory.length - 1 && (
                             <span style={{ display: "inline-block", width: 6, height: 14, background: C.accent, marginLeft: 4, animation: "blink 1s step-end infinite" }} />
                           )}
-                          {/* Text to Speech Button */}
                           {!chatLoading && i !== 0 && (
                             <button onClick={() => speakText(msg.content)} style={{ background: "none", border: "none", cursor: "pointer", marginTop: 8, padding: 0, color: C.sub, display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
                               🔊 Play
@@ -477,19 +476,19 @@ const handleSendMessage = async (customPrompt?: string) => {
 
               {/* Attachment Preview */}
               {attachment && (
-                <div style={{ padding: "10px 20px", background: isDarkMode ? "#1e293b" : "#f8fafc", borderTop: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ padding: "10px 20px", background: isDarkMode ? "#1e293b" : "#f8fafc", borderTop: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                   <span style={{ fontSize: 20 }}>📎</span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{attachment.name}</span>
                   <button onClick={() => setAttachment(null)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", borderRadius: 12, width: 24, height: 24, cursor: "pointer", display: "grid", placeItems: "center", fontSize: 12 }}>✕</button>
                 </div>
               )}
 
-              {/* DeepSeek Style Input Area */}
-              <div style={{ padding: "12px 16px", background: C.card, borderTop: `1px solid ${C.border}` }}>
+              {/* Input Area (Fixed at bottom) */}
+              <div style={{ padding: "12px 16px", background: C.card, borderTop: `1px solid ${C.border}`, flexShrink: 0, position: "relative" }}>
                 
-                {/* Attach Menu (Bottom Sheet) */}
+                {/* Attach Menu */}
                 {showAttachMenu && (
-                  <div style={{ position: "absolute", bottom: 80, left: 16, right: 16, background: isDarkMode ? "#1e293b" : "#fff", borderRadius: 16, padding: 16, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)", border: `1px solid ${C.border}`, zIndex: 10, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ position: "absolute", bottom: 70, left: 16, right: 16, background: isDarkMode ? "#1e293b" : "#fff", borderRadius: 16, padding: 16, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)", border: `1px solid ${C.border}`, zIndex: 10 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                       <button onClick={() => cameraInputRef.current?.click()} style={{ background: isDarkMode ? "#0f172a" : "#f8fafc", border: `1px solid ${C.border}`, padding: 16, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", color: C.text }}>
                         <span style={{ fontSize: 24 }}>📸</span> <span style={{ fontSize: 11, fontWeight: 700 }}>Camera</span>
@@ -506,12 +505,10 @@ const handleSendMessage = async (customPrompt?: string) => {
 
                 <div style={{ display: "flex", alignItems: "center", background: isDarkMode ? "#0f172a" : "#f4f4f5", borderRadius: 24, padding: "6px 8px 6px 12px", border: `1px solid ${C.border}`, position: "relative" }}>
                   
-                  {/* Attach (+) Icon */}
                   <button onClick={() => setShowAttachMenu(!showAttachMenu)} style={{ background: "none", border: "none", fontSize: 24, color: C.sub, cursor: "pointer", padding: "0 8px" }}>
                     +
                   </button>
                   
-                  {/* Text Input */}
                   <input 
                     value={chatInput} 
                     onChange={e => setChatInput(e.target.value)} 
@@ -520,7 +517,6 @@ const handleSendMessage = async (customPrompt?: string) => {
                     style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: C.text, fontSize: 14, padding: "8px 0" }} 
                   />
                   
-                  {/* Mic or Send Button */}
                   {chatInput.trim() || attachment ? (
                     <button onClick={() => handleSendMessage()} style={{ background: C.accent, color: "#fff", border: "none", width: 36, height: 36, borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer" }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -533,11 +529,10 @@ const handleSendMessage = async (customPrompt?: string) => {
                 </div>
                 
                 <div style={{ textAlign: "center", fontSize: 9, color: C.sub, marginTop: 8 }}>
-                  BidWell AI can make mistakes. Verify important info.
+                  BidWell AI can make mistakes.
                 </div>
               </div>
 
-              {/* Hidden Inputs for Camera, Photo, Documents */}
               <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: "none" }} />
               <input type="file" ref={photoInputRef} accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
               <input type="file" ref={docInputRef} accept=".pdf,.doc,.docx" onChange={handleFileChange} style={{ display: "none" }} />
