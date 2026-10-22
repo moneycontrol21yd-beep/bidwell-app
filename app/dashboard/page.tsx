@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -22,6 +22,18 @@ export default function Dashboard() {
   const [tenders, setTenders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  
+  // AI Chat States
+  const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([
+    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain." }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,9 +45,10 @@ export default function Dashboard() {
       .then((data) => {
         if (data.success && data.tenders) {
           const today = new Date();
-          const activeTenders = data.tenders.filter(
-            (t: any) => t.closing_date && new Date(t.closing_date) >= today
-          ).sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
+          // Filter active tenders and sort by match score
+          const activeTenders = data.tenders
+            .filter((t: any) => t.closing_date && new Date(t.closing_date) >= today)
+            .sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
           setTenders(activeTenders);
         }
         setLoading(false);
@@ -48,11 +61,33 @@ export default function Dashboard() {
     router.push("/login");
   };
 
+  const handleSendMessage = async () => {
+    if(!chatInput.trim()) return;
+    const msg = chatInput;
+    setChatHistory(prev => [...prev, { role: "user", content: msg }]);
+    setChatInput("");
+    setChatLoading(true);
+    
+    try {
+      const res = await fetch("/api/ai-chat", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ prompt: msg, language: "hi" }) 
+      });
+      const data = await res.json();
+      if(data.success) setChatHistory(prev => [...prev, { role: "assistant", content: data.reply }]);
+      else setChatHistory(prev => [...prev, { role: "assistant", content: "Sorry, VPS Brain is currently unreachable." }]);
+    } catch (e) { 
+      setChatHistory(prev => [...prev, { role: "assistant", content: "Error connecting to AI Brain." }]); 
+    }
+    setChatLoading(false);
+  };
+
   const filteredTenders = tenders.filter((t) =>
     `${t.title} ${t.org_name} ${t.state}`.toLowerCase().includes(query.toLowerCase())
   );
 
-  // Safe Calculations (Crash-Proof)
+  // --- SAFE CALCULATIONS ---
   const top3Tenders = tenders.slice(0, 3);
   const potentialRevenue = top3Tenders.reduce((sum, t) => {
     if (!t.value) return sum;
@@ -62,10 +97,23 @@ export default function Dashboard() {
   }, 0);
   const estimatedEMD = potentialRevenue * 0.02;
 
-  // Helper to format currency safely
-  const formatCurrency = (amount: number) => {
-    try { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount); }
-    catch (e) { return `₹${amount}`; }
+  // --- ROBUST FORMATTING FUNCTIONS ---
+  const formatCurrency = (amount: any) => {
+    if (!amount || amount === "N/A" || amount === "0") return "Check Portal";
+    // Extract digits and decimals
+    const num = parseFloat(String(amount).replace(/[^0-9.-]+/g, ""));
+    if (isNaN(num)) return String(amount);
+    // Format to Indian Currency
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    try {
+      return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   return (
@@ -152,17 +200,18 @@ export default function Dashboard() {
                     <div style={{ fontSize: 14, fontWeight: 800, color: "#17233b" }}>Top 3 Matched Tenders</div>
                     <div style={{ fontSize: 11, color: "#8792a5" }}>Highest probability of winning</div>
                   </div>
+                  <button onClick={() => setActive("Live tenders")} style={{ background: "transparent", border: 0, color: "#315efb", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>View all ↗</button>
                 </div>
                 <div style={{ overflowX: "auto", width: "100%" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: 500 }}>
                     <thead><tr style={{ borderBottom: "1px solid #edf0f6" }}><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>OPPORTUNITY</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>VALUE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>DEADLINE</th><th style={{ fontSize: 9, padding: 10, color: "#8a95a8" }}>MATCH</th></tr></thead>
                     <tbody>
                       {loading ? <tr><td colSpan={4} style={{ padding: 20, fontSize: 12 }}>Fetching...</td></tr> : 
-                      top3Tenders.map(t => <tr key={t.id} style={{ borderBottom: "1px solid #f0f2f7" }}>
+                      top3Tenders.map(t => <tr key={t.id} style={{ borderBottom: "1px solid #f0f2f7", cursor: "pointer" }} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)}>
                         <td style={{ padding: "13px 10px" }}><div style={{ fontWeight: 700, fontSize: 11, color: "#26344d" }}>{t.title}</div><small style={{ fontSize: 9, color: "#8792a5" }}>{t.org_name} · {t.state}</small></td>
-                        <td style={{ padding: "13px 10px", fontSize: 11, fontWeight: 800 }}>{t.value || "N/A"}</td>
-                        <td style={{ padding: "13px 10px", fontSize: 11, color: "#637087" }}>{new Date(t.closing_date).toLocaleDateString('en-IN')}</td>
-                        <td style={{ padding: "13px 10px" }}><span style={{ background: t.match_score >= 80 ? "#e3f7ef" : "#fff3db", color: t.match_score >= 80 ? "#168363" : "#a8751b", padding: "5px 7px", borderRadius: 7, fontSize: 9, fontWeight: 800 }}>{t.match_score}%</span></td>
+                        <td style={{ padding: "13px 10px", fontSize: 11, fontWeight: 800, color: "#17233b" }}>{formatCurrency(t.value)}</td>
+                        <td style={{ padding: "13px 10px", fontSize: 11, color: "#ef4444", fontWeight: 700 }}>{formatDate(t.closing_date)}</td>
+                        <td style={{ padding: "13px 10px" }}><span style={{ background: t.match_score >= 80 ? "#e3f7ef" : "#fff3db", color: t.match_score >= 80 ? "#168363" : "#a8751b", padding: "5px 7px", borderRadius: 7, fontSize: 9, fontWeight: 800 }}>{t.match_score || 50}%</span></td>
                       </tr>)}
                     </tbody>
                   </table>
@@ -217,34 +266,47 @@ export default function Dashboard() {
 
           {/* LIVE TENDERS TAB */}
           {active === "Live tenders" && (
-            <div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
-                <div style={{ display: "flex", gap: 8, background: "#fff", padding: 4, borderRadius: 10, border: "1px solid #e8edf5" }}>
-                  <button style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: "#315efb", color: "#fff" }}>All Tenders</button>
-                  <button style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", background: "transparent", color: "#64748b" }}>✨ For Me</button>
+            <div style={{ display: "grid", gap: 12 }}>
+              {filteredTenders.map((t) => (
+                <div key={t.id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ background: "#fff", padding: 20, borderRadius: 14, border: "1px solid #e8edf5", cursor: "pointer" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: "#64748b" }}>{t.source || "LIVE"}</span>
+                    <span style={{ fontSize: 10, background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{t.match_score || 50}% Match</span>
+                  </div>
+                  <h3 style={{ fontSize: 14, fontWeight: 800, color: "#26354e", margin: "0 0 6px" }}>{t.title}</h3>
+                  <p style={{ fontSize: 11, color: "#8591a5", margin: "0 0 12px" }}>{t.org_name || "Department"} · {t.state || "India"}</p>
+                  <div style={{ display: "flex", gap: 20, fontSize: 11, color: "#8994a6", background: "#f9fafc", padding: 10, borderRadius: 8 }}>
+                    <span>◈ Value: <b style={{ color: "#17233b" }}>{formatCurrency(t.value)}</b></span>
+                    <span>◷ Deadline: <b style={{ color: "#ef4444" }}>{formatDate(t.closing_date)}</b></span>
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: "grid", gap: 12 }}>
-                {filteredTenders.map((t) => (
-                  <div key={t.id} style={{ background: "#fff", padding: 20, borderRadius: 14, border: "1px solid #e8edf5" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontSize: 10, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: "#64748b" }}>{t.source || "LIVE"}</span>
-                      <span style={{ fontSize: 10, background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{t.match_score || 50}% Match</span>
-                    </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 800, color: "#26354e", margin: "0 0 6px" }}>{t.title}</h3>
-                    <p style={{ fontSize: 11, color: "#8591a5", margin: "0 0 12px" }}>{t.org_name || "Department"} · {t.state || "India"}</p>
-                    <div style={{ display: "flex", gap: 20, fontSize: 11, color: "#8994a6", background: "#f9fafc", padding: 10, borderRadius: 8 }}>
-                      <span>◈ Value: <b style={{ color: "#17233b" }}>{t.value ? `₹${t.value}` : "N/A"}</b></span>
-                      <span>◷ Deadline: <b style={{ color: "#ef4444" }}>{new Date(t.closing_date).toLocaleDateString("en-IN")}</b></span>
-                    </div>
+              ))}
+            </div>
+          )}
+
+          {/* AI CHAT TAB */}
+          {active === "AI tender brain" && (
+            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", overflow: "hidden" }}>
+              <div style={{ padding: 20, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, background: "#f8fafc" }}>
+                {chatHistory.map((msg, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                     <div style={{ background: msg.role === "user" ? "#315efb" : "#fff", color: msg.role === "user" ? "#fff" : "#17233b", padding: "14px 18px", borderRadius: 16, borderTopRightRadius: msg.role === "user" ? 4 : 16, borderTopLeftRadius: msg.role === "assistant" ? 4 : 16, maxWidth: "85%", fontSize: 14, lineHeight: 1.6, border: msg.role === "assistant" ? "1px solid #e8edf5" : "none" }}>
+                       {msg.content}
+                     </div>
                   </div>
                 ))}
+                {chatLoading && <div style={{ color: "#64748b", fontSize: 12, padding: "10px 14px", background: "#fff", borderRadius: 16, border: "1px solid #e8edf5", width: "fit-content" }}>BidWell AI is analyzing...</div>}
+                <div ref={chatEndRef} />
+              </div>
+              <div style={{ padding: 16, borderTop: "1px solid #e8edf5", display: "flex", gap: 10, background: "#fff" }}>
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} placeholder="Ask anything..." style={{ flex: 1, padding: "14px 20px", borderRadius: 24, border: "1px solid #e8edf5", outline: "none", fontSize: 14, background: "#f8fafc" }} />
+                <button onClick={handleSendMessage} style={{ background: "#315efb", color: "#fff", border: "none", padding: "0 24px", borderRadius: 24, fontWeight: 800, cursor: "pointer" }}>Send</button>
               </div>
             </div>
           )}
 
           {/* Other Tabs (Placeholder) */}
-          {!["Overview", "Live tenders"].includes(active) && (
+          {!["Overview", "Live tenders", "AI tender brain"].includes(active) && (
             <div style={{ background: "#fff", padding: 40, borderRadius: 14, textAlign: "center", color: "#94a3b8", border: "1px solid #e8edf5" }}>
               <div style={{ fontSize: 30, marginBottom: 10 }}>✳</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#17233b" }}>{active} Workspace</div>
