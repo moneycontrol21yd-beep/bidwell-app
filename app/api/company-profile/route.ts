@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     .eq('user_id', user.id)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found (new user)
+  if (error && error.code !== 'PGRST116') {
     return NextResponse.json({ success: false, error: error.message });
   }
 
@@ -36,6 +36,10 @@ export async function POST(request: Request) {
       gstin: body.gstin,
       pan: body.pan,
       msme: body.msme,
+      turnover: body.turnover,
+      experience_years: body.experience_years,
+      business_type: body.business_type, // Nayi field
+      documents: body.documents || {},   // JSONB me saare docs
       updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' });
 
