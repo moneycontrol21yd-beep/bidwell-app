@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 const C = { 
   bg: "#f5f7fb", card: "#ffffff", text: "#17233b", sub: "#64748b", accent: "#315efb", border: "#e2e8f0", success: "#10b981", danger: "#ef4444", warning: "#f59e0b"
@@ -50,7 +51,7 @@ export default function TenderDetailPage() {
 
   const formatCurrency = (amount: any) => {
     if (!amount || amount === "0") return "Not Specified";
-    const num = parseFloat(amount);
+    const num = parseFloat(String(amount).replace(/[^0-9.-]+/g, ""));
     if (isNaN(num)) return `₹${amount}`;
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
@@ -61,7 +62,6 @@ export default function TenderDetailPage() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, paddingBottom: "40px", fontFamily: "system-ui, sans-serif" }}>
       
-      {/* Header */}
       <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "20px" }}>
         <button onClick={() => router.back()} style={{ color: C.accent, fontSize: 13, fontWeight: 700, background: "none", border: "none", cursor: "pointer", marginBottom: 16, padding: 0 }}>
           ← Back to Workspace
@@ -74,7 +74,6 @@ export default function TenderDetailPage() {
         <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, lineHeight: 1.4 }}>{tender.title}</h1>
       </div>
 
-      {/* Tabs */}
       <div style={{ display: "flex", background: C.card, borderBottom: `1px solid ${C.border}`, padding: "0 20px" }}>
         <button onClick={() => setActiveTab("overview")} style={{ flex: 1, padding: "16px 0", background: "none", border: "none", borderBottom: activeTab === "overview" ? `2px solid ${C.accent}` : "2px solid transparent", color: activeTab === "overview" ? C.accent : C.sub, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>Overview</button>
         <button onClick={() => setActiveTab("intel")} style={{ flex: 1, padding: "16px 0", background: "none", border: "none", borderBottom: activeTab === "intel" ? `2px solid ${C.accent}` : "2px solid transparent", color: activeTab === "intel" ? C.accent : C.sub, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>✳ AI Intel Report</button>
@@ -82,7 +81,6 @@ export default function TenderDetailPage() {
 
       <div style={{ padding: "20px", maxWidth: 800, margin: "0 auto" }}>
         
-        {/* OVERVIEW TAB */}
         {activeTab === "overview" && (
           <>
             <div style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, padding: 20, marginBottom: 16 }}>
@@ -105,14 +103,12 @@ export default function TenderDetailPage() {
           </>
         )}
 
-        {/* INTEL TAB - PROFESSIONAL CONSULTANT REPORT */}
         {activeTab === "intel" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {intelLoading ? (
               <div style={{ textAlign: "center", padding: 40, color: C.sub }}>Generating Consultant Report from VPS Brain...</div>
             ) : intel ? (
               <>
-                {/* 1. AI Verdict Card */}
                 <div style={{ background: C.card, border: `2px solid ${intel.analysis?.verdictColor || C.border}`, padding: 20, borderRadius: 16, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: intel.analysis?.verdictColor || C.accent }} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
@@ -121,7 +117,6 @@ export default function TenderDetailPage() {
                       <div style={{ fontSize: 20, fontWeight: 900, color: intel.analysis?.verdictColor || C.text }}>{intel.analysis?.verdict || "REVIEW REQUIRED"}</div>
                     </div>
                   </div>
-                  
                   <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: `1px solid ${C.border}`, marginTop: 15 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: C.sub, marginBottom: 8, textTransform: "uppercase" }}>Key Insights & Risks:</div>
                     <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: C.text, lineHeight: 1.6 }}>
@@ -132,7 +127,6 @@ export default function TenderDetailPage() {
                   </div>
                 </div>
 
-                {/* 2. Department Kundli Grid */}
                 <div style={{ fontSize: 14, fontWeight: 900, marginTop: 10, marginBottom: -5 }}>📊 Department Kundli</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div style={{ background: C.card, padding: 16, borderRadius: 12, border: `1px solid ${C.border}` }}>
@@ -149,7 +143,6 @@ export default function TenderDetailPage() {
                   </div>
                 </div>
 
-                {/* 3. Award History / Competitors */}
                 <div style={{ background: C.card, padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, marginTop: 10 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                     <span style={{ fontSize: 20 }}>🏆</span>
@@ -173,7 +166,6 @@ export default function TenderDetailPage() {
                   )}
                 </div>
 
-                {/* 4. Strategic Next Steps */}
                 <div style={{ background: C.card, padding: 20, borderRadius: 16, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: "#8b5cf6", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
                     <span>📋</span> Recommended Next Steps

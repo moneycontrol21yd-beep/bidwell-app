@@ -24,12 +24,18 @@ export default function Dashboard() {
   const [query, setQuery] = useState("");
   
   // AI Chat States
+  const [language, setLanguage] = useState("hi");
   const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([
-    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain." }
+    { role: "assistant", content: "Namaste! Main BidWell AI hoon. Aap kisi bhi tender, eligibility ya document ke baare me puch sakte hain. Ya apna document upload karein." }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [attachment, setAttachment] = useState<{name: string, type: string} | null>(null);
+  
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,7 +51,6 @@ export default function Dashboard() {
       .then((data) => {
         if (data.success && data.tenders) {
           const today = new Date();
-          // Filter active tenders and sort by match score
           const activeTenders = data.tenders
             .filter((t: any) => t.closing_date && new Date(t.closing_date) >= today)
             .sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
@@ -61,18 +66,33 @@ export default function Dashboard() {
     router.push("/login");
   };
 
-  const handleSendMessage = async () => {
-    if(!chatInput.trim()) return;
-    const msg = chatInput;
-    setChatHistory(prev => [...prev, { role: "user", content: msg }]);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAttachment({ name: file.name, type: file.type });
+      setShowAttachMenu(false);
+    }
+  };
+
+  const handleSendMessage = async (customPrompt?: string) => {
+    const msg = customPrompt || chatInput;
+    if(!msg.trim() && !attachment) return;
+
+    let displayMsg = msg;
+    if (attachment) {
+      displayMsg = `[Attached: ${attachment.name}] ${msg || "Please analyze this document."}`;
+    }
+
+    setChatHistory(prev => [...prev, { role: "user", content: displayMsg }]);
     setChatInput("");
+    setAttachment(null);
     setChatLoading(true);
     
     try {
       const res = await fetch("/api/ai-chat", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ prompt: msg, language: "hi" }) 
+        body: JSON.stringify({ prompt: displayMsg, language }) 
       });
       const data = await res.json();
       if(data.success) setChatHistory(prev => [...prev, { role: "assistant", content: data.reply }]);
@@ -97,23 +117,17 @@ export default function Dashboard() {
   }, 0);
   const estimatedEMD = potentialRevenue * 0.02;
 
-  // --- ROBUST FORMATTING FUNCTIONS ---
   const formatCurrency = (amount: any) => {
-    if (!amount || amount === "N/A" || amount === "0") return "Check Portal";
-    // Extract digits and decimals
+    if (!amount || amount === "N/A" || amount === "0" || amount === null) return "Check Portal";
     const num = parseFloat(String(amount).replace(/[^0-9.-]+/g, ""));
     if (isNaN(num)) return String(amount);
-    // Format to Indian Currency
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "N/A";
-    try {
-      return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch (e) {
-      return dateStr;
-    }
+    try { return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } 
+    catch (e) { return dateStr; }
   };
 
   return (
@@ -166,7 +180,6 @@ export default function Dashboard() {
           {/* OVERVIEW TAB */}
           {active === "Overview" && (
             <>
-              {/* Premium Hero Section */}
               <section style={{ borderRadius: 17, background: "linear-gradient(110deg,#142544 0%,#172d52 62%,#244276 100%)", padding: "25px 20px", color: "white", display: "flex", alignItems: "center", marginBottom: 20 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#b6c9f6", fontSize: 9, fontWeight: 800 }}>
@@ -174,10 +187,10 @@ export default function Dashboard() {
                   </div>
                   <h2 style={{ fontSize: 28, lineHeight: 1.15, margin: "12px 0 9px" }}>Better tenders.<br /><span style={{ color: "#8eafff" }}>Stronger bids.</span></h2>
                   <p style={{ fontSize: 11, color: "#bdc9df", maxWidth: 355, margin: "0 0 15px" }}>Your AI-powered workspace to discover opportunities, prepare bids and stay on top of every contract.</p>
+                  <button onClick={() => setActive("Live tenders")} style={{ background: "#fff", color: "#1b2c4a", padding: "10px 14px", borderRadius: 9, border: 0, fontWeight: 700, cursor: "pointer", fontSize: 12 }}>Explore tenders ↗</button>
                 </div>
               </section>
 
-              {/* Stats Grid */}
               <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginBottom: 20 }}>
                 <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20 }}>
                   <div style={{ fontSize: 18, marginBottom: 12, color: "#315efb" }}>⌕</div>
@@ -193,7 +206,6 @@ export default function Dashboard() {
                 </div>
               </section>
 
-              {/* Top 3 Tenders */}
               <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", padding: 20, marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 19 }}>
                   <div>
@@ -218,7 +230,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Future & Growth Section */}
               <div style={{ marginTop: 30, marginBottom: 15 }}>
                 <div style={{ fontSize: 18, fontWeight: 900, color: "#17233b", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 20 }}>📈</span> Future & Growth
@@ -284,10 +295,23 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* AI CHAT TAB */}
+          {/* AI CHAT TAB (With Language, Attachments, Quick Actions) */}
           {active === "AI tender brain" && (
-            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", overflow: "hidden" }}>
-              <div style={{ padding: 20, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, background: "#f8fafc" }}>
+            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", background: "#fff", borderRadius: 14, border: "1px solid #e8edf5", overflow: "hidden", position: "relative" }}>
+              
+              <div style={{ padding: "12px 20px", borderBottom: "1px solid #e8edf5", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>Language:</span>
+                  <select value={language} onChange={e => setLanguage(e.target.value)} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 12 }}>
+                    <option value="hi">Hindi (हिंदी)</option>
+                    <option value="en">English</option>
+                    <option value="mr">Marathi (मराठी)</option>
+                  </select>
+                </div>
+                <button onClick={() => window.print()} style={{ background: "#fff", border: "1px solid #cbd5e1", padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>📄 Download PDF</button>
+              </div>
+
+              <div style={{ padding: 20, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
                 {chatHistory.map((msg, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                      <div style={{ background: msg.role === "user" ? "#315efb" : "#fff", color: msg.role === "user" ? "#fff" : "#17233b", padding: "14px 18px", borderRadius: 16, borderTopRightRadius: msg.role === "user" ? 4 : 16, borderTopLeftRadius: msg.role === "assistant" ? 4 : 16, maxWidth: "85%", fontSize: 14, lineHeight: 1.6, border: msg.role === "assistant" ? "1px solid #e8edf5" : "none" }}>
@@ -298,10 +322,36 @@ export default function Dashboard() {
                 {chatLoading && <div style={{ color: "#64748b", fontSize: 12, padding: "10px 14px", background: "#fff", borderRadius: 16, border: "1px solid #e8edf5", width: "fit-content" }}>BidWell AI is analyzing...</div>}
                 <div ref={chatEndRef} />
               </div>
-              <div style={{ padding: 16, borderTop: "1px solid #e8edf5", display: "flex", gap: 10, background: "#fff" }}>
-                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} placeholder="Ask anything..." style={{ flex: 1, padding: "14px 20px", borderRadius: 24, border: "1px solid #e8edf5", outline: "none", fontSize: 14, background: "#f8fafc" }} />
-                <button onClick={handleSendMessage} style={{ background: "#315efb", color: "#fff", border: "none", padding: "0 24px", borderRadius: 24, fontWeight: 800, cursor: "pointer" }}>Send</button>
+
+              <div style={{ padding: "0 20px 10px", display: "flex", gap: 8, overflowX: "auto" }}>
+                <button onClick={() => handleSendMessage("Mujhe tender ke liye kaunse documents chahiye?")} style={{ whiteSpace: "nowrap", padding: "6px 12px", borderRadius: 15, border: "1px solid #cbd5e1", background: "#fff", fontSize: 11, cursor: "pointer" }}>📄 Required Documents</button>
+                <button onClick={() => handleSendMessage("Is tender ki payment condition kya hai?")} style={{ whiteSpace: "nowrap", padding: "6px 12px", borderRadius: 15, border: "1px solid #cbd5e1", background: "#fff", fontSize: 11, cursor: "pointer" }}>💰 Payment Info</button>
+                <button onClick={() => handleSendMessage("Mujhe Udyam certificate ka official link do.")} style={{ whiteSpace: "nowrap", padding: "6px 12px", borderRadius: 15, border: "1px solid #cbd5e1", background: "#fff", fontSize: 11, cursor: "pointer" }}>🔗 Legal Source</button>
               </div>
+
+              {showAttachMenu && (
+                <div style={{ position: "absolute", bottom: 80, left: 20, background: "#fff", border: "1px solid #e8edf5", borderRadius: 12, padding: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", zIndex: 10 }}>
+                  <button onClick={() => pdfInputRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 16px", background: "none", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>📄 Upload PDF</button>
+                  <button onClick={() => cameraInputRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 16px", background: "none", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>📸 Take Photo</button>
+                </div>
+              )}
+
+              {attachment && (
+                <div style={{ padding: "10px 20px", background: "#f8fafc", borderTop: "1px solid #e8edf5", display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>📎</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{attachment.name}</span>
+                  <button onClick={() => setAttachment(null)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", borderRadius: 12, width: 24, height: 24, cursor: "pointer", display: "grid", placeItems: "center", fontSize: 12 }}>✕</button>
+                </div>
+              )}
+
+              <div style={{ padding: 16, borderTop: "1px solid #e8edf5", display: "flex", gap: 10, background: "#fff", alignItems: "center" }}>
+                <button onClick={() => setShowAttachMenu(!showAttachMenu)} style={{ background: "#f1f5f9", border: "none", width: 44, height: 44, borderRadius: "50%", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", color: "#64748b" }}>+</button>
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} placeholder="Ask anything or upload document..." style={{ flex: 1, padding: "14px 20px", borderRadius: 24, border: "1px solid #e8edf5", outline: "none", fontSize: 14, background: "#f8fafc" }} />
+                <button onClick={() => handleSendMessage()} style={{ background: "#315efb", color: "#fff", border: "none", padding: "0 24px", borderRadius: 24, fontWeight: 800, cursor: "pointer", height: 44 }}>Send</button>
+              </div>
+
+              <input type="file" ref={pdfInputRef} accept="application/pdf" onChange={handleFileSelect} style={{ display: "none" }} />
+              <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleFileSelect} style={{ display: "none" }} />
             </div>
           )}
 
