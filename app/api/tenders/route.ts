@@ -7,8 +7,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get("query") || "";
   const page = parseInt(searchParams.get("page") || "0");
-  
-  const limit = 50; 
+
+  const limit = 50;
   const offset = page * limit;
   const today = new Date().toISOString().split('T')[0];
 
@@ -23,16 +23,16 @@ export async function GET(request: Request) {
         userSector = (company.business_type || "").toLowerCase();
         if (company.address) {
           const parts = company.address.split(",");
-          userState = parts[parts.length - 1].trim(); 
+          userState = parts[parts.length - 1].trim();
         }
       }
     }
   } catch (e) {}
 
-  // 2. Main Query (Live tenders)
+  // 2. Main Query (Live tenders) - Count added
   let dbQuery = supabase
     .from('live_tenders')
-    .select('*')
+    .select('*', { count: 'exact' })
     .gte('closing_date', today);
 
   if (searchQuery) {
@@ -43,7 +43,8 @@ export async function GET(request: Request) {
     .order('published_date', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  const { data, error } = await dbQuery;
+  // Count extract karo
+  const { data, error, count } = await dbQuery;
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message, tenders: [] });
@@ -72,33 +73,33 @@ export async function GET(request: Request) {
     // --- SMART MATCH SCORE LOGIC ---
     let score = 40; // Base Score
 
-    // A. Search Query Match (Agar user ne kuch search kiya hai)
+    // A. Search Query Match
     if (searchQuery && textToSearch.includes(searchQuery.toLowerCase())) {
-      score += 40; 
+      score += 40;
     }
 
-    // B. Sector Match (Company profile se match)
+    // B. Sector Match
     if (userSector && textToSearch.includes(userSector)) {
       score += 30;
     }
 
-    // C. State Match (Local tenders ko priority)
+    // C. State Match
     if (userState !== "All India" && displayState.toLowerCase() === userState.toLowerCase()) {
       score += 20;
     } else if (displayState === "Central Govt" || displayState === "Pan India") {
-      score += 10; // Central tenders sabke liye open hote hain
+      score += 10; 
     }
 
-    // D. Variation (Agar phir bhi score same aa raha hai, to thoda natural variation laao)
+    // D. Variation
     if (score === 40 || score === 50 || score === 60) {
-        const hash = (t.id || t.source_tender_id || "0").toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        score = 45 + (hash % 25); // 45% se 69% ke beech random score
+        const hash = (t.id || t.source_tender_id || "0").toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        score = 45 + (hash % 25); 
     }
 
-    if (score > 99) score = 99; // 99% se zyada mat dikhao
+    if (score > 99) score = 99; 
 
     return { ...t, state: displayState, match_score: score };
   });
 
-  return NextResponse.json({ success: true, totalCount: tenders.length, tenders });
+  return NextResponse.json({ success: true, totalCount: count || 0, tenders });
 }

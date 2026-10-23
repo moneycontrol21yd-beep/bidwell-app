@@ -36,6 +36,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   
+  // Pagination States
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  
   // Theme State
   const [isDarkMode, setIsDarkMode] = useState(false);
   const C = isDarkMode ? DARK_THEME : LIGHT_THEME;
@@ -86,19 +90,40 @@ export default function Dashboard() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
+  // New Fetch Function for Pagination
+  const fetchTendersData = async (pageNum: number, append: boolean = false) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tenders?page=${pageNum}`);
+      const data = await res.json();
+      if (data.success && data.tenders) {
+        const today = new Date();
+        const activeTenders = data.tenders.filter((t: any) => t.closing_date && new Date(t.closing_date) >= today).sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
+        
+        if (append) {
+          setTenders(prev => {
+            const existingIds = new Set(prev.map((p: any) => p.id || p.source_tender_id));
+            const newUnique = activeTenders.filter((t: any) => !existingIds.has(t.id || t.source_tender_id));
+            return [...prev, ...newUnique];
+          });
+        } else {
+          setTenders(activeTenders);
+        }
+        
+        setHasMore(data.tenders.length === 50); 
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) router.push("/login");
     });
-
-    fetch("/api/tenders?page=0").then(res => res.json()).then(data => {
-      if (data.success && data.tenders) {
-        const today = new Date();
-        const activeTenders = data.tenders.filter((t: any) => t.closing_date && new Date(t.closing_date) >= today).sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
-        setTenders(activeTenders);
-      }
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    fetchTendersData(0, false);
   }, [router]);
 
   useEffect(() => {
@@ -388,7 +413,34 @@ export default function Dashboard() {
               )}
 
               {/* LIVE TENDERS */}
-              {active === "Live tenders" && <div style={{ display: "grid", gap: 12 }}>{filteredTenders.map((t) => (<div key={t.id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ ...cardStyle, cursor: "pointer", marginBottom: 0 }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 10, background: isDarkMode ? "#334155" : "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: C.sub }}>{t.source || "LIVE"}</span><span style={{ fontSize: 10, background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{t.match_score || 50}% Match</span></div><h3 style={{ fontSize: 14, fontWeight: 800, margin: "0 0 6px", color: C.text }}>{t.title}</h3><p style={{ fontSize: 11, color: C.sub, margin: "0 0 12px" }}>{t.org_name} · {t.state}</p><div style={{ display: "flex", gap: 20, fontSize: 11, color: C.sub, background: isDarkMode ? "#0f172a" : "#f9fafc", padding: 10, borderRadius: 8 }}><span>◈ Value: <b style={{ color: C.text }}>{formatCurrency(t.value)}</b></span><span>◷ Deadline: <b style={{ color: C.danger }}>{t.closing_date ? new Date(t.closing_date).toLocaleDateString("en-IN") : "N/A"}</b></span></div></div>))}</div>}
+              {active === "Live tenders" && (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {filteredTenders.map((t) => (
+                    <div key={t.id || t.source_tender_id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ ...cardStyle, cursor: "pointer", marginBottom: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 10, background: isDarkMode ? "#334155" : "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: C.sub }}>{t.source || "LIVE"}</span><span style={{ fontSize: 10, background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{t.match_score || 50}% Match</span></div>
+                      <h3 style={{ fontSize: 14, fontWeight: 800, margin: "0 0 6px", color: C.text }}>{t.title}</h3>
+                      <p style={{ fontSize: 11, color: C.sub, margin: "0 0 12px" }}>{t.org_name} · {t.state}</p>
+                      <div style={{ display: "flex", gap: 20, fontSize: 11, color: C.sub, background: isDarkMode ? "#0f172a" : "#f9fafc", padding: 10, borderRadius: 8 }}><span>◈ Value: <b style={{ color: C.text }}>{formatCurrency(t.value)}</b></span><span>◷ Deadline: <b style={{ color: C.danger }}>{t.closing_date ? new Date(t.closing_date).toLocaleDateString("en-IN") : "N/A"}</b></span></div>
+                    </div>
+                  ))}
+
+                  {hasMore && (
+                    <div style={{ textAlign: "center", marginTop: 20, marginBottom: 40 }}>
+                      <button 
+                        onClick={() => {
+                          const nextPage = page + 1;
+                          setPage(nextPage);
+                          fetchTendersData(nextPage, true);
+                        }}
+                        disabled={loading}
+                        style={{ background: C.accent, color: "#fff", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", width: "100%", maxWidth: 300, margin: "0 auto", display: "block", opacity: loading ? 0.7 : 1 }}
+                      >
+                        {loading ? "Loading More Tenders..." : "Load More Tenders"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* BID WORKSPACE */}
               {active === "Bid workspace" && (

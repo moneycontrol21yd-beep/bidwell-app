@@ -3,17 +3,31 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Linux; Android 13) Chrome/120.0"}
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+SUPABASE_URL = "https://mvelgzwtopfanrrdtxoo.supabase.co"
+# Yahan apni Supabase Anon Key daalna (NEXT_PUBLIC_SUPABASE_ANON_KEY)
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12ZWxnend0b3BmYW5ycmR0eG9vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDg2NjM5MywiZXhwIjoyMTA2NDQyMzkzfQ.ukPKWb6T7cKqc0Xsu6jrEsHNJe-lXb8Y3dU9EQSQauM"
+
+def detect_state(text):
+    text = text.lower()
+    if "delhi" in text or "nct" in text: return "Delhi"
+    if "mumbai" in text or "maharashtra" in text: return "Maharashtra"
+    if "bhopal" in text or "indore" in text or "madhya pradesh" in text: return "Madhya Pradesh"
+    if "jaipur" in text or "rajasthan" in text: return "Rajasthan"
+    if "chennai" in text or "tamil nadu" in text: return "Tamil Nadu"
+    if "lucknow" in text or "uttar pradesh" in text: return "Uttar Pradesh"
+    if "bengaluru" in text or "karnataka" in text: return "Karnataka"
+    if "kolkata" in text or "west bengal" in text: return "West Bengal"
+    if "gujarat" in text or "ahmedabad" in text: return "Gujarat"
+    return "All India" # Central tenders default
 
 def push_supabase(rows):
     if not rows: return 0
-    url = f"{SUPABASE_URL}/rest/v1/tenders"
+    url = f"{SUPABASE_URL}/rest/v1/tenders?on_conflict=source_url" # Unique key handling
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates,return=minimal",
+        "Prefer": "resolution=ignore-duplicates,return=minimal",
     }
     inserted = 0
     for i in range(0, len(rows), 100):
@@ -22,8 +36,10 @@ def push_supabase(rows):
             r = requests.post(url, headers=headers, json=batch, timeout=30)
             if r.status_code in (200, 201, 204):
                 inserted += len(batch)
-        except:
-            pass
+            else:
+                print(f"Error {r.status_code}: {r.text}")
+        except Exception as e:
+            print(f"Network error: {e}")
     return inserted
 
 def get_page(session, page_num):
@@ -47,6 +63,7 @@ def parse(html):
             if len(cells) < 5: continue
             texts = [c.get_text(" ", strip=True) for c in cells]
             texts = [t for t in texts if t]
+            
             title, link = "", ""
             for i in [4, 3, 5, 2]:
                 if i < len(cells):
@@ -58,19 +75,27 @@ def parse(html):
                             link = a["href"]
                         break
             if len(title) < 30: continue
+            
             tl = title.lower()
             if any(j in tl for j in ["as per order", "guide line", "circular", "notice", "corrigendum", "screen reader", "click here"]):
                 continue
+                
             dates = [t for t in texts if re.match(r"^\d{2}[-/]\d{2}[-/]\d{4}", t)]
             deadline = dates[1] if len(dates) > 1 else (dates[0] if dates else "")
+            
             org = ""
             for t in texts:
                 if t != title and 5 < len(t) < 200 and not re.match(r"^\d", t):
                     org = t[:150]
                     break
+                    
+            if link.strip() in ["https://eprocure.gov.in", "https://eprocure.gov.in/", "https://eprocure.gov.in/cppp/latestactivetendersnew/"]: continue
             if not link.startswith("http"):
                 link = "https://eprocure.gov.in" + link if link.startswith("/") else ""
             if not link: continue
+            
+            actual_state = detect_state(title + " " + org)
+            
             tenders.append({
                 "title": title[:350],
                 "department": org,
@@ -78,6 +103,7 @@ def parse(html):
                 "source": "CPPP",
                 "source_url": link,
                 "status": "active",
+                "state": actual_state
             })
     return tenders
 

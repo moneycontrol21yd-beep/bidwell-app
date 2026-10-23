@@ -2,11 +2,23 @@ import requests, re, time, sys
 import urllib3
 from datetime import datetime
 from bs4 import BeautifulSoup
-import psycopg2
 urllib3.disable_warnings()
 
-DB = "postgresql://bidwell:bidwell2026@localhost:5432/brain"
+# Yahan apni Supabase Anon Key daalna (NEXT_PUBLIC_SUPABASE_ANON_KEY)
+SUPABASE_URL = "https://mvelgzwtopfanrrdtxoo.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12ZWxnend0b3BmYW5ycmR0eG9vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDg2NjM5MywiZXhwIjoyMTA2NDQyMzkzfQ.ukPKWb6T7cKqc0Xsu6jrEsHNJe-lXb8Y3dU9EQSQauM"
+
 H = {"User-Agent": "Mozilla/5.0 Chrome/120.0"}
+
+def detect_state(text, default_state):
+    text = text.lower()
+    if "delhi" in text or "nct" in text: return "Delhi"
+    if "mumbai" in text or "maharashtra" in text: return "Maharashtra"
+    if "bhopal" in text or "indore" in text or "madhya pradesh" in text: return "Madhya Pradesh"
+    if "jaipur" in text or "rajasthan" in text: return "Rajasthan"
+    if "chennai" in text or "tamil nadu" in text: return "Tamil Nadu"
+    return default_state
+
 STATES = {
   "Maharashtra": "https://mahatenders.gov.in",
   "Rajasthan": "https://eproc.rajasthan.gov.in",
@@ -38,14 +50,29 @@ def parse(html, st):
             break
       if len(t) < 30: continue
       if any(j in t.lower() for j in ["guide line","circular","as per order"]): continue
+      
       d = [x for x in tx if re.match(r"^\d{2}[-/]\d{2}[-/]\d{4}", x)]
       dl = d[-1] if d else ""
+      
       o = ""
       for x in tx:
         if x != t and 5 < len(x) < 200 and not re.match(r"^\d", x): o = x; break
+      
       if l.startswith("/"): l = "https://eprocure.gov.in" + l
       elif not l.startswith("http"): continue
-      out.append({"tender_id": f"{st[:3].lower()}_{abs(hash(l))%10**12}", "title": t[:500], "org_name": (o or st)[:300], "portal_type": st, "aoc_date": dl or None, "winner_name": "", "contract_value": 0, "bid_count": 0, "tender_type": "Works", "source_url": l, "product_category": "", "product_sub_category": "", "completion_period": "", "description": t[:500], "state": st})
+      
+      actual_state = detect_state(t + " " + (o or ""), st)
+      
+      # Supabase schema ke hisaab se data format
+      out.append({
+          "source": "State Portal", 
+          "source_tender_id": f"{st[:3].lower()}_{abs(hash(l))%10**12}", 
+          "title": t[:500], 
+          "org_name": (o or st)[:300], 
+          "state": actual_state, 
+          "category": "Works", 
+          "source_url": l
+      })
   return out
 
 def fetch(name, base, s):
@@ -56,15 +83,23 @@ def fetch(name, base, s):
 
 def push(rows):
   if not rows: return 0
+  url = f"{SUPABASE_URL}/rest/v1/live_tenders?on_conflict=source_tender_id"
+  headers = {
+      "apikey": SUPABASE_KEY,
+      "Authorization": f"Bearer {SUPABASE_KEY}",
+      "Content-Type": "application/json",
+      "Prefer": "resolution=ignore-duplicates" # ON CONFLICT DO NOTHING ke barabar
+  }
   try:
-    cn = psycopg2.connect(DB, connect_timeout=30); cu = cn.cursor(); n = 0
-    for r in rows:
-      try:
-        cu.execute("""INSERT INTO brain_awards (tender_id,title,org_name,portal_type,aoc_date,winner_name,contract_value,bid_count,tender_type,source_url,product_category,product_sub_category,completion_period,description,state) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (tender_id) DO NOTHING""", tuple(r.values()))
-        n += cu.rowcount
-      except: continue
-    cn.commit(); cu.close(); cn.close(); return n
-  except: return 0
+      r = requests.post(url, headers=headers, json=rows, timeout=20)
+      if r.status_code in [200, 201]:
+          return len(rows)
+      else:
+          print(f"  [Supabase Error] {r.status_code}: {r.text}")
+          return 0
+  except Exception as e:
+      print(f"  [Network Error] {e}")
+      return 0
 
 def main():
   tgt = sys.argv[1] if len(sys.argv) > 1 else None
@@ -74,10 +109,10 @@ def main():
   tot = 0
   for n, b in items:
     r = fetch(n, b, s)
-    print(f"[{n}] {len(r)}", flush=True)
+    print(f"[{n}] Found: {len(r)}", flush=True)
     if r:
-      i = push(r); print(f"  +{i}", flush=True); tot += i
+      i = push(r); print(f"  Inserted: {i}", flush=True); tot += i
     time.sleep(1)
-  print(f"[TOTAL] {tot}", flush=True)
+  print(f"[TOTAL INSERTED] {tot}", flush=True)
 
 if __name__ == "__main__": main()
