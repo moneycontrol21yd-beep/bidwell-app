@@ -298,7 +298,6 @@ export default function Dashboard() {
   const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text, width: "100%", boxSizing: "border-box" as const, wordBreak: "break-word" as const };
 
   return (
-    {/* YAHAN MAIN CHANGE HUA HAI - POSITION FIXED */}
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text, overflow: "hidden" }}>
       
       {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />}
