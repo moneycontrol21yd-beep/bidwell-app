@@ -295,11 +295,11 @@ export default function Dashboard() {
   const potentialRevenue = top3Tenders.reduce((sum, t) => { if (!t.value) return sum; const cleanValue = String(t.value).replace(/[^0-9.-]+/g, ""); const numericValue = parseFloat(cleanValue); return sum + (isNaN(numericValue) ? 0 : numericValue); }, 0);
   const estimatedEMD = potentialRevenue * 0.02;
 
-  // Added wordBreak to prevent long words from pushing layout width
   const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text, width: "100%", boxSizing: "border-box" as const, wordBreak: "break-word" as const };
 
   return (
-    <div style={{ height: "100dvh", width: "100%", maxWidth: "100vw", overflow: "hidden", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text, position: "relative" }}>
+    {/* YAHAN MAIN CHANGE HUA HAI - POSITION FIXED */}
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text, overflow: "hidden" }}>
       
       {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />}
 
@@ -353,7 +353,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", width: "100%", minWidth: 0 }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", width: "100%", minWidth: 0 }}>
         
         {/* Header */}
         <header style={{ height: 75, flexShrink: 0, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
@@ -364,8 +364,8 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Tab Content Area - FORCE SCROLLBAR + STABLE GUTTER */}
-        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "scroll", overflowX: "hidden", display: "flex", flexDirection: "column", scrollbarGutter: "stable", width: "100%" }}>
+        {/* Tab Content Area */}
+        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "auto", overflowX: "hidden", display: "flex", flexDirection: "column", scrollbarGutter: "stable", width: "100%" }}>
           
           {active !== "AI tender brain" && (
             <div style={{ padding: "20px", paddingBottom: "80px", maxWidth: 1200, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
@@ -414,7 +414,7 @@ export default function Dashboard() {
 
               {/* LIVE TENDERS */}
               {active === "Live tenders" && (
-                <div style={{ display: "grid", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {filteredTenders.map((t) => (
                     <div key={t.id || t.source_tender_id} onClick={() => router.push(`/tenders/${t.source_tender_id || t.id}`)} style={{ ...cardStyle, cursor: "pointer", marginBottom: 0 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 10, background: isDarkMode ? "#334155" : "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: C.sub }}>{t.source || "LIVE"}</span><span style={{ fontSize: 10, background: "#e3f7ef", color: "#168363", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>{t.match_score || 50}% Match</span></div>
@@ -444,7 +444,7 @@ export default function Dashboard() {
 
               {/* BID WORKSPACE */}
               {active === "Bid workspace" && (
-                <div style={{ display: "grid", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {workspaceLoading ? <div style={{ padding: 20, textAlign: "center", color: C.sub }}>Loading your bids...</div> : workspace.length === 0 ? (
                     <div style={{ ...cardStyle, textAlign: "center", padding: 40 }}><div style={{ fontSize: 30, marginBottom: 10 }}>📁</div><div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>No active bids</div><p style={{ fontSize: 12, color: C.sub, marginTop: 8 }}>Go to Live Tenders and click "Track this Tender in Workspace" to start tracking.</p></div>
                   ) : (
@@ -482,7 +482,7 @@ export default function Dashboard() {
 
               {/* SUBSCRIPTION */}
               {active === "Subscription" && (
-                <div style={{ display: "grid", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ background: isDarkMode ? "#064e3b" : "#ecfdf5", border: `1px solid ${isDarkMode ? "#047857" : "#a7f3d0"}`, padding: 20, borderRadius: 14 }}>
                     <div style={{ fontSize: 16, fontWeight: 900, color: isDarkMode ? "#d1fae5" : "#065f46" }}>🎉 1 Month Free Trial Active</div>
                   </div>
@@ -495,7 +495,7 @@ export default function Dashboard() {
 
               {/* SETTINGS */}
               {active === "Settings" && (
-                <div style={{ display: "grid", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={cardStyle}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 16 }}>Appearance</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
@@ -510,7 +510,7 @@ export default function Dashboard() {
 
               {/* COMPANY PROFILE */}
               {active === "Company profile" && (
-                <div style={{ display: "grid", gap: 20 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   <div style={cardStyle}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 16 }}>Company Details</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
