@@ -295,10 +295,11 @@ export default function Dashboard() {
   const potentialRevenue = top3Tenders.reduce((sum, t) => { if (!t.value) return sum; const cleanValue = String(t.value).replace(/[^0-9.-]+/g, ""); const numericValue = parseFloat(cleanValue); return sum + (isNaN(numericValue) ? 0 : numericValue); }, 0);
   const estimatedEMD = potentialRevenue * 0.02;
 
-  const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text, width: "100%", boxSizing: "border-box" as const };
+  // Added wordBreak to prevent long words from pushing layout width
+  const cardStyle = { background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.02)", marginBottom: 16, color: C.text, width: "100%", boxSizing: "border-box" as const, wordBreak: "break-word" as const };
 
   return (
-    <div style={{ height: "100dvh", width: "100vw", overflow: "hidden", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text }}>
+    <div style={{ height: "100dvh", width: "100%", maxWidth: "100vw", overflow: "hidden", background: C.bg, fontFamily: "system-ui, sans-serif", display: "flex", color: C.text, position: "relative" }}>
       
       {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />}
 
@@ -352,7 +353,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", width: "100%" }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", width: "100%", minWidth: 0 }}>
         
         {/* Header */}
         <header style={{ height: 75, flexShrink: 0, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 15 }}>
@@ -363,8 +364,8 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Tab Content Area - Added scrollbarGutter and paddingBottom */}
-        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "auto", overflowX: "hidden", display: "flex", flexDirection: "column", scrollbarGutter: "stable" }}>
+        {/* Tab Content Area - FORCE SCROLLBAR + STABLE GUTTER */}
+        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "scroll", overflowX: "hidden", display: "flex", flexDirection: "column", scrollbarGutter: "stable", width: "100%" }}>
           
           {active !== "AI tender brain" && (
             <div style={{ padding: "20px", paddingBottom: "80px", maxWidth: 1200, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
