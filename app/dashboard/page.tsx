@@ -90,7 +90,6 @@ export default function Dashboard() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
-  // New Fetch Function for Pagination
   const fetchTendersData = async (pageNum: number, append: boolean = false) => {
     setLoading(true);
     try {
@@ -364,11 +363,11 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Tab Content Area */}
-        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "auto", overflowX: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* Tab Content Area - Added scrollbarGutter and paddingBottom */}
+        <div style={{ flex: 1, overflowY: active === "AI tender brain" ? "hidden" : "auto", overflowX: "hidden", display: "flex", flexDirection: "column", scrollbarGutter: "stable" }}>
           
           {active !== "AI tender brain" && (
-            <div style={{ padding: "20px", maxWidth: 1200, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+            <div style={{ padding: "20px", paddingBottom: "80px", maxWidth: 1200, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
               <div style={{ marginBottom: 25 }}>
                 <div style={{ fontSize: 10, color: C.sub, fontWeight: 800, letterSpacing: 1 }}>BIDWELL WORKSPACE</div>
                 <h1 style={{ fontSize: 24, fontWeight: 800, margin: "9px 0 4px", color: C.text }}>{active}</h1>
@@ -433,7 +432,7 @@ export default function Dashboard() {
                           fetchTendersData(nextPage, true);
                         }}
                         disabled={loading}
-                        style={{ background: C.accent, color: "#fff", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", width: "100%", maxWidth: 300, margin: "0 auto", display: "block", opacity: loading ? 0.7 : 1 }}
+                        style={{ background: C.accent, color: "#fff", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", width: "100%", maxWidth: 300, margin: "0 auto", display: "block", opacity: loading ? 0.7 : 1, height: 48 }}
                       >
                         {loading ? "Loading More Tenders..." : "Load More Tenders"}
                       </button>
