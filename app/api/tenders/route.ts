@@ -26,10 +26,17 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
+  // 🔥 GARBAGE FILTER: API level par hi kachra block kar diya
   let dbQuery = supabase
     .from('master_tenders')
     .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
-    .gte('closing_date', today);
+    .gte('closing_date', today)
+    .not('title', 'ilike', '%technical bid%')
+    .not('title', 'ilike', '%pre-bid%')
+    .not('title', 'ilike', '%bod extension%')
+    .not('title', 'ilike', '%corrigendum%')
+    .not('title', 'ilike', '%date extended%')
+    .gt('length(title)', 20); // Chhote titles ignore karo
 
   if (searchQuery) {
     dbQuery = dbQuery.or(`title.ilike.%${searchQuery}%,org_name.ilike.%${searchQuery}%`);
@@ -44,14 +51,12 @@ export async function GET(request: Request) {
     let displayState = t.state || t.portal_source;
     let displaySource = t.portal_source || "CPPP";
     
-    // Source Badge Fix
     if (displaySource.toUpperCase().includes("PRADESH") || displaySource.toUpperCase().includes("DELHI")) {
         displaySource = "Central Portal";
     }
 
     const textToSearch = `${(t.title || "").toLowerCase()} ${(t.org_name || "").toLowerCase()}`;
 
-    // Force State Detect
     if (textToSearch.includes("delhi")) displayState = "Delhi";
     else if (textToSearch.includes("mumbai") || textToSearch.includes("pune") || textToSearch.includes("nagpur")) displayState = "Maharashtra";
     else if (textToSearch.includes("bhopal") || textToSearch.includes("indore")) displayState = "Madhya Pradesh";
