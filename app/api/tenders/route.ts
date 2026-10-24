@@ -42,9 +42,16 @@ export async function GET(request: Request) {
 
   const tenders = (data || []).map((t: any) => {
     let displayState = t.state || t.portal_source;
+    let displaySource = t.portal_source || "CPPP";
+    
+    // Source Badge Fix
+    if (displaySource.toUpperCase().includes("PRADESH") || displaySource.toUpperCase().includes("DELHI")) {
+        displaySource = "Central Portal";
+    }
+
     const textToSearch = `${(t.title || "").toLowerCase()} ${(t.org_name || "").toLowerCase()}`;
 
-    // 🔥 FORCE STATE DETECTION (Database ki galti sudharne ke liye)
+    // Force State Detect
     if (textToSearch.includes("delhi")) displayState = "Delhi";
     else if (textToSearch.includes("mumbai") || textToSearch.includes("pune") || textToSearch.includes("nagpur")) displayState = "Maharashtra";
     else if (textToSearch.includes("bhopal") || textToSearch.includes("indore")) displayState = "Madhya Pradesh";
@@ -56,11 +63,10 @@ export async function GET(request: Request) {
     else if (textToSearch.includes("shillong") || textToSearch.includes("meghalaya")) displayState = "Meghalaya";
     else if (textToSearch.includes("lucknow") || textToSearch.includes("uttar pradesh")) displayState = "Uttar Pradesh";
     else if (!displayState || displayState === "India" || displayState.trim() === "" || displayState.toUpperCase() === "MADHYA-PRADESH") {
-        // Agar database me MP likha hai par title me kuch nahi mila, toh Central Govt maano
         if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd") || textToSearch.includes("drdo")) {
              displayState = "Central Govt";
         } else {
-             displayState = t.portal_source || "Pan India";
+             displayState = "Pan India";
         }
     }
 
@@ -76,7 +82,7 @@ export async function GET(request: Request) {
     }
     if (score > 99) score = 99; 
 
-    return { ...t, state: displayState, match_score: score, value: t.estimated_cost, source: t.portal_source, source_url: t.original_url };
+    return { ...t, state: displayState, source: displaySource, match_score: score, value: t.estimated_cost, source_url: t.original_url };
   });
 
   return NextResponse.json({ success: true, totalCount: count || 0, tenders });
