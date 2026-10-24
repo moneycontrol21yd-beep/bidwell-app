@@ -26,7 +26,6 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
-  // 🔥 SIRF MASTER_TENDERS
   let dbQuery = supabase
     .from('master_tenders')
     .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
@@ -37,7 +36,6 @@ export async function GET(request: Request) {
   }
 
   dbQuery = dbQuery.order('publishing_date', { ascending: false }).range(offset, offset + limit - 1);
-
   const { data, error, count } = await dbQuery;
 
   if (error) return NextResponse.json({ success: false, error: error.message, tenders: [] });
@@ -46,16 +44,24 @@ export async function GET(request: Request) {
     let displayState = t.state || t.portal_source;
     const textToSearch = `${(t.title || "").toLowerCase()} ${(t.org_name || "").toLowerCase()}`;
 
-    if (!displayState || displayState === "India" || displayState.trim() === "") {
-      if (textToSearch.includes("delhi")) displayState = "Delhi";
-      else if (textToSearch.includes("mumbai")) displayState = "Maharashtra";
-      else if (textToSearch.includes("bhopal")) displayState = "Madhya Pradesh";
-      else if (textToSearch.includes("chennai")) displayState = "Tamil Nadu";
-      else if (textToSearch.includes("kolkata")) displayState = "West Bengal";
-      else if (textToSearch.includes("bangalore") || textToSearch.includes("bengaluru")) displayState = "Karnataka";
-      else if (textToSearch.includes("hyderabad")) displayState = "Telangana";
-      else if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd")) displayState = "Central Govt";
-      else displayState = t.portal_source || "Pan India";
+    // 🔥 FORCE STATE DETECTION (Database ki galti sudharne ke liye)
+    if (textToSearch.includes("delhi")) displayState = "Delhi";
+    else if (textToSearch.includes("mumbai") || textToSearch.includes("pune") || textToSearch.includes("nagpur")) displayState = "Maharashtra";
+    else if (textToSearch.includes("bhopal") || textToSearch.includes("indore")) displayState = "Madhya Pradesh";
+    else if (textToSearch.includes("chennai")) displayState = "Tamil Nadu";
+    else if (textToSearch.includes("kolkata")) displayState = "West Bengal";
+    else if (textToSearch.includes("bangalore") || textToSearch.includes("bengaluru")) displayState = "Karnataka";
+    else if (textToSearch.includes("hyderabad")) displayState = "Telangana";
+    else if (textToSearch.includes("jaipur")) displayState = "Rajasthan";
+    else if (textToSearch.includes("shillong") || textToSearch.includes("meghalaya")) displayState = "Meghalaya";
+    else if (textToSearch.includes("lucknow") || textToSearch.includes("uttar pradesh")) displayState = "Uttar Pradesh";
+    else if (!displayState || displayState === "India" || displayState.trim() === "" || displayState.toUpperCase() === "MADHYA-PRADESH") {
+        // Agar database me MP likha hai par title me kuch nahi mila, toh Central Govt maano
+        if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd") || textToSearch.includes("drdo")) {
+             displayState = "Central Govt";
+        } else {
+             displayState = t.portal_source || "Pan India";
+        }
     }
 
     let score = 40; 
