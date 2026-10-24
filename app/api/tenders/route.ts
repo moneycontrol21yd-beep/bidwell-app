@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
-  // ✅ Removed the invalid length check and added safe not filters
+  // 🔥 GARBAGE FILTER (Strict but safe)
   let dbQuery = supabase
     .from('master_tenders')
     .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
@@ -35,7 +35,8 @@ export async function GET(request: Request) {
     .not('title', 'ilike', '%pre-bid%')
     .not('title', 'ilike', '%bod extension%')
     .not('title', 'ilike', '%corrigendum%')
-    .not('title', 'ilike', '%date extended%');
+    .not('title', 'ilike', '%date extension%')
+    .not('title', 'ilike', '%replies to%');
 
   if (searchQuery) {
     dbQuery = dbQuery.or(`title.ilike.%${searchQuery}%,org_name.ilike.%${searchQuery}%`);
