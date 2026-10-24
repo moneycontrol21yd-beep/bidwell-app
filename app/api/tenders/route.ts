@@ -26,17 +26,19 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
-  // 🔥 GARBAGE FILTER (Strict but safe)
+  // 🔥 SUPER STRICT FILTER (No Kachra)
   let dbQuery = supabase
     .from('master_tenders')
     .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
     .gte('closing_date', today)
-    .not('title', 'ilike', '%technical bid%')
-    .not('title', 'ilike', '%pre-bid%')
-    .not('title', 'ilike', '%bod extension%')
+    .not('title', 'ilike', '%extension%')
     .not('title', 'ilike', '%corrigendum%')
-    .not('title', 'ilike', '%date extension%')
-    .not('title', 'ilike', '%replies to%');
+    .not('title', 'ilike', '%corrignuedm%')
+    .not('title', 'ilike', '%due date%')
+    .not('title', 'ilike', '%updation%')
+    .not('title', 'ilike', '%addendum%')
+    .not('title', 'ilike', '%technical bid%')
+    .not('title', 'ilike', '%pre-bid%');
 
   if (searchQuery) {
     dbQuery = dbQuery.or(`title.ilike.%${searchQuery}%,org_name.ilike.%${searchQuery}%`);
@@ -51,12 +53,11 @@ export async function GET(request: Request) {
     let displayState = t.state || t.portal_source;
     let displaySource = t.portal_source || "CPPP";
     
-    if (displaySource.toUpperCase().includes("PRADESH") || displaySource.toUpperCase().includes("DELHI")) {
-        displaySource = "Central Portal";
-    }
+    if (displaySource.toUpperCase().includes("PRADESH") || displaySource.toUpperCase().includes("DELHI")) displaySource = "Central Portal";
 
     const textToSearch = `${(t.title || "").toLowerCase()} ${(t.org_name || "").toLowerCase()}`;
 
+    // State Fix (Database ki galti sudharne ke liye)
     if (textToSearch.includes("delhi")) displayState = "Delhi";
     else if (textToSearch.includes("mumbai") || textToSearch.includes("pune") || textToSearch.includes("nagpur")) displayState = "Maharashtra";
     else if (textToSearch.includes("bhopal") || textToSearch.includes("indore")) displayState = "Madhya Pradesh";
@@ -65,14 +66,9 @@ export async function GET(request: Request) {
     else if (textToSearch.includes("bangalore") || textToSearch.includes("bengaluru")) displayState = "Karnataka";
     else if (textToSearch.includes("hyderabad")) displayState = "Telangana";
     else if (textToSearch.includes("jaipur")) displayState = "Rajasthan";
-    else if (textToSearch.includes("shillong") || textToSearch.includes("meghalaya")) displayState = "Meghalaya";
-    else if (textToSearch.includes("lucknow") || textToSearch.includes("uttar pradesh")) displayState = "Uttar Pradesh";
     else if (!displayState || displayState === "India" || displayState.trim() === "" || displayState.toUpperCase() === "MADHYA-PRADESH") {
-        if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd") || textToSearch.includes("drdo")) {
-             displayState = "Central Govt";
-        } else {
-             displayState = "Pan India";
-        }
+        if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd") || textToSearch.includes("drdo")) displayState = "Central Govt";
+        else displayState = "Pan India";
     }
 
     let score = 40; 
@@ -81,7 +77,7 @@ export async function GET(request: Request) {
     if (userState !== "All India" && displayState.toLowerCase() === userState.toLowerCase()) score += 20;
     else if (displayState === "Central Govt" || displayState === "Pan India") score += 10; 
 
-    if (score === 40 || score === 50 || score === 60) {
+    if (score >= 40 && score <= 60) {
         const hash = (t.id || "0").toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         score = 45 + (hash % 25); 
     }
