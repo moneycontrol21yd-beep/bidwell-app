@@ -3,15 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get("query") || "";
   const page = parseInt(searchParams.get("page") || "0");
-
   const limit = 50;
   const offset = page * limit;
+  const today = new Date().toISOString();
 
-  // 1. User Profile nikalne ki koshish karo
   let userState = "All India";
   let userSector = "";
   try {
@@ -28,31 +26,25 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
-  // 2. MAGIC VIEW SE DATA QUERY (Yahan dono tables ka mix data aayega)
+  // 🔥 SIRF MASTER_TENDERS
   let dbQuery = supabase
-    .from('all_live_tenders')
-    .select('*', { count: 'exact' });
+    .from('master_tenders')
+    .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
+    .gte('closing_date', today);
 
   if (searchQuery) {
     dbQuery = dbQuery.or(`title.ilike.%${searchQuery}%,org_name.ilike.%${searchQuery}%`);
   }
 
-  dbQuery = dbQuery
-    .order('published_date', { ascending: false })
-    .range(offset, offset + limit - 1);
+  dbQuery = dbQuery.order('publishing_date', { ascending: false }).range(offset, offset + limit - 1);
 
   const { data, error, count } = await dbQuery;
 
-  if (error) {
-    return NextResponse.json({ success: false, error: error.message, tenders: [] });
-  }
+  if (error) return NextResponse.json({ success: false, error: error.message, tenders: [] });
 
-  // 3. Smart Match Score & State Formatting
   const tenders = (data || []).map((t: any) => {
-    let displayState = t.state || t.source;
-    const titleLower = (t.title || "").toLowerCase();
-    const orgLower = (t.org_name || "").toLowerCase();
-    const textToSearch = `${titleLower} ${orgLower}`;
+    let displayState = t.state || t.portal_source;
+    const textToSearch = `${(t.title || "").toLowerCase()} ${(t.org_name || "").toLowerCase()}`;
 
     if (!displayState || displayState === "India" || displayState.trim() === "") {
       if (textToSearch.includes("delhi")) displayState = "Delhi";
@@ -63,23 +55,22 @@ export async function GET(request: Request) {
       else if (textToSearch.includes("bangalore") || textToSearch.includes("bengaluru")) displayState = "Karnataka";
       else if (textToSearch.includes("hyderabad")) displayState = "Telangana";
       else if (textToSearch.includes("bsf") || textToSearch.includes("army") || textToSearch.includes("railway") || textToSearch.includes("fci") || textToSearch.includes("cpwd")) displayState = "Central Govt";
-      else displayState = t.source || "Pan India";
+      else displayState = t.portal_source || "Pan India";
     }
 
     let score = 40; 
-
     if (searchQuery && textToSearch.includes(searchQuery.toLowerCase())) score += 40;
     if (userSector && textToSearch.includes(userSector)) score += 30;
     if (userState !== "All India" && displayState.toLowerCase() === userState.toLowerCase()) score += 20;
     else if (displayState === "Central Govt" || displayState === "Pan India") score += 10; 
 
     if (score === 40 || score === 50 || score === 60) {
-        const hash = (t.id || t.source_tender_id || "0").toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const hash = (t.id || "0").toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         score = 45 + (hash % 25); 
     }
     if (score > 99) score = 99; 
 
-    return { ...t, state: displayState, match_score: score };
+    return { ...t, state: displayState, match_score: score, value: t.estimated_cost, source: t.portal_source, source_url: t.original_url };
   });
 
   return NextResponse.json({ success: true, totalCount: count || 0, tenders });

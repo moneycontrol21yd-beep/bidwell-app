@@ -8,22 +8,10 @@ export async function GET(request: Request) {
 
   if (!id) return NextResponse.json({ success: false, error: "No ID provided" });
 
-  const cleanId = id.trim();
-
-  // 1. Pehle View (all_live_tenders) me dhoondho (ID ya Source ID dono se)
-  let { data: viewData } = await supabase
-    .from('all_live_tenders')
-    .select('*')
-    .or(`id.eq.${cleanId},source_tender_id.eq.${cleanId}`)
-    .maybeSingle();
-    
-  if (viewData) return NextResponse.json({ success: true, tender: viewData });
-
-  // 2. Agar View me nahi mila, toh master_tenders me dhoondho
   let { data: masterData } = await supabase
     .from('master_tenders')
     .select('*')
-    .or(`id.eq.${cleanId},source_tender_id.eq.${cleanId}`)
+    .or(`id.eq.${id},source_tender_id.eq.${id}`)
     .maybeSingle();
     
   if (masterData) {
@@ -38,23 +26,5 @@ export async function GET(request: Request) {
      return NextResponse.json({ success: true, tender: mapped });
   }
 
-  // 3. Agar wahan bhi nahi mila, toh live_tenders me dhoondho
-  let { data: liveData } = await supabase
-    .from('live_tenders')
-    .select('*')
-    .or(`id.eq.${cleanId},source_tender_id.eq.${cleanId}`)
-    .maybeSingle();
-    
-  if (liveData) return NextResponse.json({ success: true, tender: liveData });
-
-  // 4. Agar purane tenders table me ho toh
-  let { data: oldData } = await supabase
-    .from('tenders')
-    .select('*')
-    .or(`id.eq.${cleanId},source_url.eq.${cleanId}`)
-    .maybeSingle();
-    
-  if (oldData) return NextResponse.json({ success: true, tender: oldData });
-
-  return NextResponse.json({ success: false, error: "Tender not found in any table" });
+  return NextResponse.json({ success: false, error: "Tender not found" });
 }
