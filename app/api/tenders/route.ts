@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     }
   } catch (e) {}
 
-  // 🔥 GARBAGE FILTER: API level par hi kachra block kar diya
+  // ✅ Removed the invalid length check and added safe not filters
   let dbQuery = supabase
     .from('master_tenders')
     .select('id, title, org_name, state, estimated_cost, closing_date, portal_source, original_url, publishing_date', { count: 'exact' })
@@ -35,8 +35,7 @@ export async function GET(request: Request) {
     .not('title', 'ilike', '%pre-bid%')
     .not('title', 'ilike', '%bod extension%')
     .not('title', 'ilike', '%corrigendum%')
-    .not('title', 'ilike', '%date extended%')
-    .gt('length(title)', 20); // Chhote titles ignore karo
+    .not('title', 'ilike', '%date extended%');
 
   if (searchQuery) {
     dbQuery = dbQuery.or(`title.ilike.%${searchQuery}%,org_name.ilike.%${searchQuery}%`);
